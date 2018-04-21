@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="permission_audio">No audio recording permission. \nCan not start calling.</string>
+	<string name="permission_audio_reason">Audio recording permission is necessary for calling.</string>
+	<string name="permission_audio_request">Audio recording permission is necessary for calling.</string>
+	<string name="permission_network">No network access permission.</string>
+	<string name="permission_network_reason">Network access permission is necessary for calling.</string>
+	<string name="permission_network_request">Network access permission is necessary for calling.</string>
+</resources>

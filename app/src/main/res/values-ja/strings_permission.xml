@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="permission_audio">録音許可がありません。\n通話できません。</string>
+	<string name="permission_audio_reason">通話するには録音許可が必要です。</string>
+	<string name="permission_audio_request">通話するには録音許可が必要です。</string>
+	<string name="permission_network">ネットワークへのアクセス許可がありません。</string>
+	<string name="permission_network_reason">通話するにはネットワークへのアクセス許可が必要です。</string>
+	<string name="permission_network_request">通話するにはネットワークへのアクセス許可が必要です。</string>
+</resources>
