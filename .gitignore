@@ -1,0 +1,43 @@
+.DS_Store
+/captures
+*.so
+!/app/src/main/jni/externalLibs/*/*.so
+
+/.idea/*.xml
+/.idea/libraries
+!.idea/codeStyleSettings.xml
+!.idea/fileColors.xml
+!.idea/encodings.xml
+!.idea/gradle.xml
+!.idea/runConfigurations/*.xml
+
+!.idea/inspectionProfiles/*.xml
+.idea/inspectionProfiles/profiles_settings.xml
+
+!.idea/scopes/*.xml
+.idea/scopes/scope_settings.xml
+
+!.idea/templateLanguages.xml
+
+.idea/codeStyles
+.idea/caches
+.idea/inspectionProfiles/
+/.idea/dictionaries/
+/.idea/copyright/
+
+/.idea/encodings.xml
+
+# Gradle
+.gradle
+build
+/local.properties
+*.iml
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+bugreport.txt
+commitlog.txt
+/logs/
