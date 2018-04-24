@@ -42,6 +42,19 @@ public class ServerInfo {
 		public Transports(@NonNull final List<Transport> transports) {
 			this.transports = transports;
 		}
+		
+		@Override
+		public String toString() {
+			final StringBuilder sb = new StringBuilder();
+			sb.append("Transports{");
+			if ((transports != null) && (transports.size() > 0)) {
+				for (final Transport transport: transports) {
+					sb.append(transport).append(",");
+				}
+			}
+			sb.append('}');
+			return sb.toString();
+		}
 	}
 
 	public static class PluginInfos {
@@ -50,6 +63,19 @@ public class ServerInfo {
 		
 		public PluginInfos(@NonNull final List<PluginInfo> plugins) {
 			this.plugins = plugins;
+		}
+
+		@Override
+		public String toString() {
+			final StringBuilder sb = new StringBuilder();
+			sb.append("PluginInfos{");
+			if ((plugins != null) && (plugins.size() > 0)) {
+				for (final PluginInfo plugin: plugins) {
+					sb.append(plugin).append(",");
+				}
+			}
+			sb.append('}');
+			return sb.toString();
 		}
 	}
 	
