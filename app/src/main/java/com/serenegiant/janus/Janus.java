@@ -15,18 +15,18 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 
 public interface Janus {
-	@POST("/")
+	@POST("/janus")
 	public Call<Session> create(@Body final Creator create);
 
-	@GET("/info")
+	@GET("/janus/info")
 	public Call<ServerInfo> getInfo();
 
-	@GET("/{session_id}")
+	@GET("/janus/{session_id}")
 	public Call<Event> getLongPoll(@Path("session_id") final String sessionId);
 	
-	@POST("/{session_id}")
+	@POST("/janus/{session_id}")
 	public Call<Plugin> attach(@Body final Attach attach);
 	
-	@POST()
+	@POST("/janus/{session_id}")
 	public Call<Void> destroy(@Body final Destroy destroy);
 }
