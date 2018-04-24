@@ -74,7 +74,8 @@ public class CallActivity extends BaseActivity
 		PeerConnectionClient.PeerConnectionEvents,
 		CallFragment.OnCallEvents {
 
-  private static final String TAG = "CallRTCClient";
+  private static final boolean DEBUG = true;	// set false on production
+  private static final String TAG = "CallActivity";
 
   public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
   public static final String EXTRA_URLPARAMETERS = "org.appspot.apprtc.URLPARAMETERS";
@@ -221,6 +222,7 @@ public class CallActivity extends BaseActivity
   @SuppressWarnings("deprecation")
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    if (DEBUG) Log.v(TAG, "onCreate:");
     Thread.setDefaultUncaughtExceptionHandler(new UnhandledExceptionHandler(this));
 
     // Set window styles for fullscreen-window size. Needs to be done before
@@ -441,6 +443,7 @@ public class CallActivity extends BaseActivity
 
   @TargetApi(21)
   private void startScreenCapture() {
+    if (DEBUG) Log.v(TAG, "startScreenCapture:");
     MediaProjectionManager mediaProjectionManager =
         (MediaProjectionManager) getApplication().getSystemService(
             Context.MEDIA_PROJECTION_SERVICE);
@@ -450,6 +453,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
+	if (DEBUG) Log.v(TAG, "onActivityResult:");
     if (requestCode != CAPTURE_PERMISSION_REQUEST_CODE)
       return;
     mediaProjectionPermissionResultCode = resultCode;
@@ -468,6 +472,7 @@ public class CallActivity extends BaseActivity
   private @Nullable VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
     final String[] deviceNames = enumerator.getDeviceNames();
 
+    if (DEBUG) Log.v(TAG, "createCameraCapturer:");
     // First, try to find front facing camera
     Logging.d(TAG, "Looking for front facing cameras.");
     for (String deviceName : deviceNames) {
@@ -499,6 +504,7 @@ public class CallActivity extends BaseActivity
 
   @TargetApi(21)
   private @Nullable VideoCapturer createScreenCapturer() {
+    if (DEBUG) Log.v(TAG, "createScreenCapturer:");
     if (mediaProjectionPermissionResultCode != Activity.RESULT_OK) {
       reportError("User didn't give permission to capture the screen.");
       return null;
@@ -515,9 +521,9 @@ public class CallActivity extends BaseActivity
   // Activity interfaces
   @Override
   public void onStop() {
-    super.onStop();
+    if (DEBUG) Log.v(TAG, "onStop:");
     activityRunning = false;
-    // Don't stop the video when using screencapture to allow user to show other apps to the remote
+    // Don't stop the video when using screen capture to allow user to show other apps to the remote
     // end.
     if (peerConnectionClient != null && !screencaptureEnabled) {
       peerConnectionClient.stopVideoSource();
@@ -525,13 +531,15 @@ public class CallActivity extends BaseActivity
     if (cpuMonitor != null) {
       cpuMonitor.pause();
     }
+    super.onStop();
   }
 
   @Override
   public void onStart() {
     super.onStart();
+    if (DEBUG) Log.v(TAG, "onStart:");
     activityRunning = true;
-    // Video is not paused for screencapture. See onPause.
+    // Video is not paused for screen capture. See onPause.
     if (peerConnectionClient != null && !screencaptureEnabled) {
       peerConnectionClient.startVideoSource();
     }
@@ -542,6 +550,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   protected void onDestroy() {
+    if (DEBUG) Log.v(TAG, "onDestroy:");
     Thread.setDefaultUncaughtExceptionHandler(null);
     disconnect();
     if (logToast != null) {
@@ -554,11 +563,13 @@ public class CallActivity extends BaseActivity
   // org.appspot.apprtc.CallFragment.OnCallEvents interface implementation.
   @Override
   public void onCallHangUp() {
+	if (DEBUG) Log.v(TAG, "onCallHangUp:");
     disconnect();
   }
 
   @Override
   public void onCameraSwitch() {
+    if (DEBUG) Log.v(TAG, "onCameraSwitch:");
     if (peerConnectionClient != null) {
       peerConnectionClient.switchCamera();
     }
@@ -566,11 +577,13 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onVideoScalingSwitch(ScalingType scalingType) {
+    if (DEBUG) Log.v(TAG, "onVideoScalingSwitch:" + scalingType);
     fullscreenRenderer.setScalingType(scalingType);
   }
 
   @Override
   public void onCaptureFormatChange(int width, int height, int framerate) {
+    if (DEBUG) Log.v(TAG, "onCaptureFormatChange:");
     if (peerConnectionClient != null) {
       peerConnectionClient.changeCaptureFormat(width, height, framerate);
     }
@@ -587,6 +600,7 @@ public class CallActivity extends BaseActivity
 
   // Helper functions.
   private void toggleCallControlFragmentVisibility() {
+    if (DEBUG) Log.v(TAG, "toggleCallControlFragmentVisibility:");
     if (!iceConnected || !callFragment.isAdded()) {
       return;
     }
@@ -605,6 +619,7 @@ public class CallActivity extends BaseActivity
   }
 
   private void startCall() {
+    if (DEBUG) Log.v(TAG, "startCall:appRtcClient=" + appRtcClient);
     if (appRtcClient == null) {
       Log.e(TAG, "AppRTC client is not allocated for a call.");
       return;
@@ -634,6 +649,7 @@ public class CallActivity extends BaseActivity
 
   // Should be called from UI thread
   private void callConnected() {
+    if (DEBUG) Log.v(TAG, "callConnected:");
     final long delta = System.currentTimeMillis() - callStartedTimeMs;
     Log.i(TAG, "Call connected: delay=" + delta + "ms");
     if (peerConnectionClient == null || isError) {
@@ -656,6 +672,7 @@ public class CallActivity extends BaseActivity
 
   // Disconnect from remote resources, dispose of local resources, and exit.
   private void disconnect() {
+    if (DEBUG) Log.v(TAG, "disconnect:");
     activityRunning = false;
     remoteProxyRenderer.setTarget(null);
     localProxyVideoSink.setTarget(null);
@@ -692,6 +709,7 @@ public class CallActivity extends BaseActivity
   }
 
   private void disconnectWithErrorMessage(final String errorMessage) {
+    if (DEBUG) Log.v(TAG, "disconnectWithErrorMessage:" + errorMessage);
     if (commandLineRun || !activityRunning) {
       Log.e(TAG, "Critical error: " + errorMessage);
       disconnect();
@@ -736,6 +754,7 @@ public class CallActivity extends BaseActivity
   }
 
   private @Nullable VideoCapturer createVideoCapturer() {
+	if (DEBUG) Log.v(TAG, "createVideoCapturer:");
     final VideoCapturer videoCapturer;
     String videoFileAsCamera = getIntent().getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA);
     if (videoFileAsCamera != null) {
@@ -767,7 +786,7 @@ public class CallActivity extends BaseActivity
   }
 
   private void setSwappedFeeds(boolean isSwappedFeeds) {
-    Logging.d(TAG, "setSwappedFeeds: " + isSwappedFeeds);
+    if (DEBUG) Log.v(TAG, "setSwappedFeeds:" + isSwappedFeeds);
     this.isSwappedFeeds = isSwappedFeeds;
     localProxyVideoSink.setTarget(isSwappedFeeds ? fullscreenRenderer : pipRenderer);
     remoteProxyRenderer.setTarget(isSwappedFeeds ? pipRenderer : fullscreenRenderer);
@@ -779,6 +798,7 @@ public class CallActivity extends BaseActivity
   // All callbacks are invoked from websocket signaling looper thread and
   // are routed to UI thread.
   private void onConnectedToRoomInternal(final SignalingParameters params) {
+	if (DEBUG) Log.v(TAG, "onConnectedToRoomInternal:");
     final long delta = System.currentTimeMillis() - callStartedTimeMs;
 
     signalingParameters = params;
@@ -814,6 +834,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onConnectedToRoom(final SignalingParameters params) {
+    if (DEBUG) Log.v(TAG, "onConnectedToRoom:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -824,6 +845,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onRemoteDescription(final SessionDescription sdp) {
+    if (DEBUG) Log.v(TAG, "onRemoteDescription:");
     final long delta = System.currentTimeMillis() - callStartedTimeMs;
     runOnUiThread(new Runnable() {
       @Override
@@ -846,6 +868,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onRemoteIceCandidate(final IceCandidate candidate) {
+	if (DEBUG) Log.v(TAG, "onRemoteIceCandidate:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -860,6 +883,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onRemoteIceCandidatesRemoved(final IceCandidate[] candidates) {
+	if (DEBUG) Log.v(TAG, "onRemoteIceCandidatesRemoved:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -874,6 +898,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onChannelClose() {
+	if (DEBUG) Log.v(TAG, "onChannelClose:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -894,6 +919,7 @@ public class CallActivity extends BaseActivity
   // are routed to UI thread.
   @Override
   public void onLocalDescription(final SessionDescription sdp) {
+	if (DEBUG) Log.v(TAG, "onLocalDescription:");
     final long delta = System.currentTimeMillis() - callStartedTimeMs;
     runOnUiThread(new Runnable() {
       @Override
@@ -916,6 +942,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onIceCandidate(final IceCandidate candidate) {
+	if (DEBUG) Log.v(TAG, "onIceCandidate:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -928,6 +955,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
+	if (DEBUG) Log.v(TAG, "onIceCandidatesRemoved:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -940,6 +968,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onIceConnected() {
+	if (DEBUG) Log.v(TAG, "onIceConnected:");
     final long delta = System.currentTimeMillis() - callStartedTimeMs;
     runOnUiThread(new Runnable() {
       @Override
@@ -953,6 +982,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onIceDisconnected() {
+	if (DEBUG) Log.v(TAG, "onIceDisconnected:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -964,10 +994,13 @@ public class CallActivity extends BaseActivity
   }
 
   @Override
-  public void onPeerConnectionClosed() {}
+  public void onPeerConnectionClosed() {
+	if (DEBUG) Log.v(TAG, "onPeerConnectionClosed:");
+  }
 
   @Override
   public void onPeerConnectionStatsReady(final StatsReport[] reports) {
+	if (DEBUG) Log.v(TAG, "onPeerConnectionStatsReady:");
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
@@ -980,6 +1013,7 @@ public class CallActivity extends BaseActivity
 
   @Override
   public void onPeerConnectionError(final String description) {
+	if (DEBUG) Log.v(TAG, "onPeerConnectionError:");
     reportError(description);
   }
 }

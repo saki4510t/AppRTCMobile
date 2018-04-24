@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
  * be sent after WebSocket connection is established.
  */
 public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents {
+  private static final boolean DEBUG = true;	// set false on production
   private static final String TAG = "WSRTCClient";
   private static final String ROOM_JOIN = "join";
   private static final String ROOM_MESSAGE = "message";
@@ -56,6 +57,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   private String leaveUrl;
 
   public WebSocketRTCClient(SignalingEvents events) {
+  	if (DEBUG) Log.v(TAG, "WebSocketRTCClient:");
     this.events = events;
     roomState = ConnectionState.NEW;
     handler = HandlerThreadHandler.createHandler(TAG);
@@ -67,6 +69,8 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // parameters, retrieves room parameters and connect to WebSocket server.
   @Override
   public void connectToRoom(RoomConnectionParameters connectionParameters) {
+	if (DEBUG) Log.v(TAG, "connectToRoom:");
+    
     this.connectionParameters = connectionParameters;
     handler.post(new Runnable() {
       @Override
@@ -78,6 +82,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 
   @Override
   public void disconnectFromRoom() {
+	if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
     handler.post(new Runnable() {
       @Override
       public void run() {
@@ -90,7 +95,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Connects to room - function runs on a local looper thread.
   private void connectToRoomInternal() {
     String connectionUrl = getConnectionUrl(connectionParameters);
-    Log.d(TAG, "Connect to room: " + connectionUrl);
+    Log.d(TAG, "connectToRoomInternal:room url=" + connectionUrl);
     roomState = ConnectionState.NEW;
     wsClient = new WebSocketChannelClient(handler, this);
 
@@ -156,7 +161,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Callback issued when room parameters are extracted. Runs on local
   // looper thread.
   private void signalingParametersReady(final SignalingParameters signalingParameters) {
-    Log.d(TAG, "Room connection completed.");
+    if (DEBUG) Log.v(TAG, "signalingParametersReady:");
     if (connectionParameters.loopback
         && (!signalingParameters.initiator || signalingParameters.offerSdp != null)) {
       reportError("Loopback room is busy.");
@@ -184,6 +189,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Send local offer SDP to the other participant.
   @Override
   public void sendOfferSdp(final SessionDescription sdp) {
+    if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
     handler.post(new Runnable() {
       @Override
       public void run() {
@@ -208,6 +214,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Send local answer SDP to the other participant.
   @Override
   public void sendAnswerSdp(final SessionDescription sdp) {
+    if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
     handler.post(new Runnable() {
       @Override
       public void run() {
@@ -226,6 +233,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Send Ice candidate to the other participant.
   @Override
   public void sendLocalIceCandidate(final IceCandidate candidate) {
+    if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:" + candidate);
     handler.post(new Runnable() {
       @Override
       public void run() {
@@ -255,6 +263,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Send removed Ice candidates to the other participant.
   @Override
   public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
+	if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
     handler.post(new Runnable() {
       @Override
       public void run() {
@@ -289,6 +298,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // (passed to WebSocket client constructor).
   @Override
   public void onWebSocketMessage(final String msg) {
+	if (DEBUG) Log.v(TAG, "onWebSocketMessage:" + msg);
     if (wsClient.getState() != WebSocketConnectionState.REGISTERED) {
       Log.e(TAG, "Got WebSocket message in non registered state.");
       return;
@@ -344,6 +354,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 
   @Override
   public void onWebSocketClose() {
+    if (DEBUG) Log.v(TAG, "onWebSocketClose:");
     events.onChannelClose();
   }
 
@@ -379,6 +390,8 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   // Send SDP or ICE candidate to a room server.
   private void sendPostMessage(
       final MessageType messageType, final String url, @Nullable final String message) {
+
+    if (DEBUG) Log.v(TAG, "sendPostMessage:");
     String logInfo = url;
     if (message != null) {
       logInfo += ". Message: " + message;
