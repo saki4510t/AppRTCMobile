@@ -8,7 +8,7 @@ import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.response.Event;
 import com.serenegiant.janus.response.Plugin;
-import com.serenegiant.janus.response.Response;
+import com.serenegiant.janus.response.SendResponse;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
@@ -42,7 +42,7 @@ public interface VideoRoom {
 		@Body final Destroy destroy);
 
 	@POST("/janus/{session_id}/{plugin_id}")
-	public Call<Response> send(
+	public Call<SendResponse> send(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
