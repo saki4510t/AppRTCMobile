@@ -30,7 +30,7 @@ public class Plugin {
 		return "Plugin{" +
 			"janus='" + janus + '\'' +
 			", transaction='" + transaction + '\'' +
-			", data=" + data +
+			", id=" + id() +
 			'}';
 	}
 }

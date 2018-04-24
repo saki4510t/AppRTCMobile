@@ -20,13 +20,6 @@ public class Session {
 		public Data(final BigInteger id) {
 			this.id = id;
 		}
-		
-		@Override
-		public String toString() {
-			return "Data{" +
-				"id=" + id +
-				'}';
-		}
 	}
 	
 	public BigInteger id() {
@@ -38,7 +31,7 @@ public class Session {
 		return "Session{" +
 			"janus='" + janus + '\'' +
 			", transaction='" + transaction + '\'' +
-			", data=" + data +
+			", id=" + id() +
 			'}';
 	}
 }
