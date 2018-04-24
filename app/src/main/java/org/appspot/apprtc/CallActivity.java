@@ -31,6 +31,7 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
 import com.serenegiant.apprtcmobile.R;
+import com.serenegiant.janus.JanusRESTRTCClient;
 
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
@@ -318,16 +319,17 @@ public class CallActivity extends BaseActivity
       return;
     }
 
-    boolean loopback = intent.getBooleanExtra(EXTRA_LOOPBACK, false);
-    boolean tracing = intent.getBooleanExtra(EXTRA_TRACING, false);
+    final boolean loopback = intent.getBooleanExtra(EXTRA_LOOPBACK, false);
+    final boolean tracing = intent.getBooleanExtra(EXTRA_TRACING, false);
+    final boolean useJanus = intent.getBooleanExtra(EXTRA_USE_JANUS, false);
 
     int videoWidth = intent.getIntExtra(EXTRA_VIDEO_WIDTH, 0);
     int videoHeight = intent.getIntExtra(EXTRA_VIDEO_HEIGHT, 0);
 
     screencaptureEnabled = intent.getBooleanExtra(EXTRA_SCREENCAPTURE, false);
-    // If capturing format is not specified for screencapture, use screen resolution.
+    // If capturing format is not specified for screen capture, use screen resolution.
     if (screencaptureEnabled && videoWidth == 0 && videoHeight == 0) {
-      DisplayMetrics displayMetrics = getDisplayMetrics();
+      final DisplayMetrics displayMetrics = getDisplayMetrics();
       videoWidth = displayMetrics.widthPixels;
       videoHeight = displayMetrics.heightPixels;
     }
@@ -362,14 +364,19 @@ public class CallActivity extends BaseActivity
 
     // Create connection client. Use org.appspot.apprtc.DirectRTCClient if room name is an IP otherwise use the
     // standard org.appspot.apprtc.WebSocketRTCClient.
+    
     if (loopback || !DirectRTCClient.IP_PATTERN.matcher(roomId).matches()) {
-      appRtcClient = new WebSocketRTCClient(this);
+      if (!useJanus) {
+		  appRtcClient = new WebSocketRTCClient(this);
+	  } else {
+		  appRtcClient = new JanusRESTRTCClient(this, this, "http://192.168.1.26:8088/");
+	  }
     } else {
       Log.i(TAG, "Using org.appspot.apprtc.DirectRTCClient because room name looks like an IP.");
       appRtcClient = new DirectRTCClient(this);
     }
     // Create connection parameters.
-    String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
+    final String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
     roomConnectionParameters =
         new RoomConnectionParameters(roomUri.toString(), roomId, loopback, urlParameters);
 
