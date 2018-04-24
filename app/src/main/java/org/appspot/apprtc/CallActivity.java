@@ -127,6 +127,7 @@ public class CallActivity extends BaseActivity
   public static final String EXTRA_ENABLE_RTCEVENTLOG = "org.appspot.apprtc.ENABLE_RTCEVENTLOG";
   public static final String EXTRA_USE_LEGACY_AUDIO_DEVICE =
       "org.appspot.apprtc.USE_LEGACY_AUDIO_DEVICE";
+  public static final String EXTRA_USE_JANUS = "com.serenegiant.janus.USE_JANUS";
 
   private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
 

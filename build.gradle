@@ -36,9 +36,16 @@ ext {
 
 	supportLibVersion = '27.1.1'  // variable that can be referenced to keep support libs consistent
 	constraintLayoutVersion = '1.1.0'
+
+	gsonVersion = '2.8.2'
+	okHttpVersion = '3.10.0'
+	retrofit2Version = '2.4.0'
+//	rxandroidVersion = '2.0.2'
+//	rxjavaVersion = '2.1.12'
+	socketIOClientJavaVersion = '1.0.0'
+	webRTCVersion = '1.0.+'
+
 	commonLibVersion= '2.4.0'
-	versionGson = '2.8.0'
-	webrtcVersion = '1.0.+'
 
 	versionCodeNum = 31
 	versionNameString = '1.7.2'
