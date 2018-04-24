@@ -9,8 +9,9 @@ package org.appspot.apprtc;/*
  */
 
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.util.Log;
+
+import com.serenegiant.utils.HandlerThreadHandler;
 
 import org.appspot.apprtc.RoomParametersFetcher.RoomParametersFetcherEvents;
 import org.appspot.apprtc.WebSocketChannelClient.WebSocketChannelEvents;
@@ -57,9 +58,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
   public WebSocketRTCClient(SignalingEvents events) {
     this.events = events;
     roomState = ConnectionState.NEW;
-    final HandlerThread handlerThread = new HandlerThread(TAG);
-    handlerThread.start();
-    handler = new Handler(handlerThread.getLooper());
+    handler = HandlerThreadHandler.createHandler(TAG);
   }
 
   // --------------------------------------------------------------------
