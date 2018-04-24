@@ -23,10 +23,6 @@ public interface Janus {
 	@GET("/janus/info")
 	public Call<ServerInfo> getInfo();
 
-	@GET("/janus/{session_id}")
-	public Call<Event> getLongPoll(
-		@Path("session_id") final BigInteger sessionId);
-	
 	@POST("/janus/{session_id}")
 	public Call<Plugin> attach(
 		@Path("session_id") final BigInteger sessionId,

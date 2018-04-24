@@ -6,7 +6,6 @@ import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
-import com.serenegiant.janus.response.Event;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.SendResponse;
 import com.serenegiant.janus.response.ServerInfo;
@@ -27,10 +26,6 @@ public interface VideoRoom {
 	@GET("/janus/info")
 	public Call<ServerInfo> getInfo();
 
-	@GET("/janus/{session_id}")
-	public Call<Event> getLongPoll(
-		@Path("session_id") final BigInteger sessionId);
-	
 	@POST("/janus/{session_id}")
 	public Call<Plugin> attach(
 		@Path("session_id") final BigInteger sessionId,
