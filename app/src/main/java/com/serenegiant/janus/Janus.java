@@ -8,6 +8,8 @@ import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.Session;
 
+import java.math.BigInteger;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -22,11 +24,16 @@ public interface Janus {
 	public Call<ServerInfo> getInfo();
 
 	@GET("/janus/{session_id}")
-	public Call<Event> getLongPoll(@Path("session_id") final String sessionId);
+	public Call<Event> getLongPoll(
+		@Path("session_id") final BigInteger sessionId);
 	
 	@POST("/janus/{session_id}")
-	public Call<Plugin> attach(@Body final Attach attach);
+	public Call<Plugin> attach(
+		@Path("session_id") final BigInteger sessionId,
+		@Body final Attach attach);
 	
 	@POST("/janus/{session_id}")
-	public Call<Void> destroy(@Body final Destroy destroy);
+	public Call<Void> destroy(
+		@Path("session_id") final BigInteger sessionId,
+		@Body final Destroy destroy);
 }

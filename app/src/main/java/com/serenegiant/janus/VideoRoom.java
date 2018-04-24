@@ -12,6 +12,8 @@ import com.serenegiant.janus.response.Response;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
+import java.math.BigInteger;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -26,30 +28,35 @@ public interface VideoRoom {
 	public Call<ServerInfo> getInfo();
 
 	@GET("/janus/{session_id}")
-	public Call<Event> getLongPoll(@Path("session_id") final String sessionId);
+	public Call<Event> getLongPoll(
+		@Path("session_id") final BigInteger sessionId);
 	
 	@POST("/janus/{session_id}")
-	public Call<Plugin> attach(@Body final Attach attach);
+	public Call<Plugin> attach(
+		@Path("session_id") final BigInteger sessionId,
+		@Body final Attach attach);
 	
 	@POST("/janus/{session_id}")
-	public Call<Void> destroy(@Body final Destroy destroy);
+	public Call<Void> destroy(
+		@Path("session_id") final BigInteger sessionId,
+		@Body final Destroy destroy);
 
 	@POST("/janus/{session_id}/{plugin_id}")
 	public Call<Response> send(
-		@Path("session_id") final String sessionId,
-		@Path("plugin_id") final String pluginId,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
 	
 	@POST("/janus/{session_id}/{plugin_id}")
 	public Call<Void> detach(
-		@Path("session_id") final String sessionId,
-		@Path("plugin_id") final String pluginId,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Detach detach);
 	
 	@POST("/janus/{session_id}/{plugin_id}")
 	public Call<Void> hangup(
-		@Path("session_id") final String sessionId,
-		@Path("plugin_id") final String pluginId,
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Hangup hangup);
 	
 }
