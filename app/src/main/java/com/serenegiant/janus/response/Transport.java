@@ -16,4 +16,15 @@ public class Transport {
 		this.version_string = version_string;
 		this.version = version;
 	}
+	
+	@Override
+	public String toString() {
+		return "Transport{" +
+			"name='" + name + '\'' +
+			", author='" + author + '\'' +
+			", description='" + description + '\'' +
+			", version_string='" + version_string + '\'' +
+			", version=" + version +
+			'}';
+	}
 }

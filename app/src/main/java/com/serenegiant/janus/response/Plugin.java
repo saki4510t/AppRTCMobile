@@ -24,4 +24,13 @@ public class Plugin {
 	public BigInteger id() {
 		return data != null ? data.id : null;
 	}
+	
+	@Override
+	public String toString() {
+		return "Plugin{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", data=" + data +
+			'}';
+	}
 }

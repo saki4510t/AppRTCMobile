@@ -56,4 +56,22 @@ public class ServerInfo {
 	public List<PluginInfo> plugins() {
 		return plugins != null ? plugins.plugins : null;
 	}
+
+	@Override
+	public String toString() {
+		return "ServerInfo{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", name='" + name + '\'' +
+			", version=" + version +
+			", version_string='" + version_string + '\'' +
+			", author='" + author + '\'' +
+			", data_channels=" + data_channels +
+			", ipv6=" + ipv6 +
+			", ice_tcp=" + ice_tcp +
+			", transports=" + transports +
+			", plugins=" + plugins +
+			'}';
+	}
+	
 }

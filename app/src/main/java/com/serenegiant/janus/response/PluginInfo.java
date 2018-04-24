@@ -16,4 +16,15 @@ public class PluginInfo {
 		this.version_string = version_string;
 		this.version = version;
 	}
+	
+	@Override
+	public String toString() {
+		return "PluginInfo{" +
+			"name='" + name + '\'' +
+			", author='" + author + '\'' +
+			", description='" + description + '\'' +
+			", version_string='" + version_string + '\'' +
+			", version=" + version +
+			'}';
+	}
 }

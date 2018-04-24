@@ -20,9 +20,25 @@ public class Session {
 		public Data(final BigInteger id) {
 			this.id = id;
 		}
+		
+		@Override
+		public String toString() {
+			return "Data{" +
+				"id=" + id +
+				'}';
+		}
 	}
 	
 	public BigInteger id() {
 		return data != null ? data.id : null;
+	}
+	
+	@Override
+	public String toString() {
+		return "Session{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", data=" + data +
+			'}';
 	}
 }

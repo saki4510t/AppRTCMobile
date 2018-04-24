@@ -28,5 +28,24 @@ public class Event {
 			this.plugin = plugin;
 			this.data = data;
 		}
+		
+		@Override
+		public String toString() {
+			return "PluginData{" +
+				"plugin='" + plugin + '\'' +
+				", data=" + data +
+				'}';
+		}
+	}
+	
+	@Override
+	public String toString() {
+		return "Event{" +
+			"janus='" + janus + '\'' +
+			", sender='" + sender + '\'' +
+			", transaction='" + transaction + '\'' +
+			", plugindata=" + plugindata +
+			", jsep=" + jsep +
+			'}';
 	}
 }

@@ -8,4 +8,12 @@ public class Response {
 		this.janus = janus;
 		this.transaction = transaction;
 	}
+	
+	@Override
+	public String toString() {
+		return "Response{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			'}';
+	}
 }
