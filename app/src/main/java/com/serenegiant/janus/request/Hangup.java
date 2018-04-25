@@ -14,15 +14,14 @@ public class Hangup {
 	@NonNull
 	public final BigInteger session_id;
 	
-	public Hangup(@NonNull final String transaction,
-		@NonNull final BigInteger session_id) {
+	public Hangup(@NonNull final BigInteger session_id) {
 
 		this.janus = "hangup";
-		this.transaction = transaction;
+		this.transaction = TransactionGenerator.get(12);
 		this.session_id = session_id;
 	}
 	
 	public Hangup(@NonNull final Session session) {
-		this(session.transaction, session.data.id);
+		this(session.id());
 	}
 }

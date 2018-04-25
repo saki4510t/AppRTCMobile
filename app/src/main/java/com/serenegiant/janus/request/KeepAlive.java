@@ -14,15 +14,14 @@ public class KeepAlive {
 	@NonNull
 	public final BigInteger session_id;
 	
-	public KeepAlive(@NonNull final String transaction,
-		@NonNull final BigInteger session_id) {
+	public KeepAlive(@NonNull final BigInteger session_id) {
 
 		this.janus = "keepalive";
-		this.transaction = transaction;
+		this.transaction = TransactionGenerator.get(12);
 		this.session_id = session_id;
 	}
 	
 	public KeepAlive(@NonNull final Session session) {
-		this(session.transaction, session.data.id);
+		this(session.id());
 	}
 }

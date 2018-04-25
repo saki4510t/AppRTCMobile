@@ -1,4 +1,4 @@
-package com.serenegiant.janus;
+package com.serenegiant.janus.request;
 
 import java.util.Random;
 

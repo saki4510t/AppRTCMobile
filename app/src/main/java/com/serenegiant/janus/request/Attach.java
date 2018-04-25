@@ -16,17 +16,16 @@ public class Attach {
 	@NonNull
 	public final String plugin;
 	
-	public Attach(@NonNull final String transaction,
-		@NonNull final BigInteger session_id,
+	public Attach(@NonNull final BigInteger session_id,
 		@NonNull final String plugin) {
 		
 		this.janus = "attach";
-		this.transaction = transaction;
+		this.transaction = TransactionGenerator.get(12);
 		this.session_id = session_id;
 		this.plugin = plugin;
 	}
 	
 	public Attach(@NonNull final Session session, @NonNull final String plugin) {
-		this(session.transaction, session.id(), plugin);
+		this(session.id(), plugin);
 	}
 }

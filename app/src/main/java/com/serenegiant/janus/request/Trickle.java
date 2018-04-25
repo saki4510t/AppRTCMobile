@@ -18,12 +18,11 @@ public class Trickle {
 	@NonNull
 	public final JSONObject candidates;
 
-	public Trickle(@NonNull final String transaction,
-		@NonNull final BigInteger session_id,
+	public Trickle(@NonNull final BigInteger session_id,
 		@NonNull final JSONObject candidates) {
 
 		this.janus = "trickle";
-		this.transaction = transaction;
+		this.transaction = TransactionGenerator.get(12);
 		this.session_id = session_id;
 		this.candidates = candidates;
 	}
@@ -31,6 +30,6 @@ public class Trickle {
 	public Trickle(@NonNull final Session session,
 	   @NonNull final JSONObject candidates) {
 	   
-	   this(session.transaction, session.data.id, candidates);
+	   this(session.id(), candidates);
 	}
 }

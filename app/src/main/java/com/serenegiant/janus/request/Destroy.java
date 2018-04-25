@@ -14,15 +14,14 @@ public class Destroy {
 	@NonNull
 	public final BigInteger session_id;
 	
-	public Destroy(@NonNull final String transaction,
-		@NonNull final BigInteger session_id) {
+	public Destroy(@NonNull final BigInteger session_id) {
 
 		this.janus = "destroy";
-		this.transaction = transaction;
+		this.transaction = TransactionGenerator.get(12);
 		this.session_id = session_id;
 	}
 	
 	public Destroy(@NonNull final Session session) {
-		this(session.transaction, session.data.id);
+		this(session.data.id);
 	}
 }

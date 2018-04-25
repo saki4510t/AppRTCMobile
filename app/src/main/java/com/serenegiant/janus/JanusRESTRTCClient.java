@@ -14,6 +14,7 @@ import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.request.Message;
+import com.serenegiant.janus.request.TransactionGenerator;
 import com.serenegiant.janus.response.Event;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.SendResponse;
@@ -297,7 +298,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				}
 				if (mServerInfo != null) {
 					// サーバー情報を取得できたらセッションを生成
-					final Call<Session> createCall = mJanus.create(new Creator(TransactionGenerator.get(12)));
+					final Call<Session> createCall = mJanus.create(new Creator());
 					setCall(call);
 					try {
 						final Response<Session> response = createCall.execute();

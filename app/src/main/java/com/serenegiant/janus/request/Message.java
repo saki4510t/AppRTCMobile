@@ -22,36 +22,34 @@ public class Message {
 	public final JSONObject body;
 	public final JSONObject jsep;
 	
-	public Message(@NonNull final String transaction,
-		@NonNull final BigInteger session_id,
+	public Message(@NonNull final BigInteger session_id,
 		@NonNull final BigInteger handle_id,
 		final JSONObject body, final JSONObject jsep) {
 
 		this.janus = "message";
-		this.transaction = transaction;
+		this.transaction = TransactionGenerator.get(12);
 		this.session_id = session_id;
 		this.handle_id = handle_id;
 		this.body = body;
 		this.jsep = jsep;
 	}
 
-	public Message(@NonNull final String transaction,
-		@NonNull final BigInteger session_id,
+	public Message(@NonNull final BigInteger session_id,
 		@NonNull final BigInteger handle_id,
 		final JSONObject body) {
 
-		this(transaction, session_id, handle_id, body, null);
+		this(session_id, handle_id, body, null);
 	}
 
 	public Message(@NonNull final Session session, @NonNull final Plugin plugin,
 		final JSONObject body) {
 
-		this(session.transaction, session.id(), plugin.id(), body, null);
+		this(session.id(), plugin.id(), body, null);
 	}
 
 	public Message(@NonNull final Session session, @NonNull final Plugin plugin,
 		final JSONObject body, final JSONObject jsep) {
 
-		this(session.transaction, session.id(), plugin.id(), body, jsep);
+		this(session.id(), plugin.id(), body, jsep);
 	}
 }

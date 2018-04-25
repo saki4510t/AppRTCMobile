@@ -8,8 +8,8 @@ public class Creator {
 	@NonNull
 	public final String transaction;
 	
-	public Creator(@NonNull final String transaction) {
+	public Creator() {
 		this.janus = "create";
-		this.transaction = transaction;
+		this.transaction = TransactionGenerator.get(12);
 	}
 }
