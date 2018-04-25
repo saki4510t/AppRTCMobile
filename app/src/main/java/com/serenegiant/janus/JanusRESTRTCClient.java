@@ -24,6 +24,7 @@ import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
+import com.serenegiant.utils.Stacktrace;
 
 import org.appspot.apprtc.AppRTCClient;
 import org.webrtc.IceCandidate;
@@ -102,6 +103,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 // implementations of org.appspot.apprtc.AppRTCClient interface
 	@Override
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
+		if (DEBUG) Log.v(TAG, "connectToRoom:");
+		Stacktrace.print();
 		this.connectionParameters = connectionParameters;
 		handler.post(new Runnable() {
 			@Override
@@ -113,6 +116,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	
 	@Override
 	public void sendOfferSdp(final SessionDescription sdp) {
+		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
@@ -123,6 +127,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	
 	@Override
 	public void sendAnswerSdp(final SessionDescription sdp) {
+		if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
@@ -133,6 +138,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	
 	@Override
 	public void sendLocalIceCandidate(final IceCandidate candidate) {
+		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
@@ -163,10 +169,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	
 	@Override
 	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
+		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals#run");
 				// FIXME 未実装
 //				final JSONObject json = new JSONObject();
 //				jsonPut(json, "type", "remove-candidates");
@@ -195,6 +201,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	
 	@Override
 	public void disconnectFromRoom() {
+		if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
 		cancelCall();
 		handler.post(new Runnable() {
 			@Override
@@ -527,6 +534,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				throw new RuntimeException("unexpected response " + response);
 			}
 			roomState = ConnectionState.JOINED;
+			// FIXME ここから先はなにしたらええんやろ？この時点でCONNECTEDでええん？
+			// Fire connection and signaling parameters events.
+//			events.onConnectedToRoom(signalingParameters);
 		} catch (final Exception e) {
 			setCall(null);
 			detach();
