@@ -97,7 +97,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	public void release() {
 		disconnectFromRoom();
 	}
-	
+
+//================================================================================
+// implementations of org.appspot.apprtc.AppRTCClient interface
 	@Override
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
 		this.connectionParameters = connectionParameters;
