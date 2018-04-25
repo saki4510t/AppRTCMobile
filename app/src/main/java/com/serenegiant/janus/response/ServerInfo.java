@@ -11,7 +11,10 @@ public class ServerInfo {
 	public final int version;
 	public final String version_string;
 	public final String author;
+	public final String commit_hash;
+	public final String compile_time;
 	public final boolean data_channels;
+	public final int session_timeout;
 	public final boolean ipv6;
 	public final boolean ice_tcp;
 	public final Transports transports;
@@ -19,7 +22,9 @@ public class ServerInfo {
 	
 	public ServerInfo(final String janus, final String transaction, final String name,
 		final int version, final String version_string, final String author,
-		final boolean data_channels, final boolean ipv6, final boolean ice_tcp,
+		final String commit_hash, final String compile_time,
+		final boolean data_channels, final int session_timeout,
+		final boolean ipv6, final boolean ice_tcp,
 		final Transports transports, final PluginInfos plugins) {
 
 		this.janus = janus;
@@ -28,7 +33,10 @@ public class ServerInfo {
 		this.version = version;
 		this.version_string = version_string;
 		this.author = author;
+		this.commit_hash = commit_hash;
+		this.compile_time = compile_time;
 		this.data_channels = data_channels;
+		this.session_timeout = session_timeout;
 		this.ipv6 = ipv6;
 		this.ice_tcp = ice_tcp;
 		this.transports = transports;
