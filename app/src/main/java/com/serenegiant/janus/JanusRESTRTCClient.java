@@ -260,18 +260,25 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			mLongPollCall = null;
 		}
 	}
-
+	
+	/**
+	 * 初期化処理
+	 * @param baseUrl
+	 */
 	private void initAsync(@NonNull final String baseUrl) {
 		if (DEBUG) Log.v(TAG, "initAsync:" + baseUrl);
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
+				// 通常のRESTアクセス用APIインターフェースを生成
 				mJanus = setupRetrofit(
 					setupHttpClient(HTTP_READ_TIMEOUT_MS, HTTP_WRITE_TIMEOUT_MS),
 					baseUrl).create(VideoRoom.class);
+				// long poll用APIインターフェースを生成
 				mLongPoll = setupRetrofit(
 					setupHttpClient(HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
 					baseUrl).create(LongPoll.class);
+				// Janus-gatewayサーバー情報を取得
 				final Call<ServerInfo> call = mJanus.getInfo();
 				setCall(call);
 				try {
@@ -284,11 +291,12 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					} else {
 						reportError("initAsync: unexpected response " + response);
 					}
-				} catch (IOException e) {
+				} catch (final IOException e) {
 					setCall(null);
 					reportError(e.getMessage());
 				}
 				if (mServerInfo != null) {
+					// サーバー情報を取得できたらセッションを生成
 					final Call<Session> createCall = mJanus.create(new Creator(TransactionGenerator.get(12)));
 					setCall(call);
 					try {
@@ -296,9 +304,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 						if (DEBUG) Log.v(TAG, "initAsync#onResponse:" + response);
 						setCall(null);
 						if (response.isSuccessful() && (response.body() != null)) {
+							// セッションを生成できた＼(^o^)／
 							mSession = response.body();
 							if (DEBUG) Log.v(TAG, "initAsync#onResponse:" + mSession);
-							// FIXME 未実装
 						}
 					} catch (final IOException e) {
 						setCall(null);
@@ -309,14 +317,17 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		});
 	}
 	
-	// Connects to room - function runs on a local looper thread.
+	/**
+	 * Connects to room - function runs on a local looper thread.
+	 */
 	private void connectToRoomInternal() {
 		if (DEBUG) Log.v(TAG, "connectToRoomInternal:");
 		if (mSession != null) {
 			roomState = ConnectionState.NEW;
+			// VideoRoomプラグインにアタッチ
 			attach();
 			if (mPlugin != null) {
-				// FIXME 未実装
+				// VideoRoomプラグインにアタッチできた
 				longPoll();
 				try {
 					join();
@@ -324,6 +335,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					cancelCall();
 					reportError(e.getMessage());
 				}
+				// FIXME 未実装
 			}
 		} else {
 			reportError("session is not ready/already disconnected");
@@ -355,7 +367,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 //		new RoomParametersFetcher(connectionUrl, null, callbacks).makeRequest();
 	}
 
-	// Disconnect from room and send bye messages - runs on a local looper thread.
+	/**
+	 * Disconnect from room and send bye messages - runs on a local looper thread.
+	 */
 	private void disconnectFromRoomInternal() {
 		if (DEBUG) Log.v(TAG, "disconnectFromRoomInternal:state=" + roomState);
 		cancelCall();
@@ -385,6 +399,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	}
 	
 //--------------------------------------------------------------------
+	/**
+	 * long pollを実行
+	 */
 	private void longPoll() {
 		if (DEBUG) Log.v(TAG, "longPoll:");
 		final Call<Event> call = mLongPoll.getEvent(mSession.id());
@@ -408,11 +425,15 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				synchronized (mSync) {
 					mLongPollCall = null;
 				}
+				// FIXME タイムアウトの時は再度long pollする？
 				reportError(t.getMessage());
 			}
 		});
 	}
 	
+	/**
+	 * VideoRoomプラグインにアタッチ要求
+	 */
 	private void attach() {
 		if (DEBUG) Log.v(TAG, "attach:");
 		final Attach attach = new Attach(mSession, "janus.plugin.videoroom");
@@ -433,7 +454,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			reportError(e.getMessage());
 		}
 	}
-
+	
+	/**
+	 * Roomにjoin
+	 * @throws IOException
+	 */
 	private void join() throws IOException {
 		if (DEBUG) Log.v(TAG, "join:");
 		final JSONObject json = new JSONObject();
