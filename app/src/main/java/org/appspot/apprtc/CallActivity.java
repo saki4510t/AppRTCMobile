@@ -916,10 +916,11 @@ public class CallActivity extends BaseActivity
 		reportError(description);
 	}
 
-	// -----Implementation of org.appspot.apprtc.PeerConnectionClient.PeerConnectionEvents.---------
-	// Send local peer connection SDP and ICE candidates to remote party.
-	// All callbacks are invoked from peer connection client looper thread and
-	// are routed to UI thread.
+// -----Implementation of org.appspot.apprtc.PeerConnectionClient.PeerConnectionEvents.---------
+// ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+// Send local peer connection SDP and ICE candidates to remote party.
+// All callbacks are invoked from peer connection client looper thread and
+// are routed to UI thread.
 	@Override
 	public void onLocalDescription(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "onLocalDescription:");
@@ -1019,4 +1020,5 @@ public class CallActivity extends BaseActivity
 		if (DEBUG) Log.v(TAG, "onPeerConnectionError:");
 		reportError(description);
 	}
+// ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑
 }
