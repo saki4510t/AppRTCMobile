@@ -1,5 +1,8 @@
 package com.serenegiant.janus.request;
 
+/**
+ * message body
+ */
 public class Join {
 	public final String request;
 	public final int room;
