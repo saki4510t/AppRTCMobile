@@ -114,32 +114,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				if (DEBUG) Log.v(TAG, "sendOfferSdp#run");
-				if (roomState != ConnectionState.CONNECTED) {
-					reportError(new RuntimeException("Sending offer SDP in non connected state."));
-					return;
-				}
-				final Call<ResponseBody> call = mJanus.send(
-					mSession.id(),
-					mPlugin.id(),
-					new Message(mSession, mPlugin,
-						new Configure(true, true),
-						new JsepSdp("offer", sdp.description))
-				);
-				setCall(call);
-				try {
-					final Response<ResponseBody> response = call.execute();
-
-					if (connectionParameters.loopback) {
-						// In loopback mode rename this offer to answer and route it back.
-						final SessionDescription sdpAnswer = new SessionDescription(
-						SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
-						events.onRemoteDescription(sdpAnswer);
-					}
-				} catch (final IOException e) {
-					setCall(null);
-					reportError(e);
-				}
+				sendOfferSdpInternal(sdp);
 			}
 		});
 	}
@@ -149,25 +124,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				if (DEBUG) Log.v(TAG, "sendAnswerSdp#run");
-				if (connectionParameters.loopback) {
-					Log.e(TAG, "Sending answer in loopback mode.");
-					return;
-				}
-				final Call<ResponseBody> call = mJanus.send(
-					mSession.id(),
-					mPlugin.id(),
-					new Message(mSession, mPlugin,
-						new Start(1234),
-						new JsepSdp("answer", sdp.description))
-				);
-				setCall(call);
-				try {
-					final Response<ResponseBody> response = call.execute();
-				} catch (final IOException e) {
-					setCall(null);
-					reportError(e);
-				}
+				sendAnswerSdpInternal(sdp);
 			}
 		});
 	}
@@ -407,6 +364,60 @@ public class JanusRESTRTCClient implements AppRTCClient {
 //		}
 	}
 	
+	private void sendOfferSdpInternal(final SessionDescription sdp) {
+		if (DEBUG) Log.v(TAG, "sendOfferSdpInternal:");
+		if (roomState != ConnectionState.CONNECTED) {
+			reportError(new RuntimeException("Sending offer SDP in non connected state."));
+			return;
+		}
+		final Call<ResponseBody> call = mJanus.send(
+			mSession.id(),
+			mPlugin.id(),
+			new Message(mSession, mPlugin,
+				new Configure(true, true),
+				new JsepSdp("offer", sdp.description))
+		);
+		setCall(call);
+		try {
+			final Response<ResponseBody> response = call.execute();
+			if (DEBUG) Log.v(TAG, "sendOfferSdp:response=" + response
+				+ "\n" + response.body());
+
+			if (connectionParameters.loopback) {
+				// In loopback mode rename this offer to answer and route it back.
+				final SessionDescription sdpAnswer = new SessionDescription(
+				SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
+				events.onRemoteDescription(sdpAnswer);
+			}
+		} catch (final IOException e) {
+			setCall(null);
+			reportError(e);
+		}
+	}
+	
+	private void sendAnswerSdpInternal(final SessionDescription sdp) {
+		if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:");
+		if (connectionParameters.loopback) {
+			Log.e(TAG, "Sending answer in loopback mode.");
+			return;
+		}
+		final Call<ResponseBody> call = mJanus.send(
+			mSession.id(),
+			mPlugin.id(),
+			new Message(mSession, mPlugin,
+				new Start(1234),
+				new JsepSdp("answer", sdp.description))
+		);
+		setCall(call);
+		try {
+			final Response<ResponseBody> response = call.execute();
+			if (DEBUG) Log.v(TAG, "sendAnswerSdp:response=" + response
+				+ "\n" + response.body());
+		} catch (final IOException e) {
+			setCall(null);
+			reportError(e);
+		}
+	}
 //--------------------------------------------------------------------
 	/**
 	 * long poll asynchronously
