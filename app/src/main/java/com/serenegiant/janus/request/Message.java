@@ -19,12 +19,12 @@ public class Message {
 	@NonNull
 	public final BigInteger handle_id;
 	
-	public final JSONObject body;
-	public final JSONObject jsep;
+	public final Object body;
+	public final Object jsep;
 	
 	public Message(@NonNull final BigInteger session_id,
 		@NonNull final BigInteger handle_id,
-		final JSONObject body, final JSONObject jsep) {
+		final Object body, final Object jsep) {
 
 		this.janus = "message";
 		this.transaction = TransactionGenerator.get(12);
@@ -36,19 +36,19 @@ public class Message {
 
 	public Message(@NonNull final BigInteger session_id,
 		@NonNull final BigInteger handle_id,
-		final JSONObject body) {
+		final Object body) {
 
 		this(session_id, handle_id, body, null);
 	}
 
 	public Message(@NonNull final Session session, @NonNull final Plugin plugin,
-		final JSONObject body) {
+		final Object body) {
 
 		this(session.id(), plugin.id(), body, null);
 	}
 
 	public Message(@NonNull final Session session, @NonNull final Plugin plugin,
-		final JSONObject body, final JSONObject jsep) {
+		final Object body, final Object jsep) {
 
 		this(session.id(), plugin.id(), body, jsep);
 	}
