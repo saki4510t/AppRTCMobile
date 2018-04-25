@@ -30,7 +30,6 @@ import org.webrtc.SessionDescription;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -51,21 +50,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 
 	private static enum ConnectionState { NEW, CONNECTED, CLOSED, ERROR }
 
-	private static class RandomString {
-		final String str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		final Random rnd = new Random();
-
-		public String get(int length) {
-			final StringBuilder sb = new StringBuilder(length);
-			for (int i = 0; i < length; i++) {
-				sb.append(str.charAt(rnd.nextInt(str.length())));
-			}
-			return sb.toString();
-		}
-	}
 
 	private final Object mSync = new Object();
-	private final RandomString mRandomString = new RandomString();
 	private final WeakReference<Context> mWeakContext;
 	private VideoRoom mJanus;
 	private LongPoll mLongPoll;
@@ -303,7 +289,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					reportError(e.getMessage());
 				}
 				if (mServerInfo != null) {
-					final Call<Session> createCall = mJanus.create(new Creator(mRandomString.get(12)));
+					final Call<Session> createCall = mJanus.create(new Creator(TransactionGenerator.get(12)));
 					setCall(call);
 					try {
 						final Response<Session> response = createCall.execute();
