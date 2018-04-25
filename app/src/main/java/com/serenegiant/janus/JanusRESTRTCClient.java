@@ -18,6 +18,7 @@ import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Join;
 import com.serenegiant.janus.request.JsepSdp;
 import com.serenegiant.janus.request.Message;
+import com.serenegiant.janus.request.Start;
 import com.serenegiant.janus.response.EventJoin;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
@@ -123,7 +124,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					mPlugin.id(),
 					new Message(mSession, mPlugin,
 						new Configure(true, true),
-						new JsepSdp(sdp.description))
+						new JsepSdp("offer", sdp.description))
 				);
 				setCall(call);
 				try {
@@ -153,11 +154,20 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					Log.e(TAG, "Sending answer in loopback mode.");
 					return;
 				}
-				// FIXME 未実装
-//				JSONObject json = new JSONObject();
-//				jsonPut(json, "sdp", sdp.description);
-//				jsonPut(json, "type", "answer");
-//				wsClient.send(json.toString());
+				final Call<ResponseBody> call = mJanus.send(
+					mSession.id(),
+					mPlugin.id(),
+					new Message(mSession, mPlugin,
+						new Start(1234),
+						new JsepSdp("answer", sdp.description))
+				);
+				setCall(call);
+				try {
+					final Response<ResponseBody> response = call.execute();
+				} catch (final IOException e) {
+					setCall(null);
+					reportError(e);
+				}
 			}
 		});
 	}
