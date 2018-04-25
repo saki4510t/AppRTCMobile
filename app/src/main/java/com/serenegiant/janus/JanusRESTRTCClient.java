@@ -27,12 +27,16 @@ import com.serenegiant.utils.HandlerThreadHandler;
 import com.serenegiant.utils.Stacktrace;
 
 import org.appspot.apprtc.AppRTCClient;
+import org.json.JSONObject;
 import org.webrtc.IceCandidate;
+import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -74,6 +78,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private ServerInfo mServerInfo;
 	private Session mSession;
 	private Plugin mPlugin;
+	private Room mRoom;
 
 	public JanusRESTRTCClient(@NonNull final Context context,
 		final SignalingEvents events,
@@ -142,7 +147,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				if (DEBUG) Log.v(TAG, "sendLocalIceCandidate#run");
 				// FIXME 未実装
 //				final JSONObject json = new JSONObject();
 //				jsonPut(json, "type", "candidate");
@@ -326,6 +330,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				// VideoRoomプラグインにアタッチできた
 				join();
 			}
+			if (roomState == ConnectionState.JOINED) {
+				// roomにjoinできた
+				connect();
+			}
 		} else {
 			reportError(new RuntimeException("session is not ready/already disconnected"));
 		}
@@ -392,6 +400,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			if (DEBUG) Log.v(TAG, "sendOfferSdp:response=" + response
 				+ "\n" + response.body());
 
+			// FIXME ここでなんかせなあかん気がする
 			if (connectionParameters.loopback) {
 				// In loopback mode rename this offer to answer and route it back.
 				final SessionDescription sdpAnswer = new SessionDescription(
@@ -474,11 +483,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 * @return
 	 * @throws IOException
 	 */
-	private Response<ResponseBody> poll() throws IOException {
-		if (DEBUG) Log.v(TAG, "longPoll:");
+	private ResponseBody poll() throws IOException {
+		if (DEBUG) Log.v(TAG, "poll:");
 		final Call<ResponseBody> call = mLongPoll.getEvent(mSession.id());
 		setCall(call);
-		return call.execute();
+		return call.execute().body();
 	}
 
 	/**
@@ -525,8 +534,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				if ("success".equals(join.janus)) {
 					// 多分ここにはこない, ackが返ってくるはず
 				} else if ("ack".equals(join.janus)) {
-					final Response<ResponseBody> poll = poll();
-					if (DEBUG) Log.v(TAG, "join:poll=" + poll);
+					final ResponseBody poll = poll();
+					final JSONObject json = new JSONObject(poll.string());
+					if (DEBUG) Log.v(TAG, "join:" + json);
+					final Room room = new Room(mSession, mPlugin);
+					mRoom = room;
 				} else {
 					throw new RuntimeException("unexpected response " + response);
 				}
@@ -534,9 +546,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				throw new RuntimeException("unexpected response " + response);
 			}
 			roomState = ConnectionState.JOINED;
-			// FIXME ここから先はなにしたらええんやろ？この時点でCONNECTEDでええん？
-			// Fire connection and signaling parameters events.
-//			events.onConnectedToRoom(signalingParameters);
 		} catch (final Exception e) {
 			setCall(null);
 			detach();
@@ -544,13 +553,23 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 	}
 	
+	private void connect() {
+		// FIXME ここから先はなにしたらええんやろ？この時点でCONNECTEDでええん？
+		roomState = ConnectionState.CONNECTED;
+		final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
+		final SignalingParameters params = new SignalingParameters(
+			iceServers, true, mRoom.clientId(),
+				null, null, null, null);
+		// Fire connection and signaling parameters events.
+		events.onConnectedToRoom(params);
+	}
+
 	/**
 	 * detach from VideoRoom plugin
 	 */
 	private void detach() {
 		if (DEBUG) Log.v(TAG, "detach:");
 		if ((roomState == ConnectionState.CONNECTED)
-			|| (roomState == ConnectionState.JOINED)
 			|| (roomState == ConnectionState.ATTACHED)
 			|| (mPlugin != null)) {
 
@@ -563,6 +582,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			}
 		}
 		setCall(null);
+		mRoom = null;
 		mPlugin = null;
 	}
 	
@@ -581,6 +601,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			}
 			setCall(null);
 		}
+		mRoom = null;
 		mPlugin = null;
 		mSession = null;
 		mServerInfo = null;
