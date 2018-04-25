@@ -465,7 +465,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		final JSONObject json = new JSONObject();
 		try {
 			json.put("request", "join")
-			.put("room", "room")
+			.put("room", 1234)	// FIXME 固定値じゃなくてパラメータにする
 			.put("ptype", "publisher")
 			.put("display", "android");
 		} catch (final JSONException e) {
