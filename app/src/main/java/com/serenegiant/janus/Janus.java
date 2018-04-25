@@ -3,7 +3,6 @@ package com.serenegiant.janus;
 import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
-import com.serenegiant.janus.response.Event;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.Session;

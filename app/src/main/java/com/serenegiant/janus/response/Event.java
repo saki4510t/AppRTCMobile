@@ -22,9 +22,9 @@ public class Event {
 	
 	public static class PluginData {
 		public final String plugin;
-		public final JSONObject data;
+		public final Object data;
 		
-		public PluginData(final String plugin, final JSONObject data) {
+		public PluginData(final String plugin, final Object data) {
 			this.plugin = plugin;
 			this.data = data;
 		}

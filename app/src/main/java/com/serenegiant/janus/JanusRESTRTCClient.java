@@ -14,10 +14,8 @@ import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.request.Message;
-import com.serenegiant.janus.request.TransactionGenerator;
-import com.serenegiant.janus.response.Event;
+import com.serenegiant.janus.response.EventJoin;
 import com.serenegiant.janus.response.Plugin;
-import com.serenegiant.janus.response.SendResponse;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
@@ -36,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,7 +56,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private VideoRoom mJanus;
 	private LongPoll mLongPoll;
 	private Call<?> mCurrentCall;
-	private Call<Event> mLongPollCall;
+	private Call<?> mLongPollCall;
 	private RoomConnectionParameters connectionParameters;
 	private Handler handler;
 	private ConnectionState roomState;
@@ -405,29 +404,38 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 */
 	private void longPoll() {
 		if (DEBUG) Log.v(TAG, "longPoll:");
-		final Call<Event> call = mLongPoll.getEvent(mSession.id());
+		final Call<ResponseBody> call = mLongPoll.getEvent(mSession.id());
 		synchronized (mSync) {
 			mLongPollCall = call;
 		}
-		call.enqueue(new Callback<Event>() {
+		call.enqueue(new Callback<ResponseBody>() {
 			@Override
-			public void onResponse(@NonNull final Call<Event> call, @NonNull final Response<Event> response) {
-				if (DEBUG) Log.v(TAG, "longPoll:onResponse=" + response
-					+ "\nevent=" + response.body());
+			public void onResponse(@NonNull final Call<ResponseBody> call, @NonNull final Response<ResponseBody> response) {
 				synchronized (mSync) {
 					mLongPollCall = null;
 				}
 				longPoll();
+				// サーバー側がタイムアウト(30秒？)した時は{"janus": "keepalive"}が来る
+				if (DEBUG) {
+					try {
+						Log.v(TAG, "longPoll:onResponse=" + response
+							+ "\nevent=" + response.body().string());
+					} catch (final IOException e) {
+						Log.w(TAG, e);
+					}
+				}
 			}
 			
 			@Override
-			public void onFailure(@NonNull final Call<Event> call, @NonNull final Throwable t) {
+			public void onFailure(@NonNull final Call<ResponseBody> call, @NonNull final Throwable t) {
 				if (DEBUG) Log.v(TAG, "longPoll:onFailure=" + t);
 				synchronized (mSync) {
 					mLongPollCall = null;
 				}
 				// FIXME タイムアウトの時は再度long pollする？
-				reportError(t.getMessage());
+				if (!(t instanceof IOException) || !"Canceled".equals(t.getMessage())) {
+					reportError(t.getMessage());
+				}
 			}
 		});
 	}
@@ -462,25 +470,29 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 */
 	private void join() throws IOException {
 		if (DEBUG) Log.v(TAG, "join:");
-		final JSONObject json = new JSONObject();
+		final JSONObject body = new JSONObject();
 		try {
-			json.put("request", "join")
+			body.put("request", "join")
 			.put("room", 1234)	// FIXME 固定値じゃなくてパラメータにする
 			.put("ptype", "publisher")
 			.put("display", "android");
+			final Message message = new Message(mSession, mPlugin, body);
+			if (DEBUG) Log.v(TAG, "join:" + message);
+			final Call<EventJoin> call = mJanus.join(mSession.id(), mPlugin.id(), message);
+			setCall(call);
+			final Response<EventJoin> response = call.execute();
+			if (DEBUG) Log.v(TAG, "join:" + response + "\n" + response.body());
 		} catch (final JSONException e) {
 			throw new IOException(e);
 		}
-		final Response<SendResponse> response = sendInternal(json);
-		if (DEBUG) Log.v(TAG, "join:" + response + "\n" + response.body());
 	}
 	
-	private final Response<SendResponse> sendInternal(@NonNull final JSONObject body)
+	private final Response<ResponseBody> sendInternal(@NonNull final JSONObject body)
 		throws IOException {
 		
 		final Message message = new Message(mSession, mPlugin, body);
 		if (DEBUG) Log.v(TAG, "sendInternal:" + message);
-		final Call<SendResponse> call = mJanus.send(mSession.id(), mPlugin.id(), message);
+		final Call<ResponseBody> call = mJanus.send(mSession.id(), mPlugin.id(), message);
 		setCall(call);
 		return call.execute();
 	}
@@ -544,7 +556,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 			builder.addInterceptor(logging);
 		}
-		return builder.build();
+		final OkHttpClient result = builder.build();
+		if (sOkHttpClient == null) {
+			sOkHttpClient = result;
+		}
+		return result;
 	}
 	
 	/**

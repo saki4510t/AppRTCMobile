@@ -6,13 +6,14 @@ import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
+import com.serenegiant.janus.response.EventJoin;
 import com.serenegiant.janus.response.Plugin;
-import com.serenegiant.janus.response.SendResponse;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 
 import java.math.BigInteger;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -37,7 +38,13 @@ public interface VideoRoom {
 		@Body final Destroy destroy);
 
 	@POST("/janus/{session_id}/{plugin_id}")
-	public Call<SendResponse> send(
+	public Call<EventJoin> join(
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Message message);
+
+	@POST("/janus/{session_id}/{plugin_id}")
+	public Call<ResponseBody> send(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);
