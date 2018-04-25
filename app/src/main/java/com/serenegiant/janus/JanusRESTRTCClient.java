@@ -260,18 +260,18 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				try {
 					mCurrentCall.cancel();
 				} catch (final Exception e) {
-					mCurrentCall = null;
 					Log.w(TAG, e);
 				}
 			}
+			mCurrentCall = null;
 			if ((mLongPollCall != null) && !mLongPollCall.isCanceled()) {
 				try {
 					mLongPollCall.cancel();
 				} catch (final Exception e) {
-					mLongPollCall = null;
 					Log.w(TAG, e);
 				}
 			}
+			mLongPollCall = null;
 		}
 	}
 
