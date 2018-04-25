@@ -12,4 +12,12 @@ public class Creator {
 		this.janus = "create";
 		this.transaction = TransactionGenerator.get(12);
 	}
+	
+	@Override
+	public String toString() {
+		return "Creator{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			'}';
+	}
 }

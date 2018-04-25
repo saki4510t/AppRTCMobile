@@ -24,4 +24,13 @@ public class KeepAlive {
 	public KeepAlive(@NonNull final Session session) {
 		this(session.id());
 	}
+	
+	@Override
+	public String toString() {
+		return "KeepAlive{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
+			'}';
+	}
 }

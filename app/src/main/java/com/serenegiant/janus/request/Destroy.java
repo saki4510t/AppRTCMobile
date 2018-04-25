@@ -24,4 +24,13 @@ public class Destroy {
 	public Destroy(@NonNull final Session session) {
 		this(session.data.id);
 	}
+	
+	@Override
+	public String toString() {
+		return "Destroy{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
+			'}';
+	}
 }

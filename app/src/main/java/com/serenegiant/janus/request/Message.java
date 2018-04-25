@@ -52,4 +52,16 @@ public class Message {
 
 		this(session.id(), plugin.id(), body, jsep);
 	}
+	
+	@Override
+	public String toString() {
+		return "Message{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
+			", handle_id=" + handle_id +
+			", body=" + body +
+			", jsep=" + jsep +
+			'}';
+	}
 }

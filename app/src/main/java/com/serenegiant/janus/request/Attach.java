@@ -28,4 +28,14 @@ public class Attach {
 	public Attach(@NonNull final Session session, @NonNull final String plugin) {
 		this(session.id(), plugin);
 	}
+	
+	@Override
+	public String toString() {
+		return "Attach{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
+			", plugin='" + plugin + '\'' +
+			'}';
+	}
 }

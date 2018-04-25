@@ -24,4 +24,13 @@ public class Detach {
 	public Detach(@NonNull final Session session) {
 		this(session.id());
 	}
+	
+	@Override
+	public String toString() {
+		return "Detach{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
+			'}';
+	}
 }

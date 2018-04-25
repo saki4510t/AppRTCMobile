@@ -24,4 +24,13 @@ public class Hangup {
 	public Hangup(@NonNull final Session session) {
 		this(session.id());
 	}
+	
+	@Override
+	public String toString() {
+		return "Hangup{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
+			'}';
+	}
 }

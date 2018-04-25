@@ -32,4 +32,14 @@ public class Trickle {
 	   
 	   this(session.id(), candidates);
 	}
+	
+	@Override
+	public String toString() {
+		return "Trickle{" +
+			"janus='" + janus + '\'' +
+			", transaction='" + transaction + '\'' +
+			", session_id=" + session_id +
+			", candidates=" + candidates +
+			'}';
+	}
 }
