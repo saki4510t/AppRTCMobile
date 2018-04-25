@@ -5,8 +5,6 @@ import android.support.annotation.NonNull;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.Session;
 
-import org.json.JSONObject;
-
 import java.math.BigInteger;
 
 public class Message {
