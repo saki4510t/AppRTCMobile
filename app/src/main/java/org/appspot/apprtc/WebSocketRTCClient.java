@@ -158,8 +158,10 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 		}
 	}
 	
-	// Callback issued when room parameters are extracted. Runs on local
-	// looper thread.
+	/**
+	 * Callback issued when room parameters are extracted. Runs on local looper thread.
+	 * @param signalingParameters
+	 */
 	private void signalingParametersReady(final SignalingParameters signalingParameters) {
 		if (DEBUG) Log.v(TAG, "signalingParametersReady:");
 		if (connectionParameters.loopback
@@ -185,8 +187,14 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 		wsClient.connect(signalingParameters.wssUrl, signalingParameters.wssPostUrl);
 		wsClient.register(connectionParameters.roomId, signalingParameters.clientId);
 	}
-	
-	// Send local offer SDP to the other participant.
+
+//================================================================================
+// implementations of org.appspot.apprtc.AppRTCClient interface
+
+	/**
+	 * Send local offer SDP to the other participant.
+	 * @param sdp
+	 */
 	@Override
 	public void sendOfferSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
@@ -211,7 +219,10 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 		});
 	}
 	
-	// Send local answer SDP to the other participant.
+	/**
+	 * Send local answer SDP to the other participant.
+	 * @param sdp
+	 */
 	@Override
 	public void sendAnswerSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
@@ -230,7 +241,10 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 		});
 	}
 	
-	// Send Ice candidate to the other participant.
+	/**
+	 * Send Ice candidate to the other participant.
+	 * @param candidate
+	 */
 	@Override
 	public void sendLocalIceCandidate(final IceCandidate candidate) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:" + candidate);
@@ -260,7 +274,10 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 		});
 	}
 	
-	// Send removed Ice candidates to the other participant.
+	/**
+	 * Send removed Ice candidates to the other participant.
+	 * @param candidates
+	 */
 	@Override
 	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
@@ -292,10 +309,10 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 		});
 	}
 	
-	// --------------------------------------------------------------------
-	// WebSocketChannelEvents interface implementation.
-	// All events are called by org.appspot.apprtc.WebSocketChannelClient on a local looper thread
-	// (passed to WebSocket client constructor).
+//================================================================================
+// WebSocketChannelEvents interface implementation.
+// All events are called by org.appspot.apprtc.WebSocketChannelClient on a local looper thread
+// (passed to WebSocket client constructor).
 	@Override
 	public void onWebSocketMessage(final String msg) {
 		if (DEBUG) Log.v(TAG, "onWebSocketMessage:" + msg);
@@ -363,8 +380,8 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 		reportError("WebSocket error: " + description);
 	}
 	
-	// --------------------------------------------------------------------
-	// Helper functions.
+//================================================================================
+// Helper functions.
 	private void reportError(final String errorMessage) {
 		Log.e(TAG, errorMessage);
 		handler.post(new Runnable() {
