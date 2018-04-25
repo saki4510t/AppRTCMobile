@@ -13,6 +13,8 @@ import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.Attach;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
+import com.serenegiant.janus.request.Detach;
+import com.serenegiant.janus.request.Join;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.response.EventJoin;
 import com.serenegiant.janus.response.Plugin;
@@ -328,7 +330,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			attach();
 			if (mPlugin != null) {
 				// VideoRoomプラグインにアタッチできた
-				longPoll();
 				try {
 					join();
 				} catch (final IOException e) {
@@ -373,26 +374,12 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private void disconnectFromRoomInternal() {
 		if (DEBUG) Log.v(TAG, "disconnectFromRoomInternal:state=" + roomState);
 		cancelCall();
+		detach();
 		if (roomState == ConnectionState.CONNECTED) {
 			if (DEBUG) Log.d(TAG, "Closing room.");
 //			sendPostMessage(WebSocketRTCClient.MessageType.LEAVE, leaveUrl, null);
 		}
-		if (mSession != null) {
-			final Destroy destroy = new Destroy(mSession);
-			final Call<Void> call = mJanus.destroy(mSession.id(), destroy);
-			try {
-				call.execute();
-			} catch (final IOException e) {
-				reportError(e.getMessage());
-			}
-			setCall(null);
-		}
-		mPlugin = null;
-		mSession = null;
-		mServerInfo = null;
-		roomState = ConnectionState.CLOSED;
-		mJanus = null;
-		mLongPollCall = null;
+		destroy();
 //		if (wsClient != null) {
 //			wsClient.disconnect(true);
 //		}
@@ -400,7 +387,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	
 //--------------------------------------------------------------------
 	/**
-	 * long pollを実行
+	 * long poll asynchronously
 	 */
 	private void longPoll() {
 		if (DEBUG) Log.v(TAG, "longPoll:");
@@ -441,7 +428,19 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	}
 	
 	/**
-	 * VideoRoomプラグインにアタッチ要求
+	 * request long poll synchronously
+	 * @return
+	 * @throws IOException
+	 */
+	private Response<ResponseBody> poll() throws IOException {
+		if (DEBUG) Log.v(TAG, "longPoll:");
+		final Call<ResponseBody> call = mLongPoll.getEvent(mSession.id());
+		setCall(call);
+		return call.execute();
+	}
+
+	/**
+	 * attach to VideoRoom plugin
 	 */
 	private void attach() {
 		if (DEBUG) Log.v(TAG, "attach:");
@@ -465,28 +464,63 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	}
 	
 	/**
-	 * Roomにjoin
+	 * join Room
 	 * @throws IOException
 	 */
 	private void join() throws IOException {
 		if (DEBUG) Log.v(TAG, "join:");
-		final JSONObject body = new JSONObject();
-		try {
-			body.put("request", "join")
-			.put("room", 1234)	// FIXME 固定値じゃなくてパラメータにする
-			.put("ptype", "publisher")
-			.put("display", "android");
-			final Message message = new Message(mSession, mPlugin, body);
-			if (DEBUG) Log.v(TAG, "join:" + message);
-			final Call<EventJoin> call = mJanus.join(mSession.id(), mPlugin.id(), message);
-			setCall(call);
-			final Response<EventJoin> response = call.execute();
-			if (DEBUG) Log.v(TAG, "join:" + response + "\n" + response.body());
-		} catch (final JSONException e) {
-			throw new IOException(e);
+		final Message message = new Message(mSession, mPlugin,
+			new Join(1234, "android"));
+		if (DEBUG) Log.v(TAG, "join:" + message);
+		final Call<EventJoin> call = mJanus.join(mSession.id(), mPlugin.id(), message);
+		setCall(call);
+		final Response<EventJoin> response = call.execute();
+		if (DEBUG) Log.v(TAG, "join:response=" + response + "\n" + response.body());
+		if ("ack".equals(response.body().janus)) {
+			final Response<ResponseBody> poll = poll();
+			if (DEBUG) Log.v(TAG, "join:poll=" + poll);
 		}
 	}
 	
+	/**
+	 * detach from VideoRoom plugin
+	 */
+	private void detach() {
+		if (DEBUG) Log.v(TAG, "detach:");
+		final Call<Void> call = mJanus.detach(mSession.id(), mPlugin.id(), new Detach(mSession));
+		setCall(call);
+		try {
+			call.execute();
+		} catch (final IOException e) {
+			if (DEBUG) Log.w(TAG, e);
+		}
+		setCall(null);
+		mPlugin = null;
+	}
+	
+	/**
+	 * destroy session
+	 */
+	private void destroy() {
+		if (DEBUG) Log.v(TAG, "destroy:");
+		if (mSession != null) {
+			final Destroy destroy = new Destroy(mSession);
+			final Call<Void> call = mJanus.destroy(mSession.id(), destroy);
+			try {
+				call.execute();
+			} catch (final IOException e) {
+				reportError(e.getMessage());
+			}
+			setCall(null);
+		}
+		mPlugin = null;
+		mSession = null;
+		mServerInfo = null;
+		roomState = ConnectionState.CLOSED;
+		mJanus = null;
+		mLongPollCall = null;
+	}
+
 	private final Response<ResponseBody> sendInternal(@NonNull final JSONObject body)
 		throws IOException {
 		
@@ -514,6 +548,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 	}
 	
+	/**
+	 * keep first OkHttpClient as singleton
+	 */
 	private static OkHttpClient sOkHttpClient;
 	/**
 	 * Janus-gatewayサーバーとの通信用のOkHttpClientインスタンスの初期化処理
@@ -553,7 +590,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		// ログ出力設定
 		if (DEBUG) {
 			final HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-			logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+			logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 			builder.addInterceptor(logging);
 		}
 		final OkHttpClient result = builder.build();
