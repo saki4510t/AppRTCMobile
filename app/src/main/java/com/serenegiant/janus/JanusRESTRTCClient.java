@@ -23,7 +23,6 @@ import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
 
 import org.appspot.apprtc.AppRTCClient;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.SessionDescription;
@@ -50,7 +49,13 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = JanusRESTRTCClient.class.getSimpleName();
 
-	private static enum ConnectionState { NEW, CONNECTED, CLOSED, ERROR }
+	private static enum ConnectionState {
+		NEW,
+		ATTACHED,
+		JOINED,
+		CONNECTED,
+		CLOSED,
+		ERROR }
 
 
 	private final Object mSync = new Object();
@@ -328,15 +333,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			roomState = ConnectionState.NEW;
 			// VideoRoomプラグインにアタッチ
 			attach();
-			if (mPlugin != null) {
+			if (roomState == ConnectionState.ATTACHED) {
 				// VideoRoomプラグインにアタッチできた
-				try {
-					join();
-				} catch (final IOException e) {
-					cancelCall();
-					reportError(e.getMessage());
-				}
-				// FIXME 未実装
+				join();
 			}
 		} else {
 			reportError("session is not ready/already disconnected");
@@ -453,6 +452,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			setCall(null);
 			if (response.isSuccessful() && (response.body() != null)) {
 				mPlugin = response.body();
+				roomState = ConnectionState.ATTACHED;
 				if (DEBUG) Log.v(TAG, "attach#onResponse:" + mPlugin);
 			} else {
 				reportError("attach:unexpected response " + response);
@@ -467,18 +467,34 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 * join Room
 	 * @throws IOException
 	 */
-	private void join() throws IOException {
+	private void join() {
 		if (DEBUG) Log.v(TAG, "join:");
 		final Message message = new Message(mSession, mPlugin,
 			new Join(1234, "android"));
 		if (DEBUG) Log.v(TAG, "join:" + message);
 		final Call<EventJoin> call = mJanus.join(mSession.id(), mPlugin.id(), message);
 		setCall(call);
-		final Response<EventJoin> response = call.execute();
-		if (DEBUG) Log.v(TAG, "join:response=" + response + "\n" + response.body());
-		if ("ack".equals(response.body().janus)) {
-			final Response<ResponseBody> poll = poll();
-			if (DEBUG) Log.v(TAG, "join:poll=" + poll);
+		try {
+			final Response<EventJoin> response = call.execute();
+			if (DEBUG) Log.v(TAG, "join:response=" + response + "\n" + response.body());
+			if (response.isSuccessful() && (response.body() != null)) {
+				final EventJoin join = response.body();
+				if ("success".equals(join.janus)) {
+					// 多分ここにはこない, ackが返ってくるはず
+				} else if ("ack".equals(join.janus)) {
+					final Response<ResponseBody> poll = poll();
+					if (DEBUG) Log.v(TAG, "join:poll=" + poll);
+				} else {
+					throw new RuntimeException("unexpected response " + response);
+				}
+			} else {
+				throw new RuntimeException("unexpected response " + response);
+			}
+			roomState = ConnectionState.JOINED;
+		} catch (final Exception e) {
+			setCall(null);
+			detach();
+			reportError(e.getMessage());
 		}
 	}
 	
@@ -487,12 +503,18 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 */
 	private void detach() {
 		if (DEBUG) Log.v(TAG, "detach:");
-		final Call<Void> call = mJanus.detach(mSession.id(), mPlugin.id(), new Detach(mSession));
-		setCall(call);
-		try {
-			call.execute();
-		} catch (final IOException e) {
-			if (DEBUG) Log.w(TAG, e);
+		if ((roomState == ConnectionState.CONNECTED)
+			|| (roomState == ConnectionState.JOINED)
+			|| (roomState == ConnectionState.ATTACHED)
+			|| (mPlugin != null)) {
+
+			final Call<Void> call = mJanus.detach(mSession.id(), mPlugin.id(), new Detach(mSession));
+			setCall(call);
+			try {
+				call.execute();
+			} catch (final IOException e) {
+				if (DEBUG) Log.w(TAG, e);
+			}
 		}
 		setCall(null);
 		mPlugin = null;
