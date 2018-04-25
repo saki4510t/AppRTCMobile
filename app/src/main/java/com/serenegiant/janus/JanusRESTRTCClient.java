@@ -502,16 +502,22 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 	}
 	
+	private static OkHttpClient sOkHttpClient;
 	/**
 	 * Janus-gatewayサーバーとの通信用のOkHttpClientインスタンスの初期化処理
 	 * @return
 	 */
-	private OkHttpClient setupHttpClient(
+	private synchronized OkHttpClient setupHttpClient(
 		final long readTimeoutMs, final long writeTimeoutMs) {
 	
 		if (DEBUG) Log.v(TAG, "setupHttpClient:");
 
-		final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+		final OkHttpClient.Builder builder;
+		if (sOkHttpClient == null) {
+		 	builder = new OkHttpClient.Builder();
+		} else {
+			builder = sOkHttpClient.newBuilder();
+		}
 		builder
 			.addInterceptor(new Interceptor() {
 				@Override
