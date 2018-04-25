@@ -60,6 +60,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 
 	private final Object mSync = new Object();
 	private final WeakReference<Context> mWeakContext;
+	private final SignalingEvents events;
 	private VideoRoom mJanus;
 	private LongPoll mLongPoll;
 	private Call<?> mCurrentCall;
@@ -75,9 +76,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		final SignalingEvents events,
 		@NonNull final String baseUrl) {
 
-		mWeakContext = new WeakReference<>(context);
-		handler = HandlerThreadHandler.createHandler(TAG);
-		roomState = ConnectionState.NEW;
+		this.mWeakContext = new WeakReference<>(context);
+		this.events = events;
+		this.handler = HandlerThreadHandler.createHandler(TAG);
+		this.roomState = ConnectionState.NEW;
 		initAsync(baseUrl);
 	}
 	
@@ -112,19 +114,29 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			public void run() {
 				if (DEBUG) Log.v(TAG, "sendOfferSdp#run");
 				if (roomState != ConnectionState.CONNECTED) {
-					reportError("Sending offer SDP in non connected state.");
+					reportError(new RuntimeException("Sending offer SDP in non connected state."));
 					return;
 				}
-				// FIXME 未実装
-//				final JSONObject json = new JSONObject();
-//				jsonPut(json, "sdp", sdp.description);
-//				jsonPut(json, "type", "offer");
-//				sendPostMessage(WebSocketRTCClient.MessageType.MESSAGE, messageUrl, json.toString());
+				final Call<ResponseBody> call = mJanus.send(
+					mSession.id(),
+					mPlugin.id(),
+					new Message(mSession, mPlugin,
+						new Configure(true, true),
+						new JsepSdp(sdp.description))
+				);
+				setCall(call);
+				try {
+					final Response<ResponseBody> response = call.execute();
+
 				if (connectionParameters.loopback) {
 					// In loopback mode rename this offer to answer and route it back.
 					final SessionDescription sdpAnswer = new SessionDescription(
 					SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
-//					events.onRemoteDescription(sdpAnswer);
+						events.onRemoteDescription(sdpAnswer);
+					}
+				} catch (final IOException e) {
+					setCall(null);
+					reportError(e);
 				}
 			}
 		});
