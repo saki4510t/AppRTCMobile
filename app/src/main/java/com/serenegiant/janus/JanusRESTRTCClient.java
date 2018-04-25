@@ -479,6 +479,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		throws IOException {
 		
 		final Message message = new Message(mSession, mPlugin, body);
+		if (DEBUG) Log.v(TAG, "sendInternal:" + message);
 		final Call<SendResponse> call = mJanus.send(mSession.id(), mPlugin.id(), message);
 		setCall(call);
 		return call.execute();
