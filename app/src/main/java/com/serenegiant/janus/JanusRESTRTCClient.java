@@ -11,10 +11,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.Attach;
+import com.serenegiant.janus.request.Configure;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Join;
+import com.serenegiant.janus.request.JsepSdp;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.response.EventJoin;
 import com.serenegiant.janus.response.Plugin;
@@ -23,7 +25,6 @@ import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
 
 import org.appspot.apprtc.AppRTCClient;
-import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.SessionDescription;
 
@@ -128,10 +129,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				try {
 					final Response<ResponseBody> response = call.execute();
 
-				if (connectionParameters.loopback) {
-					// In loopback mode rename this offer to answer and route it back.
-					final SessionDescription sdpAnswer = new SessionDescription(
-					SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
+					if (connectionParameters.loopback) {
+						// In loopback mode rename this offer to answer and route it back.
+						final SessionDescription sdpAnswer = new SessionDescription(
+						SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
 						events.onRemoteDescription(sdpAnswer);
 					}
 				} catch (final IOException e) {
@@ -308,11 +309,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 						mServerInfo = response.body();
 						if (DEBUG) Log.v(TAG, "initAsync#onResponse:" + mServerInfo);
 					} else {
-						reportError("initAsync: unexpected response " + response);
+						reportError(new RuntimeException("initAsync: unexpected response " + response));
 					}
 				} catch (final IOException e) {
 					setCall(null);
-					reportError(e.getMessage());
+					reportError(e);
 				}
 				if (mServerInfo != null) {
 					// サーバー情報を取得できたらセッションを生成
@@ -329,7 +330,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 						}
 					} catch (final IOException e) {
 						setCall(null);
-						reportError(e.getMessage());
+						reportError(e);
 					}
 				}
 			}
@@ -350,7 +351,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				join();
 			}
 		} else {
-			reportError("session is not ready/already disconnected");
+			reportError(new RuntimeException("session is not ready/already disconnected"));
 		}
 //		String connectionUrl = getConnectionUrl(connectionParameters);
 //		Log.d(TAG, "Connect to room: " + connectionUrl);
@@ -432,7 +433,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				}
 				// FIXME タイムアウトの時は再度long pollする？
 				if (!(t instanceof IOException) || !"Canceled".equals(t.getMessage())) {
-					reportError(t.getMessage());
+					reportError(t);
 				}
 			}
 		});
@@ -467,11 +468,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				roomState = ConnectionState.ATTACHED;
 				if (DEBUG) Log.v(TAG, "attach#onResponse:" + mPlugin);
 			} else {
-				reportError("attach:unexpected response " + response);
+				reportError(new RuntimeException("attach:unexpected response " + response));
 			}
 		} catch (final IOException e) {
 			setCall(null);
-			reportError(e.getMessage());
+			reportError(e);
 		}
 	}
 	
@@ -506,7 +507,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		} catch (final Exception e) {
 			setCall(null);
 			detach();
-			reportError(e.getMessage());
+			reportError(e);
 		}
 	}
 	
@@ -543,7 +544,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			try {
 				call.execute();
 			} catch (final IOException e) {
-				reportError(e.getMessage());
+				reportError(e);
 			}
 			setCall(null);
 		}
@@ -555,25 +556,16 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		mLongPollCall = null;
 	}
 
-	private final Response<ResponseBody> sendInternal(@NonNull final JSONObject body)
-		throws IOException {
-		
-		final Message message = new Message(mSession, mPlugin, body);
-		if (DEBUG) Log.v(TAG, "sendInternal:" + message);
-		final Call<ResponseBody> call = mJanus.send(mSession.id(), mPlugin.id(), message);
-		setCall(call);
-		return call.execute();
-	}
-
-	private void reportError(final String errorMessage) {
-		Log.e(TAG, errorMessage);
+	private void reportError(@NonNull final Throwable t) {
+		Log.w(TAG, t);
+		cancelCall();
 		try {
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
 					if (roomState != ConnectionState.ERROR) {
 						roomState = ConnectionState.ERROR;
-	//					events.onChannelError(errorMessage);	// FIXME
+						events.onChannelError(t.getMessage());
 					}
 				}
 			});
