@@ -19,7 +19,7 @@ import com.serenegiant.janus.request.Join;
 import com.serenegiant.janus.request.JsepSdp;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Start;
-import com.serenegiant.janus.response.EventJoin;
+import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
@@ -390,7 +390,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		final Call<ResponseBody> call = mJanus.send(
 			mSession.id(),
 			mPlugin.id(),
-			new Message(mSession, mPlugin,
+			new Message(mRoom,
 				new Configure(true, true),
 				new JsepSdp("offer", sdp.description))
 		);
@@ -422,7 +422,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		final Call<ResponseBody> call = mJanus.send(
 			mSession.id(),
 			mPlugin.id(),
-			new Message(mSession, mPlugin,
+			new Message(mRoom,
 				new Start(1234),
 				new JsepSdp("answer", sdp.description))
 		);

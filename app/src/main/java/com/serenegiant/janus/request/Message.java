@@ -2,8 +2,7 @@ package com.serenegiant.janus.request;
 
 import android.support.annotation.NonNull;
 
-import com.serenegiant.janus.response.Plugin;
-import com.serenegiant.janus.response.Session;
+import com.serenegiant.janus.Room;
 
 import java.math.BigInteger;
 
@@ -39,16 +38,15 @@ public class Message {
 		this(session_id, handle_id, body, null);
 	}
 
-	public Message(@NonNull final Session session, @NonNull final Plugin plugin,
-		final Object body) {
+	public Message(@NonNull final Room room, final Object body) {
 
-		this(session.id(), plugin.id(), body, null);
+		this(room.sessionId, room.pluginId, body, null);
 	}
 
-	public Message(@NonNull final Session session, @NonNull final Plugin plugin,
+	public Message(@NonNull final Room room,
 		final Object body, final Object jsep) {
 
-		this(session.id(), plugin.id(), body, jsep);
+		this(room.sessionId, room.pluginId, body, jsep);
 	}
 	
 	@Override
