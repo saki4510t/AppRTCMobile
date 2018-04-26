@@ -15,4 +15,14 @@ public class Join {
 		this.ptype = "publisher";
 		this.display = display;
 	}
+	
+	@Override
+	public String toString() {
+		return "Join{" +
+			"request='" + request + '\'' +
+			", room=" + room +
+			", ptype='" + ptype + '\'' +
+			", display='" + display + '\'' +
+			'}';
+	}
 }

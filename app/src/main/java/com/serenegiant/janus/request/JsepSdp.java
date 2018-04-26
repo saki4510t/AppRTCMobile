@@ -14,4 +14,12 @@ public class JsepSdp {
 		this.type = type;
 		this.sdp = sdp;
 	}
+	
+	@Override
+	public String toString() {
+		return "JsepSdp{" +
+			"type='" + type + '\'' +
+			", sdp='" + sdp + '\'' +
+			'}';
+	}
 }
