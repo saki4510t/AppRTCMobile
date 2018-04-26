@@ -40,6 +40,12 @@ public interface VideoRoom {
 		@Body final Message message);
 
 	@POST("/janus/{session_id}/{plugin_id}")
+	public Call<EventRoom> offer(
+		@Path("session_id") final BigInteger sessionId,
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Message message);
+
+	@POST("/janus/{session_id}/{plugin_id}")
 	public Call<EventRoom> trickle(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
