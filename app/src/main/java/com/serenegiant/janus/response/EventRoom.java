@@ -1,6 +1,6 @@
 package com.serenegiant.janus.response;
 
-import org.json.JSONObject;
+import com.serenegiant.janus.request.JsepSdp;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -10,11 +10,11 @@ public class EventRoom {
 	public final String sender;
 	public final String transaction;
 	public final PluginData plugindata;
-	public final JSONObject jsep;
+	public final JsepSdp jsep;
 	
 	public EventRoom(final String janus, final String sender,
 		final String transaction,
-		final PluginData plugindata, final JSONObject jsep) {
+		final PluginData plugindata, final JsepSdp jsep) {
 		
 		this.janus = janus;
 		this.sender = sender;
@@ -42,24 +42,15 @@ public class EventRoom {
 	}
 	
 	public static class Data {
-		public final String videoroom;
-		public final int room;
-		public final String description;
-		public final BigInteger id;
-		public final BigInteger private_id;
-		public final String[] publishers;
-		
-		public Data(final String videoroom, final int room,
-			final String description,
-			final BigInteger id, final BigInteger private_id,
-			final String[] publishers) {
-			this.videoroom = videoroom;
-			this.room = room;
-			this.description = description;
-			this.id = id;
-			this.private_id = private_id;
-			this.publishers = publishers;
-		}
+		public String videoroom;
+		public int room;
+		public String description;
+		public boolean configured;
+		public String audio_codec;
+		public String video_codec;
+		public BigInteger id;
+		public BigInteger private_id;
+		public String[] publishers;
 		
 		@Override
 		public String toString() {
@@ -67,6 +58,9 @@ public class EventRoom {
 				"videoroom='" + videoroom + '\'' +
 				", room=" + room +
 				", description='" + description + '\'' +
+				", configured=" + configured +
+				", audio_codec='" + audio_codec + '\'' +
+				", video_codec='" + video_codec + '\'' +
 				", id=" + id +
 				", private_id=" + private_id +
 				", publishers=" + Arrays.toString(publishers) +
