@@ -6,7 +6,7 @@ import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
-import com.serenegiant.janus.response.EventJoin;
+import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
@@ -32,13 +32,13 @@ public interface VideoRoom {
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Attach attach);
 	
-	@POST("/janus/{session_id}")
-	public Call<Void> destroy(
+	@POST("/janus/{session_id}/{plugin_id}")
+	public Call<EventRoom> join(
 		@Path("session_id") final BigInteger sessionId,
 		@Body final Destroy destroy);
 
 	@POST("/janus/{session_id}/{plugin_id}")
-	public Call<EventJoin> join(
+	public Call<EventRoom> trickle(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Message message);

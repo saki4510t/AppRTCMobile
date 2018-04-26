@@ -5,14 +5,14 @@ import org.json.JSONObject;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-public class EventJoin {
+public class EventRoom {
 	public final String janus;
 	public final String sender;
 	public final String transaction;
 	public final PluginData plugindata;
 	public final JSONObject jsep;
 	
-	public EventJoin(final String janus, final String sender,
+	public EventRoom(final String janus, final String sender,
 		final String transaction,
 		final PluginData plugindata, final JSONObject jsep) {
 		
@@ -76,7 +76,7 @@ public class EventJoin {
 	
 	@Override
 	public String toString() {
-		return "EventJoin{" +
+		return "EventRoom{" +
 			"janus='" + janus + '\'' +
 			", sender='" + sender + '\'' +
 			", transaction='" + transaction + '\'' +
