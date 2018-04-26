@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;
@@ -26,11 +25,8 @@ import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
-import com.serenegiant.utils.Stacktrace;
 
 import org.appspot.apprtc.AppRTCClient;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
@@ -112,7 +108,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	@Override
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
-		Stacktrace.print();
 		this.connectionParameters = connectionParameters;
 		handler.post(new Runnable() {
 			@Override
@@ -371,7 +366,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			reportError(new RuntimeException("Sending offer SDP in non connected state."));
 			return;
 		}
-		final Call<ResponseBody> call = mJanus.send(
+		final Call<EventRoom> call = mJanus.offer(
 			mSession.id(),
 			mPlugin.id(),
 			new Message(mRoom,
@@ -380,18 +375,74 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		);
 		setCall(call);
 		try {
-			final Response<ResponseBody> response = call.execute();
-			if (DEBUG) Log.v(TAG, "sendOfferSdp:response=" + response
-				+ "\n" + response.body());
+			SessionDescription answerSdp = null;
+			Response<EventRoom> response = call.execute();
+//			if (DEBUG) Log.v(TAG, "sendOfferSdpInternal:response=" + response
+//				+ "\n" + response.body());
+			if (response.isSuccessful() && (response.body() != null)) {
+				final EventRoom offer = response.body();
+				if ("event".equals(offer.janus)) {
+					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
+					answerSdp = new SessionDescription(
+						SessionDescription.Type.fromCanonicalForm("answer"),
+						offer.jsep.sdp);
+				} else if ("ack".equals(offer.janus)
+					|| "keepalive".equals(offer.janus)) {
 
-			// FIXME ここでなんかせなあかん気がする
+					final Call<EventRoom> waitCall = mLongPoll.getRoomEvent(mSession.id());
+					// FIXME これは非同期で呼び出したほうがいいような気がする
+LOOP:				for ( ; ; ) {
+						final Call<EventRoom> c = waitCall.clone();
+						setCall(c);
+						response = c.execute();
+						if (response.isSuccessful() && (response.body() != null)) {
+							final EventRoom event = response.body();
+							if (!TextUtils.isEmpty(event.janus)) {
+								switch (event.janus) {
+								case "ack":
+									continue;
+								case "keepalive":
+									continue;
+								case "event":
+									if (DEBUG) Log.v(TAG, "sendOfferSdpInternal:received answer sdp");
+									answerSdp = new SessionDescription(
+										SessionDescription.Type.fromCanonicalForm("answer"),
+										event.jsep.sdp);
+									break LOOP;
+								default:
+									throw new RuntimeException("unexpected response " + response);
+								}
+							}
+						} else {
+							throw new RuntimeException("unexpected response " + response);
+						}
+					} // end of for
+				} else {
+					throw new RuntimeException("unexpected response " + response);
+				}
+			} else {
+				throw new RuntimeException("failed to send offer sdp");
+			}
+			setCall(null);
 			if (connectionParameters.loopback) {
 				// In loopback mode rename this offer to answer and route it back.
-				final SessionDescription sdpAnswer = new SessionDescription(
-					SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
-				events.onRemoteDescription(sdpAnswer);
+				answerSdp = new SessionDescription(
+					SessionDescription.Type.fromCanonicalForm("answer"),
+					sdp.description);
 			}
-		} catch (final IOException e) {
+			if (answerSdp != null) {
+				final SessionDescription remoteSdp = answerSdp;
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						if (DEBUG) Log.v(TAG, "sendOfferSdpInternal:call onRemoteDescription");
+						events.onRemoteDescription(remoteSdp);
+					}
+				});
+			} else {
+///				throw new RuntimeException("failed to receive answer sdp");
+			}
+		} catch (final Exception e) {
 			setCall(null);
 			reportError(e);
 		}
@@ -414,7 +465,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		setCall(call);
 		try {
 			final Response<ResponseBody> response = call.execute();
-			if (DEBUG) Log.v(TAG, "sendAnswerSdp:response=" + response
+			if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:response=" + response
 				+ "\n" + response.body());
 		} catch (final IOException e) {
 			setCall(null);
@@ -424,6 +475,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 
 	private void sendLocalIceCandidateInternal(final IceCandidate candidate) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateInternal:");
+		if (roomState != ConnectionState.CONNECTED) {
+			if (DEBUG) Log.d(TAG, "already disconnected");
+			return;
+		}
 		final Call<EventRoom> call = mJanus.trickle(
 			mSession.id(),
 			mPlugin.id(),
@@ -431,39 +486,88 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		);
 		setCall(call);
 		try {
-			final Response<EventRoom> response = call.execute();
+			Response<EventRoom> response = call.execute();
 			if (DEBUG) Log.v(TAG, "sendLocalIceCandidateInternal:response=" + response
 				+ "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
 				final EventRoom join = response.body();
-				if ("success".equals(join.janus)) {
-					// 多分ここにはこない, ackが返ってくるはず
+				if ("event".equals(join.janus)) {
+					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
 					// FIXME 正常に処理できた…Roomの情報を更新する
-				} else if ("event".equals(join.janus)) {
-					// 多分ここにはこない, ackが返ってくるはず
-					// FIXME 正常に処理できた…Roomの情報を更新する
-				} else if ("ack".equals(join.janus)) {
-LOOP:				for ( ; ; ) {
-						final Response<ResponseBody> poll = poll();
-						if (poll.isSuccessful() && (poll.body() != null)) {
-							final JSONObject json = new JSONObject(poll.body().string());
-							if (DEBUG) Log.v(TAG, "join:" + json);
-							final String janus = json.optString("janus");
-							if (!TextUtils.isEmpty(janus)) {
-								switch (janus) {
-								case "ack":
-									continue;
-								case "event":
-									// FIXME 正常に処理できた…Roomの情報を更新する
-									break LOOP;
-								default:
-									throw new RuntimeException("unexpected response " + poll);
+					// FIXME removeCandidateを生成する
+				} else if ("ack".equals(join.janus)
+					|| "keepalive".equals(join.janus)) {
+
+					final Call<EventRoom> waitCall = mLongPoll.getRoomEvent(mSession.id());
+					waitCall.enqueue(new Callback<EventRoom>() {
+						@Override
+						public void onResponse(@NonNull final Call<EventRoom> call, @NonNull final Response<EventRoom> response) {
+							setCall(null);
+							if (response.isSuccessful() && (response.body() != null)) {
+								final EventRoom event = response.body();
+								if (!TextUtils.isEmpty(event.janus)) {
+									switch (event.janus) {
+									case "ack":
+										enqueue(waitCall.clone());
+										break;
+									case "keepalive":
+										enqueue(waitCall.clone());
+										break;
+									case "event":
+										// FIXME 正常に処理できた…Roomの情報を更新する
+										IceCandidate remoteCandidate = null;
+										// FIXME removeCandidateを生成する
+										if (remoteCandidate != null) {
+											events.onRemoteIceCandidate(remoteCandidate);
+										}
+										break;
+									default:
+										reportError(new RuntimeException("unexpected response " + response));
+									}
 								}
+							} else if (roomState == ConnectionState.CONNECTED) {
+								// なんかわからんけど期待したのと違うレスポオンスが返ってきた
+								Log.w(TAG, "unexpected response " + response);
+								enqueue(waitCall.clone());
+							} else {
+								reportError(new RuntimeException("unexpected state"));
 							}
-						} else {
-							throw new RuntimeException("unexpected response " + poll);
 						}
-					} // end of for
+						
+						@Override
+						public void onFailure(@NonNull final Call<EventRoom> call, @NonNull final Throwable t) {
+							reportError(t);
+						}
+						
+						private void enqueue(final Call<EventRoom> call) {
+							setCall(call);
+							call.enqueue(this);
+						}
+					});
+//LOOP:				for ( ; ; ) {
+//						final Call<EventRoom> c = waitCall.clone();
+//						setCall(c);
+//						response = c.execute();
+//						if (response.isSuccessful() && (response.body() != null)) {
+//							final EventRoom event = response.body();
+//							if (!TextUtils.isEmpty(event.janus)) {
+//								switch (event.janus) {
+//								case "ack":
+//									continue;
+//								case "keepalive":
+//									continue;
+//								case "event":
+//									// FIXME 正常に処理できた…Roomの情報を更新する
+//									// FIXME removeCandidateを生成する
+//									break LOOP;
+//								default:
+//									throw new RuntimeException("unexpected response " + response);
+//								}
+//							}
+//						} else {
+//							throw new RuntimeException("unexpected response " + response);
+//						}
+//					} // end of for
 				} else {
 					throw new RuntimeException("unexpected response " + response);
 				}
@@ -471,38 +575,15 @@ LOOP:				for ( ; ; ) {
 				throw new RuntimeException("unexpected response " + response);
 			}
 			if (connectionParameters.loopback) {
-				// offer側ではないときは不要？
 				events.onRemoteIceCandidate(candidate);
 			}
-			setCall(null);
-		} catch (final IOException | JSONException e) {
-			setCall(null);
+		} catch (final IOException e) {
+			cancelCall();
 			detach();
 			reportError(e);
 		}
 	}
 	
-	// FIXME 未実装
-//				final JSONObject json = new JSONObject();
-//				jsonPut(json, "type", "candidate");
-//				jsonPut(json, "label", candidate.sdpMLineIndex);
-//				jsonPut(json, "id", candidate.sdpMid);
-//				jsonPut(json, "candidate", candidate.sdp);
-//				if (initiator) {
-//					// Call initiator sends ice candidates to GAE server.
-//					if (roomState != WebSocketRTCClient.ConnectionState.CONNECTED) {
-//						reportError("Sending ICE candidate in non connected state.");
-//						return;
-//					}
-//					sendPostMessage(WebSocketRTCClient.MessageType.MESSAGE, messageUrl, json.toString());
-//					if (connectionParameters.loopback) {
-//						events.onRemoteIceCandidate(candidate);
-//					}
-//				} else {
-//					// Call receiver sends ice candidates to websocket server.
-//					wsClient.send(json.toString());
-//				}
-
 //--------------------------------------------------------------------
 	/**
 	 * long poll asynchronously
@@ -571,6 +652,7 @@ LOOP:				for ( ; ; ) {
 			setCall(null);
 			if (response.isSuccessful() && (response.body() != null)) {
 				mPlugin = response.body();
+				mRoom = new Room(mSession, mPlugin);
 				roomState = ConnectionState.ATTACHED;
 				if (DEBUG) Log.v(TAG, "attach#onResponse:" + mPlugin);
 			} else {
@@ -589,42 +671,44 @@ LOOP:				for ( ; ; ) {
 	private void join() {
 		if (DEBUG) Log.v(TAG, "join:");
 		final Message message = new Message(mRoom,
-			new Join(1234, "android"));
+			new Join(1234/*FIXME*/, "android"));
 		if (DEBUG) Log.v(TAG, "join:" + message);
 		final Call<EventRoom> call = mJanus.join(mSession.id(), mPlugin.id(), message);
 		setCall(call);
 		try {
-			final Response<EventRoom> response = call.execute();
+			Response<EventRoom> response = call.execute();
 			if (DEBUG) Log.v(TAG, "join:response=" + response + "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
 				final EventRoom join = response.body();
-				if ("success".equals(join.janus)) {
-					// 多分ここにはこない, ackが返ってくるはず
-					mRoom = new Room(mSession, mPlugin);
-				} else if ("event".equals(join.janus)) {
-					// 多分ここにはこない, ackが返ってくるはず
-					final Room room = new Room(mSession, mPlugin);
-					mRoom = room;
-				} else if ("ack".equals(join.janus)) {
+				if ("event".equals(join.janus)) {
+					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
+					// FIXME Roomの情報を更新する
+				} else if ("ack".equals(join.janus)
+					|| "keepalive".equals(join.janus)) {
+
+					// FIXME これは非同期で呼び出したほうがいいような気がする
+					final Call<EventRoom> waitCall = mLongPoll.getRoomEvent(mSession.id());
 LOOP:				for ( ; ; ) {
-						final Response<ResponseBody> poll = poll();
-						if (poll.isSuccessful() && (poll.body() != null)) {
-							final JSONObject json = new JSONObject(poll.body().string());
-							if (DEBUG) Log.v(TAG, "join:" + json);
-							final String janus = json.optString("janus");
-							if (!TextUtils.isEmpty(janus)) {
-								switch (janus) {
+						final Call<EventRoom> c = waitCall.clone();
+						setCall(c);
+						response = c.execute();
+						if (response.isSuccessful() && (response.body() != null)) {
+							final EventRoom event = response.body();
+							if (!TextUtils.isEmpty(event.janus)) {
+								switch (event.janus) {
 								case "ack":
 									continue;
+								case "keepalive":
+									continue;
 								case "event":
-									mRoom = new Room(mSession, mPlugin);
+									// FIXME Roomの情報を更新する
 									break LOOP;
 								default:
-									throw new RuntimeException("unexpected response " + poll);
+									throw new RuntimeException("unexpected response " + response);
 								}
 							}
 						} else {
-							throw new RuntimeException("unexpected response " + poll);
+							throw new RuntimeException("unexpected response " + response);
 						}
 					}
 				} else {
@@ -671,6 +755,7 @@ LOOP:				for ( ; ; ) {
 			}
 		}
 		setCall(null);
+		roomState = ConnectionState.CLOSED;
 		mRoom = null;
 		mPlugin = null;
 	}
@@ -781,7 +866,7 @@ LOOP:				for ( ; ; ) {
 		if (DEBUG) Log.v(TAG, "setupRetrofit:" + baseUrl);
 		// JSONのパーサーとしてGsonを使う
 		final Gson gson = new GsonBuilder()
-			.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+//			.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)	// IDENTITY
 			.registerTypeAdapter(Date.class, new DateTypeAdapter())
 			.create();
 		return new Retrofit.Builder()
