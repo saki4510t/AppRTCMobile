@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 import com.serenegiant.apprtcmobile.R;
@@ -11,7 +12,7 @@ import com.serenegiant.dialog.MessageDialogFragment;
 import com.serenegiant.utils.BuildCheck;
 import com.serenegiant.utils.PermissionCheck;
 
-public abstract class BaseActivity extends Activity
+public abstract class BaseActivity extends AppCompatActivity
 	implements MessageDialogFragment.MessageDialogListener {
 	
 	static int ID_PERMISSION_REASON_AUDIO = R.string.permission_audio_reason;

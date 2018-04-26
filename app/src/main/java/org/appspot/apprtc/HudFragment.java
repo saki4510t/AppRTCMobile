@@ -8,8 +8,8 @@ package org.appspot.apprtc;/*
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;

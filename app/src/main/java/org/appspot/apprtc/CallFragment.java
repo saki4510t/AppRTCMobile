@@ -9,8 +9,9 @@ package org.appspot.apprtc;/*
  */
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,8 +54,9 @@ public class CallFragment extends Fragment {
 	
 	@Override
 	public View onCreateView(
-		LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View controlView = inflater.inflate(R.layout.fragment_call, container, false);
+		@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+		final View controlView = inflater.inflate(R.layout.fragment_call, container, false);
 		
 		// Create UI controls.
 		contactView = controlView.findViewById(R.id.contact_name_call);

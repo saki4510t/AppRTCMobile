@@ -469,7 +469,7 @@ public class ConnectActivity extends BaseActivity {
 			Uri uri = Uri.parse(roomUrl);
 			Intent intent = new Intent(this, CallActivity.class);
 			intent.setData(uri);
-//    intent.putExtra(CallActivity.EXTRA_USE_JANUS, true);  // FIXME テスト用
+		    intent.putExtra(CallActivity.EXTRA_USE_JANUS, true);  // FIXME テスト用
 			intent.putExtra(CallActivity.EXTRA_ROOMID, roomId);
 			intent.putExtra(CallActivity.EXTRA_LOOPBACK, loopback);
 			intent.putExtra(CallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
