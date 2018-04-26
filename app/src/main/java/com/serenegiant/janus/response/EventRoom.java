@@ -42,15 +42,33 @@ public class EventRoom {
 	}
 	
 	public static class Data {
-		public String videoroom;
-		public int room;
-		public String description;
-		public boolean configured;
-		public String audio_codec;
-		public String video_codec;
-		public BigInteger id;
-		public BigInteger private_id;
-		public String[] publishers;
+		public final String videoroom;
+		public final int room;
+		public final String description;
+		public final boolean configured;
+		public final String audio_codec;
+		public final String video_codec;
+		public final BigInteger id;
+		public final BigInteger private_id;
+		public Publisher[] publishers;
+		
+		public Data(final String videoroom, final int room,
+			final String description,
+			final boolean configured,
+			final String audio_codec, final String video_codec,
+			final BigInteger id, final BigInteger private_id,
+			final Publisher[] publishers) {
+
+			this.videoroom = videoroom;
+			this.room = room;
+			this.description = description;
+			this.configured = configured;
+			this.audio_codec = audio_codec;
+			this.video_codec = video_codec;
+			this.id = id;
+			this.private_id = private_id;
+			this.publishers = publishers;
+		}
 		
 		@Override
 		public String toString() {
@@ -68,6 +86,26 @@ public class EventRoom {
 		}
 	}
 	
+	public static class Publisher {
+		public final BigInteger id;
+		public final String display;
+		public final String audio_codec;
+		public final String video_codec;
+		public final boolean talking;
+		
+		public Publisher(final BigInteger id,
+			final String display,
+			final String audio_codec, final String video_codec,
+			final boolean talking) {
+
+			this.id = id;
+			this.display = display;
+			this.audio_codec = audio_codec;
+			this.video_codec = video_codec;
+			this.talking = talking;
+		}
+	}
+
 	@Override
 	public String toString() {
 		return "EventRoom{" +
