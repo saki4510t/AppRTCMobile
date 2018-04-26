@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.FieldNamingPolicy;
@@ -19,6 +20,7 @@ import com.serenegiant.janus.request.Join;
 import com.serenegiant.janus.request.JsepSdp;
 import com.serenegiant.janus.request.Message;
 import com.serenegiant.janus.request.Start;
+import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
@@ -27,6 +29,7 @@ import com.serenegiant.utils.HandlerThreadHandler;
 import com.serenegiant.utils.Stacktrace;
 
 import org.appspot.apprtc.AppRTCClient;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
@@ -147,26 +150,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				// FIXME 未実装
-//				final JSONObject json = new JSONObject();
-//				jsonPut(json, "type", "candidate");
-//				jsonPut(json, "label", candidate.sdpMLineIndex);
-//				jsonPut(json, "id", candidate.sdpMid);
-//				jsonPut(json, "candidate", candidate.sdp);
-//				if (initiator) {
-//					// Call initiator sends ice candidates to GAE server.
-//					if (roomState != WebSocketRTCClient.ConnectionState.CONNECTED) {
-//						reportError("Sending ICE candidate in non connected state.");
-//						return;
-//					}
-//					sendPostMessage(WebSocketRTCClient.MessageType.MESSAGE, messageUrl, json.toString());
-//					if (connectionParameters.loopback) {
-//						events.onRemoteIceCandidate(candidate);
-//					}
-//				} else {
-//					// Call receiver sends ice candidates to websocket server.
-//					wsClient.send(json.toString());
-//				}
+				sendLocalIceCandidateInternal(candidate);
 			}
 		});
 	}
@@ -404,13 +388,14 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			if (connectionParameters.loopback) {
 				// In loopback mode rename this offer to answer and route it back.
 				final SessionDescription sdpAnswer = new SessionDescription(
-				SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
+					SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
 				events.onRemoteDescription(sdpAnswer);
 			}
 		} catch (final IOException e) {
 			setCall(null);
 			reportError(e);
 		}
+		setCall(null);
 	}
 	
 	private void sendAnswerSdpInternal(final SessionDescription sdp) {
@@ -436,6 +421,88 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			reportError(e);
 		}
 	}
+
+	private void sendLocalIceCandidateInternal(final IceCandidate candidate) {
+		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateInternal:");
+		final Call<EventRoom> call = mJanus.trickle(
+			mSession.id(),
+			mPlugin.id(),
+			new Trickle(mRoom, candidate)
+		);
+		setCall(call);
+		try {
+			final Response<EventRoom> response = call.execute();
+			if (DEBUG) Log.v(TAG, "sendLocalIceCandidateInternal:response=" + response
+				+ "\n" + response.body());
+			if (response.isSuccessful() && (response.body() != null)) {
+				final EventRoom join = response.body();
+				if ("success".equals(join.janus)) {
+					// 多分ここにはこない, ackが返ってくるはず
+					// FIXME 正常に処理できた…Roomの情報を更新する
+				} else if ("event".equals(join.janus)) {
+					// 多分ここにはこない, ackが返ってくるはず
+					// FIXME 正常に処理できた…Roomの情報を更新する
+				} else if ("ack".equals(join.janus)) {
+LOOP:				for ( ; ; ) {
+						final Response<ResponseBody> poll = poll();
+						if (poll.isSuccessful() && (poll.body() != null)) {
+							final JSONObject json = new JSONObject(poll.body().string());
+							if (DEBUG) Log.v(TAG, "join:" + json);
+							final String janus = json.optString("janus");
+							if (!TextUtils.isEmpty(janus)) {
+								switch (janus) {
+								case "ack":
+									continue;
+								case "event":
+									// FIXME 正常に処理できた…Roomの情報を更新する
+									break LOOP;
+								default:
+									throw new RuntimeException("unexpected response " + poll);
+								}
+							}
+						} else {
+							throw new RuntimeException("unexpected response " + poll);
+						}
+					} // end of for
+				} else {
+					throw new RuntimeException("unexpected response " + response);
+				}
+			} else {
+				throw new RuntimeException("unexpected response " + response);
+			}
+			if (connectionParameters.loopback) {
+				// offer側ではないときは不要？
+				events.onRemoteIceCandidate(candidate);
+			}
+			setCall(null);
+		} catch (final IOException | JSONException e) {
+			setCall(null);
+			detach();
+			reportError(e);
+		}
+	}
+	
+	// FIXME 未実装
+//				final JSONObject json = new JSONObject();
+//				jsonPut(json, "type", "candidate");
+//				jsonPut(json, "label", candidate.sdpMLineIndex);
+//				jsonPut(json, "id", candidate.sdpMid);
+//				jsonPut(json, "candidate", candidate.sdp);
+//				if (initiator) {
+//					// Call initiator sends ice candidates to GAE server.
+//					if (roomState != WebSocketRTCClient.ConnectionState.CONNECTED) {
+//						reportError("Sending ICE candidate in non connected state.");
+//						return;
+//					}
+//					sendPostMessage(WebSocketRTCClient.MessageType.MESSAGE, messageUrl, json.toString());
+//					if (connectionParameters.loopback) {
+//						events.onRemoteIceCandidate(candidate);
+//					}
+//				} else {
+//					// Call receiver sends ice candidates to websocket server.
+//					wsClient.send(json.toString());
+//				}
+
 //--------------------------------------------------------------------
 	/**
 	 * long poll asynchronously
@@ -483,11 +550,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 * @return
 	 * @throws IOException
 	 */
-	private ResponseBody poll() throws IOException {
+	private Response<ResponseBody> poll() throws IOException {
 		if (DEBUG) Log.v(TAG, "poll:");
 		final Call<ResponseBody> call = mLongPoll.getEvent(mSession.id());
 		setCall(call);
-		return call.execute().body();
+		return call.execute();
 	}
 
 	/**
@@ -521,30 +588,52 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 */
 	private void join() {
 		if (DEBUG) Log.v(TAG, "join:");
-		final Message message = new Message(mSession, mPlugin,
+		final Message message = new Message(mRoom,
 			new Join(1234, "android"));
 		if (DEBUG) Log.v(TAG, "join:" + message);
-		final Call<EventJoin> call = mJanus.join(mSession.id(), mPlugin.id(), message);
+		final Call<EventRoom> call = mJanus.join(mSession.id(), mPlugin.id(), message);
 		setCall(call);
 		try {
-			final Response<EventJoin> response = call.execute();
+			final Response<EventRoom> response = call.execute();
 			if (DEBUG) Log.v(TAG, "join:response=" + response + "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
-				final EventJoin join = response.body();
+				final EventRoom join = response.body();
 				if ("success".equals(join.janus)) {
 					// 多分ここにはこない, ackが返ってくるはず
-				} else if ("ack".equals(join.janus)) {
-					final ResponseBody poll = poll();
-					final JSONObject json = new JSONObject(poll.string());
-					if (DEBUG) Log.v(TAG, "join:" + json);
+					mRoom = new Room(mSession, mPlugin);
+				} else if ("event".equals(join.janus)) {
+					// 多分ここにはこない, ackが返ってくるはず
 					final Room room = new Room(mSession, mPlugin);
 					mRoom = room;
+				} else if ("ack".equals(join.janus)) {
+LOOP:				for ( ; ; ) {
+						final Response<ResponseBody> poll = poll();
+						if (poll.isSuccessful() && (poll.body() != null)) {
+							final JSONObject json = new JSONObject(poll.body().string());
+							if (DEBUG) Log.v(TAG, "join:" + json);
+							final String janus = json.optString("janus");
+							if (!TextUtils.isEmpty(janus)) {
+								switch (janus) {
+								case "ack":
+									continue;
+								case "event":
+									mRoom = new Room(mSession, mPlugin);
+									break LOOP;
+								default:
+									throw new RuntimeException("unexpected response " + poll);
+								}
+							}
+						} else {
+							throw new RuntimeException("unexpected response " + poll);
+						}
+					}
 				} else {
 					throw new RuntimeException("unexpected response " + response);
 				}
 			} else {
 				throw new RuntimeException("unexpected response " + response);
 			}
+			setCall(null);
 			roomState = ConnectionState.JOINED;
 		} catch (final Exception e) {
 			setCall(null);

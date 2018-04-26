@@ -6,6 +6,7 @@ import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.request.Detach;
 import com.serenegiant.janus.request.Hangup;
 import com.serenegiant.janus.request.Message;
+import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.Plugin;
 import com.serenegiant.janus.response.ServerInfo;
@@ -35,14 +36,15 @@ public interface VideoRoom {
 	@POST("/janus/{session_id}/{plugin_id}")
 	public Call<EventRoom> join(
 		@Path("session_id") final BigInteger sessionId,
-		@Body final Destroy destroy);
+		@Path("plugin_id") final BigInteger pluginId,
+		@Body final Message message);
 
 	@POST("/janus/{session_id}/{plugin_id}")
 	public Call<EventRoom> trickle(
 		@Path("session_id") final BigInteger sessionId,
 		@Path("plugin_id") final BigInteger pluginId,
-		@Body final Message message);
-
+		@Body final Trickle trickle);
+	
 	@POST("/janus/{session_id}/{plugin_id}")
 	public Call<ResponseBody> send(
 		@Path("session_id") final BigInteger sessionId,
@@ -61,4 +63,8 @@ public interface VideoRoom {
 		@Path("plugin_id") final BigInteger pluginId,
 		@Body final Hangup hangup);
 	
+	@POST("/janus/{session_id}")
+	public Call<Void> destroy(
+		@Path("session_id") final BigInteger sessionId,
+		@Body final Destroy destroy);
 }
