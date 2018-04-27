@@ -1284,6 +1284,7 @@ public class PeerConnectionClient {
 			case GATHERING:
 				break;
 			case COMPLETE:
+				executor.execute(() -> events.onIceCandidate(null));
 				break;
 			default:
 				break;
