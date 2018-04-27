@@ -78,7 +78,17 @@ public class TransactionManager {
 		}
 		return result;
 	}
-	
+
+	/**
+	 * remove specific transaction
+ 	 * @param transaction
+	 */
+	public static void removeTransaction(final String transaction) {
+		synchronized (sTransactions) {
+			sTransactions.remove(transaction);
+		}
+	}
+
 	/**
 	 * clear transaction - callback mapping
 	 */
