@@ -1,6 +1,9 @@
 package com.serenegiant.janus.request;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.serenegiant.janus.TransactionManager;
 
 public class Creator {
 	@NonNull
@@ -8,9 +11,9 @@ public class Creator {
 	@NonNull
 	public final String transaction;
 	
-	public Creator() {
+	public Creator(@Nullable final TransactionManager.TransactionCallback callback) {
 		this.janus = "create";
-		this.transaction = TransactionGenerator.get(12);
+		this.transaction = TransactionManager.get(12, callback);
 	}
 	
 	@Override

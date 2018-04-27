@@ -1,8 +1,10 @@
 package com.serenegiant.janus.request;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.serenegiant.janus.Room;
+import com.serenegiant.janus.TransactionManager;
 
 import org.webrtc.IceCandidate;
 
@@ -22,27 +24,32 @@ public class Trickle {
 
 	public Trickle(@NonNull final BigInteger session_id,
 		@NonNull final BigInteger handle_id,
-		@NonNull final Candidate candidate) {
+		@NonNull final Candidate candidate,
+		@Nullable final TransactionManager.TransactionCallback callback) {
 
 		this.janus = "trickle";
-		this.transaction = TransactionGenerator.get(12);
+		this.transaction = TransactionManager.get(12, callback);
 		this.session_id = session_id;
 		this.handle_id = handle_id;
 		this.candidate = candidate;
 	}
 	
 	public Trickle(@NonNull final Room room,
-	   @NonNull final Candidate candidate) {
+	   @NonNull final Candidate candidate,
+		@Nullable final TransactionManager.TransactionCallback callback) {
 	   
-	   this(room.sessionId, room.pluginId, candidate);
+	   this(room.sessionId, room.pluginId, candidate, callback);
 	}
 	
 	public Trickle(@NonNull final Room room,
-		@NonNull final IceCandidate candidate) {
+		@NonNull final IceCandidate candidate,
+		@Nullable final TransactionManager.TransactionCallback callback) {
+		
 
 		this(room.sessionId, room.pluginId,
 			new Candidate(candidate.sdpMLineIndex,
-				candidate.sdpMid, candidate.sdp));
+				candidate.sdpMid, candidate.sdp),
+			callback);
 	}
 
 	public static class Candidate {

@@ -1,8 +1,10 @@
 package com.serenegiant.janus.request;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.serenegiant.janus.Room;
+import com.serenegiant.janus.TransactionManager;
 
 import java.math.BigInteger;
 
@@ -21,10 +23,11 @@ public class Message {
 	
 	public Message(@NonNull final BigInteger session_id,
 		@NonNull final BigInteger handle_id,
-		final Object body, final Object jsep) {
+		final Object body, final Object jsep,
+		@Nullable final TransactionManager.TransactionCallback callback) {
 
 		this.janus = "message";
-		this.transaction = TransactionGenerator.get(12);
+		this.transaction = TransactionManager.get(12, callback);
 		this.session_id = session_id;
 		this.handle_id = handle_id;
 		this.body = body;
@@ -33,20 +36,23 @@ public class Message {
 
 	public Message(@NonNull final BigInteger session_id,
 		@NonNull final BigInteger handle_id,
-		final Object body) {
+		final Object body,
+		@Nullable final TransactionManager.TransactionCallback callback) {
 
-		this(session_id, handle_id, body, null);
+		this(session_id, handle_id, body, null, callback);
 	}
 
-	public Message(@NonNull final Room room, final Object body) {
+	public Message(@NonNull final Room room, final Object body,
+		@Nullable final TransactionManager.TransactionCallback callback) {
 
-		this(room.sessionId, room.pluginId, body, null);
+		this(room.sessionId, room.pluginId, body, null, callback);
 	}
 
 	public Message(@NonNull final Room room,
-		final Object body, final Object jsep) {
+		final Object body, final Object jsep,
+		@Nullable final TransactionManager.TransactionCallback callback) {
 
-		this(room.sessionId, room.pluginId, body, jsep);
+		this(room.sessionId, room.pluginId, body, jsep, callback);
 	}
 	
 	@Override
