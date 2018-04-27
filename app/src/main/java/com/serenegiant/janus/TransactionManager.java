@@ -43,27 +43,40 @@ public class TransactionManager {
 		return transaction;
 	}
 	
+	/**
+	 * callback listener when app receives transaction message
+	 */
 	public interface TransactionCallback {
-		public boolean onSuccess(final JSONObject object);
+		/**
+		 * usually this is called from from long poll
+		 * @param json
+		 * @return true: handled and removed assignment
+		 */
+		public boolean onReceived(final JSONObject json);
 	}
 	
 	/**
 	 * call callback related to the specific transaction
 	 * @param transaction
 	 * @param json
-	 * @return
+	 * @return true: handled and removed assignment
 	 */
 	public static boolean handleTransaction(
 		@NonNull final String transaction,
 		@NonNull final JSONObject json) {
 		
 		TransactionCallback callback = null;
+		final boolean result;
 		synchronized (sTransactions) {
 			if (sTransactions.containsKey(transaction)) {
-				callback = sTransactions.remove(transaction);
+				callback = sTransactions.get(transaction);
+			}
+			result = callback != null && callback.onReceived(json);
+			if (result) {
+				sTransactions.remove(transaction);
 			}
 		}
-		return callback != null && callback.onSuccess(json);
+		return result;
 	}
 	
 	/**
