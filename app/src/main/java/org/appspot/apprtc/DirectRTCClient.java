@@ -179,6 +179,7 @@ public class DirectRTCClient implements AppRTCClient, TCPChannelClient.TCPChanne
 	
 	@Override
 	public void sendLocalIceCandidate(final IceCandidate candidate) {
+		if (candidate == null) return;
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {

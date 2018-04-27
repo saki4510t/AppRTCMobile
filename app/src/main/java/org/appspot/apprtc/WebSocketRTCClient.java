@@ -248,6 +248,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 	@Override
 	public void sendLocalIceCandidate(final IceCandidate candidate) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:" + candidate);
+		if (candidate == null) return;
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
