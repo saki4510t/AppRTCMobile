@@ -23,6 +23,6 @@ public class Room {
 	
 	@NonNull
 	public String clientId() {
-		return id != null ? id.toString(16) : "";
+		return id != null ? id.toString() : "";
 	}
 }

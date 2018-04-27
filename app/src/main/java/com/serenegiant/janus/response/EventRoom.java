@@ -48,6 +48,8 @@ public class EventRoom {
 		public final boolean configured;
 		public final String audio_codec;
 		public final String video_codec;
+		public final String unpublished;
+		public final String leaving;
 		public final BigInteger id;
 		public final BigInteger private_id;
 		public Publisher[] publishers;
@@ -56,6 +58,8 @@ public class EventRoom {
 			final String description,
 			final boolean configured,
 			final String audio_codec, final String video_codec,
+			final String unpublished,
+			final String leaving,
 			final BigInteger id, final BigInteger private_id,
 			final Publisher[] publishers) {
 
@@ -65,6 +69,8 @@ public class EventRoom {
 			this.configured = configured;
 			this.audio_codec = audio_codec;
 			this.video_codec = video_codec;
+			this.unpublished = unpublished;
+			this.leaving = leaving;
 			this.id = id;
 			this.private_id = private_id;
 			this.publishers = publishers;
