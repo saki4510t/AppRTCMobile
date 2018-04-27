@@ -11,9 +11,9 @@ public class Creator {
 	@NonNull
 	public final String transaction;
 	
-	public Creator(@Nullable final TransactionManager.TransactionCallback callback) {
+	public Creator() {
 		this.janus = "create";
-		this.transaction = TransactionManager.get(12, callback);
+		this.transaction = TransactionManager.get(12, null);
 	}
 	
 	@Override
