@@ -19,7 +19,7 @@ public class Detach {
 	public Detach(@NonNull final BigInteger session_id,
 		@Nullable final TransactionManager.TransactionCallback callback) {
 
-		this.janus = "destroy";
+		this.janus = "detach";
 		this.transaction = TransactionManager.get(12, callback);
 		this.session_id = session_id;
 	}
