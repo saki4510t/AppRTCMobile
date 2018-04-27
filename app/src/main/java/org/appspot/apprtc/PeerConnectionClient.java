@@ -1278,6 +1278,16 @@ public class PeerConnectionClient {
 		@Override
 		public void onIceGatheringChange(PeerConnection.IceGatheringState newState) {
 			Log.d(TAG, "IceGatheringState: " + newState);
+			switch (newState) {
+			case NEW:
+				break;
+			case GATHERING:
+				break;
+			case COMPLETE:
+				break;
+			default:
+				break;
+			}
 		}
 		
 		@Override
