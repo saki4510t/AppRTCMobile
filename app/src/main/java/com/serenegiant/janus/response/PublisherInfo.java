@@ -2,14 +2,14 @@ package com.serenegiant.janus.response;
 
 import java.math.BigInteger;
 
-public class Publisher {
+public class PublisherInfo {
 	public final BigInteger id;
 	public final String display;
 	public final String audio_codec;
 	public final String video_codec;
 	public final boolean talking;
 	
-	public Publisher(final BigInteger id,
+	public PublisherInfo(final BigInteger id,
 		final String display,
 		final String audio_codec, final String video_codec,
 		final boolean talking) {
@@ -31,7 +31,7 @@ public class Publisher {
 
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		final Publisher publisher = (Publisher) o;
+		final PublisherInfo publisher = (PublisherInfo) o;
 		
 		return (id != null) && id.equals(publisher.id);
 	}

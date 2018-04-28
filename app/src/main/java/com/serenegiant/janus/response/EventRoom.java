@@ -52,7 +52,7 @@ public class EventRoom {
 		public final String leaving;
 		public final BigInteger id;
 		public final BigInteger private_id;
-		public Publisher[] publishers;
+		public PublisherInfo[] publishers;
 		
 		public Data(final String videoroom, final int room,
 			final String description,
@@ -61,7 +61,7 @@ public class EventRoom {
 			final String unpublished,
 			final String leaving,
 			final BigInteger id, final BigInteger private_id,
-			final Publisher[] publishers) {
+			final PublisherInfo[] publishers) {
 
 			this.videoroom = videoroom;
 			this.room = room;
