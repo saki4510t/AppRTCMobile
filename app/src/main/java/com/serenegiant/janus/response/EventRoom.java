@@ -92,26 +92,6 @@ public class EventRoom {
 		}
 	}
 	
-	public static class Publisher {
-		public final BigInteger id;
-		public final String display;
-		public final String audio_codec;
-		public final String video_codec;
-		public final boolean talking;
-		
-		public Publisher(final BigInteger id,
-			final String display,
-			final String audio_codec, final String video_codec,
-			final boolean talking) {
-
-			this.id = id;
-			this.display = display;
-			this.audio_codec = audio_codec;
-			this.video_codec = video_codec;
-			this.talking = talking;
-		}
-	}
-
 	@Override
 	public String toString() {
 		return "EventRoom{" +
