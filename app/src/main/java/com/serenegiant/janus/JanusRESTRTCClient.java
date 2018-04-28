@@ -81,8 +81,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
 	private Session mSession;
-//	private Plugin mPlugin;
-//	private Room mRoom;
 
 	public JanusRESTRTCClient(@NonNull final Context context,
 		@NonNull final SignalingEvents events,
@@ -386,46 +384,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		} else {
 			reportError(new IllegalStateException("publisher not found"));
 		}
-//		final Call<EventRoom> call = mJanus.offer(
-//			mSession.id(),
-//			mPlugin.id(),
-//			new Message(mRoom,
-//				new Configure(true, true),
-//				new JsepSdp("offer", sdp.description))
-//		);
-//		addCall(call);
-//		try {
-//			final Response<EventRoom> response = call.execute();
-//			if (DEBUG) Log.v(TAG, "sendOfferSdpInternal:response=" + response
-//				+ "\n" + response.body());
-//			if (response.isSuccessful() && (response.body() != null)) {
-//				removeCall(call);
-//				final EventRoom offer = response.body();
-//				if ("event".equals(offer.janus)) {
-//					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
-//					final SessionDescription answerSdp
-//						= new SessionDescription(
-//						SessionDescription.Type.fromCanonicalForm("answer"),
-//						offer.jsep.sdp);
-//					events.onRemoteDescription(answerSdp);
-//				} else if (!"ack".equals(offer.janus)
-//					&& !"keepalive".equals(offer.janus)) {
-//					throw new RuntimeException("unexpected response " + response);
-//				}
-//				// 実際の待機はlong pollで行う
-//			} else {
-//				throw new RuntimeException("failed to send offer sdp");
-//			}
-//			if (connectionParameters.loopback) {
-//				// In loopback mode rename this offer to answer and route it back.
-//				events.onRemoteDescription(new SessionDescription(
-//					SessionDescription.Type.fromCanonicalForm("answer"),
-//					sdp.description));
-//			}
-//		} catch (final Exception e) {
-//			cancelCall();
-//			reportError(e);
-//		}
 	}
 	
 	private void sendAnswerSdpInternal(final SessionDescription sdp) {
@@ -444,23 +402,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		} else {
 			reportError(new IllegalStateException("publisher not found"));
 		}
-//		final Call<ResponseBody> call = mJanus.send(
-//			mSession.id(),
-//			mPlugin.id(),
-//			new Message(mRoom,
-//				new Start(1234),
-//				new JsepSdp("answer", sdp.description))
-//		);
-//		addCall(call);
-//		try {
-//			final Response<ResponseBody> response = call.execute();
-//			if (DEBUG) Log.v(TAG, "sendAnswerSdpInternal:response=" + response
-//				+ "\n" + response.body());
-//			removeCall(call);
-//		} catch (final IOException e) {
-//			cancelCall();
-//			reportError(e);
-//		}
 	}
 
 	/**
@@ -484,55 +425,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		} else {
 			reportError(new IllegalStateException("there is no publisher"));
 		}
-//		final Call<EventRoom> call;
-//		if (candidate != null) {
-//			call = mJanus.trickle(
-//				mSession.id(),
-//				mPlugin.id(),
-//				new Trickle(mRoom, candidate)
-//			);
-//		} else {
-//			call = mJanus.trickleCompleted(
-//				mSession.id(),
-//				mPlugin.id(),
-//				new TrickleCompleted(mRoom)
-//			);
-//		}
-//		addCall(call);
-//		try {
-//			final Response<EventRoom> response = call.execute();
-//			if (DEBUG) Log.v(TAG, "sendLocalIceCandidateInternal:response=" + response
-//				+ "\n" + response.body());
-//			if (response.isSuccessful() && (response.body() != null)) {
-//				removeCall(call);
-//				final EventRoom join = response.body();
-//				if ("event".equals(join.janus)) {
-//					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
-//					// FIXME 正常に処理できた…Roomの情報を更新する
-//					IceCandidate remoteCandidate = null;
-//					// FIXME removeCandidateを生成する
-//					if (remoteCandidate != null) {
-//						events.onRemoteIceCandidate(remoteCandidate);
-//					} else {
-//						// FIXME remoteCandidateがなかった時
-//					}
-//				} else if (!"ack".equals(join.janus)
-//					&& !"keepalive".equals(join.janus)) {
-//
-//					throw new RuntimeException("unexpected response " + response);
-//				}
-//				// 実際の待機はlong pollで行う
-//			} else {
-//				throw new RuntimeException("unexpected response " + response);
-//			}
-//			if ((candidate != null) && (connectionParameters.loopback)) {
-//				events.onRemoteIceCandidate(candidate);
-//			}
-//		} catch (final IOException e) {
-//			cancelCall();
-//			detach();
-//			reportError(e);
-//		}
 	}
 	
 //--------------------------------------------------------------------
@@ -562,7 +454,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 									= new JanusPlugin.Publisher(
 										mJanus, mSession, mJanusPluginCallback);
 								publisher.attach();
-//								attach();
 							}
 						});
 					} else {
@@ -583,104 +474,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		});
 	}
 
-//	/**
-//	 * attach to VideoRoom plugin
-//	 */
-//	private void attach() {
-//		if (DEBUG) Log.v(TAG, "attach:");
-//		final Attach attach = new Attach(mSession, "janus.plugin.videoroom");
-//		final Call<Plugin> call = mJanus.attach(mSession.id(), attach);
-//		addCall(call);
-//		call.enqueue(new Callback<Plugin>() {
-//			@Override
-//			public void onResponse(@NonNull final Call<Plugin> call,
-//				@NonNull final Response<Plugin> response) {
-//
-//				if (response.isSuccessful() && (response.body() != null)) {
-//					removeCall(call);
-//					mPlugin = response.body();
-//					mRoom = new Room(mSession, mPlugin);
-//					mConnectionState = ConnectionState.ATTACHED;
-//					// プラグインにアタッチできた＼(^o^)／
-//					if (DEBUG) Log.v(TAG, "attach#onResponse:" + mRoom);
-//					// ルームへjoin
-//					handler.post(new Runnable() {
-//						@Override
-//						public void run() {
-//							join();
-//						}
-//					});
-//				} else {
-//					reportError(new RuntimeException("unexpected response:" + response));
-//				}
-//			}
-//
-//			@Override
-//			public void onFailure(@NonNull final Call<Plugin> call,
-//				@NonNull final Throwable t) {
-//
-//				reportError(t);
-//			}
-//		});
-//	}
-//
-//	/**
-//	 * join Room
-//	 * @throws IOException
-//	 */
-//	private void join() {
-//		if (DEBUG) Log.v(TAG, "join:");
-//		final Message message = new Message(mRoom,
-//			new Join(1234/*FIXME*/, Build.MODEL));
-//		if (DEBUG) Log.v(TAG, "join:" + message);
-//		final Call<EventRoom> call = mJanus.join(mSession.id(), mPlugin.id(), message);
-//		addCall(call);
-//		try {
-//			final Response<EventRoom> response = call.execute();
-//			if (DEBUG) Log.v(TAG, "join:response=" + response + "\n" + response.body());
-//			if (response.isSuccessful() && (response.body() != null)) {
-//				removeCall(call);
-//				final EventRoom join = response.body();
-//				longPoll();
-//				if ("event".equals(join.janus)) {
-//					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
-//					handleOnJoin(join);
-//				} else if (!"ack".equals(join.janus)
-//					&& !"keepalive".equals(join.janus)) {
-//
-//					throw new RuntimeException("unexpected response:" + response);
-//				}
-//			} else {
-//				throw new RuntimeException("unexpected response:" + response);
-//			}
-//		} catch (final Exception e) {
-//			cancelCall();
-//			detach();
-//			reportError(e);
-//		}
-//	}
-//
-//	/**
-//	 * detach from VideoRoom plugin
-//	 */
+	/**
+	 * detach from VideoRoom plugin
+	 */
 	private void detach() {
 		if (DEBUG) Log.v(TAG, "detach:");
-//		if ((mConnectionState == ConnectionState.CONNECTED)
-//			|| (mConnectionState == ConnectionState.ATTACHED)
-//			|| (mPlugin != null)) {
-//
-//			cancelCall();
-//			final Call<Void> call = mJanus.detach(mSession.id(), mPlugin.id(), new Detach(mSession));
-//			addCall(call);
-//			try {
-//				call.execute();
-//			} catch (final IOException e) {
-//				if (DEBUG) Log.w(TAG, e);
-//			}
-//			removeCall(call);
-//		}
-//		mRoom = null;
-//		mPlugin = null;
 		cancelCall();
 		mConnectionState = ConnectionState.CLOSED;
 		synchronized (mAttachedPlugins) {
@@ -711,8 +509,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			}
 			removeCall(call);
 		}
-//		mRoom = null;
-//		mPlugin = null;
 		mSession = null;
 		mServerInfo = null;
 		mConnectionState = ConnectionState.CLOSED;
@@ -895,6 +691,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 * プラグインイベントの処理
 	 * @param body
 	 */
+	@Deprecated
 	private void handlePluginEvent(final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + body);
 		final Gson gson = new Gson();
@@ -944,6 +741,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 	}
 	
+	@Deprecated
 	private void handleOnJoin(final EventRoom room) {
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた
@@ -958,6 +756,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		events.onConnectedToRoom(params);
 	}
 
+	@Deprecated
 	private void handleWebRTCEvent(final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handleWebRTCEvent:" + body);
 		switch (body.optString("janus")) {
