@@ -13,6 +13,7 @@ import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.response.EventRoom;
+import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
@@ -59,9 +60,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private static enum ConnectionState {
 		UNINITIALIZED,
 		READY,	// janus-gateway server is ready to access
-		NEW,
-		ATTACHED,
-		JOINED,
 		CONNECTED,
 		CLOSED,
 		ERROR }
@@ -83,7 +81,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private ConnectionState mConnectionState;
 	private ServerInfo mServerInfo;
 	private Session mSession;
-	private SessionDescription mLocalSdp;
 //	private Plugin mPlugin;
 //	private Room mRoom;
 
@@ -130,7 +127,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	@Override
 	public void sendOfferSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
-		mLocalSdp = sdp;
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
@@ -366,8 +362,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private void disconnectFromRoomInternal() {
 		if (DEBUG) Log.v(TAG, "disconnectFromRoomInternal:state=" + mConnectionState);
 		cancelCall();
-		if ((mConnectionState == ConnectionState.CONNECTED)
-			|| (mConnectionState == ConnectionState.JOINED)) {
+		if ((mConnectionState == ConnectionState.CONNECTED)) {
 
 			if (DEBUG) Log.d(TAG, "Closing room.");
 			detach();
@@ -480,9 +475,12 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 		final JanusPlugin publisher;
 		synchronized (mAttachedPlugins) {
-			publisher = mAttachedPlugins.containsKey(BigInteger.ZERO) ? mAttachedPlugins.get(BigInteger.ZERO) : null;
+			publisher = mAttachedPlugins.containsKey(BigInteger.ZERO)
+				? mAttachedPlugins.get(BigInteger.ZERO) : null;
 		}
-		if (publisher != null) {
+		if (publisher instanceof JanusPlugin.Publisher) {
+			((JanusPlugin.Publisher) publisher).sendLocalIceCandidate(candidate,
+				connectionParameters.loopback);
 		} else {
 			reportError(new IllegalStateException("there is no publisher"));
 		}
@@ -681,9 +679,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 //			}
 //			removeCall(call);
 //		}
-//		mConnectionState = ConnectionState.CLOSED;
 //		mRoom = null;
 //		mPlugin = null;
+		cancelCall();
+		mConnectionState = ConnectionState.CLOSED;
 		synchronized (mAttachedPlugins) {
 			for (final Map.Entry<BigInteger, JanusPlugin> entry:
 				mAttachedPlugins.entrySet()) {
@@ -735,8 +734,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 
 			if (DEBUG) Log.v(TAG, "onJoin:" + plugin);
 			if (plugin instanceof JanusPlugin.Publisher) {
-				handleOnJoin(room);
+				mConnectionState = ConnectionState.CONNECTED;
+				handleOnJoin(room);	// FIXME publisherの時はhandleJoin呼んじゃダメかも
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
+				handleOnJoin(room);
 			}
 		}
 		
@@ -760,6 +761,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:" + plugin
 				+ "\n" + sdp);
+			events.onRemoteDescription(sdp);
 		}
 		
 		@Override
@@ -795,8 +797,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				removeCall(call);
 				if ((mConnectionState != ConnectionState.ERROR)
 					&& (mConnectionState != ConnectionState.CLOSED)
-					&& (mConnectionState != ConnectionState.UNINITIALIZED)
-					&& (mConnectionState != ConnectionState.NEW)) {
+					&& (mConnectionState != ConnectionState.UNINITIALIZED)) {
 
 					try {
 						handler.post(new Runnable() {
@@ -925,7 +926,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				if ((event.plugindata != null)
 					&& (event.plugindata.data != null)) {
 
-					final EventRoom.Publisher[] publishers = event.plugindata.data.publishers;
+					final PublisherInfo[] publishers = event.plugindata.data.publishers;
 					final int n = publishers != null ? publishers.length : 0;
 					// FIXME EventRoom#plugindata#data#publishersが変化した時になんかせなあかんのかも
 					// FIXME Subscriberの生成＆attach処理が必要
@@ -946,10 +947,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private void handleOnJoin(final EventRoom room) {
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた
-		mConnectionState = ConnectionState.JOINED;
 		// FIXME Roomの情報を更新する
 		// FIXME ここから先はなにしたらええんやろ？この時点でCONNECTEDでええん？
-		mConnectionState = ConnectionState.CONNECTED;
 		// 適当にパラメータ作って呼び出してみる
 		final SignalingParameters params = new SignalingParameters(
 			mCallback.getIceServers(this),

@@ -18,6 +18,7 @@ import com.serenegiant.janus.request.Trickle;
 import com.serenegiant.janus.request.TrickleCompleted;
 import com.serenegiant.janus.response.EventRoom;
 import com.serenegiant.janus.response.Plugin;
+import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.Session;
 
 import org.json.JSONObject;
@@ -38,10 +39,31 @@ import retrofit2.Response;
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = JanusPlugin.class.getSimpleName();
 	
+	/**
+	 * callback interface for JanusPlugin
+	 */
+	/*package*/ interface JanusPluginCallback {
+		public void onAttach(@NonNull final JanusPlugin plugin);
+		public void onJoin(@NonNull final JanusPlugin plugin, final EventRoom room);
+		public void onDetach(@NonNull final JanusPlugin plugin);
+		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
+			final IceCandidate remoteCandidate);
+		/**
+		 * リモート側のSessionDescriptionを受信した時
+		 * これを呼び出すと通話中の状態になる
+		 * @param plugin
+		 * @param sdp
+		 */
+		public void onRemoteDescription(@NonNull final JanusPlugin plugin,
+			final SessionDescription sdp);
+
+		public void onError(@NonNull final JanusPlugin plugin,
+			@NonNull final Throwable t);
+	}
+	
 	private static enum RoomState {
 		UNINITIALIZED,
 		ATTACHED,
-		JOINED,
 		CONNECTED,
 		CLOSED,
 		ERROR }
@@ -57,22 +79,8 @@ import retrofit2.Response;
 	protected RoomState mRoomState = RoomState.UNINITIALIZED;
 	protected Plugin mPlugin;
 	protected Room mRoom;
-	
-	/**
-	 * callback interface for JanusPlugin
-	 */
-	/*package*/ interface JanusPluginCallback {
-		public void onAttach(@NonNull final JanusPlugin plugin);
-		public void onJoin(@NonNull final JanusPlugin plugin, final EventRoom room);
-		public void onDetach(@NonNull final JanusPlugin plugin);
-		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
-			final IceCandidate remoteCandidate);
-		public void onRemoteDescription(@NonNull final JanusPlugin plugin,
-			final SessionDescription sdp);
-
-		public void onError(@NonNull final JanusPlugin plugin,
-			@NonNull final Throwable t);
-	}
+	protected SessionDescription mLocalSdp;
+	protected SessionDescription mRemoteSdp;
 	
 	/**
 	 * constructor
@@ -229,6 +237,7 @@ import retrofit2.Response;
 				+ "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
 				removeCall(call);
+				this.mLocalSdp = sdp;
 				final EventRoom offer = response.body();
 				if ("event".equals(offer.janus)) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
@@ -284,11 +293,16 @@ import retrofit2.Response;
 	}
 
 //--------------------------------------------------------------------------------
+// Long pollによるメッセージ受信時の処理関係
+	/**
+	 * TransactionManagerからのコールバックインターフェースの実装
+	 */
 	protected final TransactionManager.TransactionCallback
 		mTransactionCallback = new TransactionManager.TransactionCallback() {
 	
 		/**
 		 * usually this is called from from long poll
+		 * 実際の処理は上位クラスの#onReceivedへ移譲
 		 * @param json
 		 * @return
 		 */
@@ -297,7 +311,12 @@ import retrofit2.Response;
 			return JanusPlugin.this.onReceived(json);
 		}
 	};
-
+	
+	/**
+	 * TransactionManagerからのコールバックの実際の処理
+	 * @param body
+	 * @return
+	 */
 	protected boolean onReceived(final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "onReceived:" + body);
 		final String janus = body.optString("janus");
@@ -329,8 +348,12 @@ import retrofit2.Response;
 		}
 		return false;	// true: handled
 	}
-//--------------------------------------------------------------------------------
 
+	/**
+	 * プラグイン向けのイベントメッセージの処理
+	 * @param body
+	 * @return
+	 */
 	protected boolean handlePluginEvent(final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + body);
 		final Gson gson = new Gson();
@@ -342,33 +365,25 @@ import retrofit2.Response;
 			switch (eventType) {
 			case "joined":
 				handleOnJoin(event);
-				return true;
+				return true;	// true: 処理済み
 			case "event":
+				// FIXME publisherの時はここではonRemoteDescriptionを呼び出さない
 				if (event.jsep != null) {
 					if ("answer".equals(event.jsep.type)) {
 						final SessionDescription answerSdp
 							= new SessionDescription(
 								SessionDescription.Type.fromCanonicalForm("answer"),
 								event.jsep.sdp);
-						mCallback.onRemoteDescription(this, answerSdp);
-						return true;
+						return onRemoteDescription(answerSdp);
 					} else if ("offer".equals(event.jsep.type)) {
 						final SessionDescription offerSdp
 							= new SessionDescription(
 								SessionDescription.Type.fromCanonicalForm("offer"),
 								event.jsep.sdp);
-						mCallback.onRemoteDescription(this, offerSdp);
-						return true;
+						return onRemoteDescription(offerSdp);
 					}
 				}
-				if ((event.plugindata != null)
-					&& (event.plugindata.data != null)) {
-
-					final EventRoom.Publisher[] publishers = event.plugindata.data.publishers;
-					final int n = publishers != null ? publishers.length : 0;
-					// FIXME EventRoom#plugindata#data#publishersが変化した時になんかせなあかんのかも
-					// FIXME Subscriberの生成＆attach処理が必要
-				}
+				checkPublishers(event);
 				// FIXME remote candidateの処理がどっかに要る気がするんだけど
 //				IceCandidate remoteCandidate = null;
 //				// FIXME removeCandidateを生成する
@@ -383,18 +398,54 @@ import retrofit2.Response;
 		return false;	// true: handled
 	}
 	
+	/**
+	 * リモート側のSessionDescriptionの準備ができたときの処理
+	 * @param sdp
+	 * @return
+	 */
+	protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
+		mRemoteSdp = sdp;
+		return true;	// FIXME 本当はfalseなんだけど今はJanusRESTRTCClient側の処理が残っているのでtrueを返す
+	}
+
+	/**
+	 * WebRTC関係のイベント受信時の処理
+	 * @param body
+	 * @return
+	 */
 	protected boolean handleWebRTCEvent(final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handleWebRTCEvent:" + body);
 		return false;	// true: handled
 	}
 
+	/**
+	 * Join完了イベント受信時の処理
+	 * @param room
+	 */
 	protected void handleOnJoin(final EventRoom room) {
 		if (DEBUG) Log.v(TAG, "handleOnJoin:" + room);
-		// FIXME 未実装
 		mRoomState = RoomState.CONNECTED;
+		// FIXME 未実装
+		mRoom.publisherId = room.plugindata.data.id;
+		checkPublishers(room);
+
 		mCallback.onJoin(this, room);
 	}
 
+	protected void checkPublishers(final EventRoom room) {
+		if ((room.plugindata != null)
+			&& (room.plugindata.data != null)) {
+
+			@NonNull
+			final List<PublisherInfo> changed = mRoom.updatePublisher(room.plugindata.data.publishers);
+			if (!changed.isEmpty()) {
+				if (DEBUG) Log.v(TAG, "");
+				// FIXME EventRoom#plugindata#data#publishersが変化した時になんかせなあかんのかも
+				// FIXME Subscriberの生成＆attach処理が必要
+			}
+		}
+	}
+//--------------------------------------------------------------------------------
 	/**
 	 * set call that is currently in progress
 	 * @param call
@@ -447,6 +498,7 @@ import retrofit2.Response;
 
 //================================================================================
 	/*package*/ static class Publisher extends JanusPlugin {
+
 		/**
 		 * コンストラクタ
 		 * @param session
@@ -525,7 +577,7 @@ import retrofit2.Response;
 	
 	/*package*/ static class Subscriber extends JanusPlugin {
 		/*package*/ final BigInteger feederId;
-		private final SessionDescription sdp;
+
 		/**
 		 * コンストラクタ
 		 * @param session
@@ -539,7 +591,7 @@ import retrofit2.Response;
 			super(videoRoom, session, callback);
 			if (DEBUG) Log.v(TAG, "Subscriber:");
 			this.feederId = feederId;
-			this.sdp = sdp;
+			this.mLocalSdp = sdp;
 		}
 		
 		@NonNull
@@ -550,6 +602,14 @@ import retrofit2.Response;
 
 		protected BigInteger getFeedId() {
 			return feederId;
+		}
+
+		@Override
+		protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
+			super.onRemoteDescription(sdp);
+			// 通話準備完了
+			mCallback.onRemoteDescription(this, sdp);
+			return true;
 		}
 
 	}
