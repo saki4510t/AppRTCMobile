@@ -265,7 +265,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			mCurrentCalls.clear();
 		}
 	}
-	
+
+//--------------------------------------------------------------------------------
 	private void addPlugin(@NonNull final BigInteger key, @NonNull final JanusPlugin plugin) {
 		synchronized (mAttachedPlugins) {
 			mAttachedPlugins.put(key, plugin);
@@ -287,6 +288,15 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		});
 	}
 
+	private JanusPlugin getPlugin(@Nullable final BigInteger key) {
+		synchronized (mAttachedPlugins) {
+			if ((key != null) && mAttachedPlugins.containsKey(key)) {
+				return mAttachedPlugins.get(key);
+			}
+		}
+		return null;
+	}
+//--------------------------------------------------------------------------------
 	/**
 	 * notify error
 	 * @param t
@@ -453,6 +463,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 								final JanusPlugin.Publisher publisher
 									= new JanusPlugin.Publisher(
 										mJanus, mSession, mJanusPluginCallback);
+								// ローカルのPublisherは1つしかないので検索の手間を省くために
+								// BigInteger.ZEROをキーとして登録しておく。
+								// attachした時点で実際のプラグインのidでも登録される
+								addPlugin(BigInteger.ZERO, publisher);
 								publisher.attach();
 							}
 						});
@@ -485,7 +499,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			for (final Map.Entry<BigInteger, JanusPlugin> entry:
 				mAttachedPlugins.entrySet()) {
 
-				entry.getValue().detach();
+				// key === BigInteger.ZEROはPublisherのキーの別名で、
+				// 本当のidでも別途登録されているはずなのでここでは呼ばない
+				if (!BigInteger.ZERO.equals(entry.getKey())) {
+					entry.getValue().detach();
+				}
 			}
 			mAttachedPlugins.clear();
 		}
@@ -568,10 +586,16 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 	};
 
+	/**
+	 * TransactionManagerからのコールバック
+	 */
 	private final TransactionManager.TransactionCallback mTransactionCallback
 		= new TransactionManager.TransactionCallback() {
 		@Override
-		public boolean onReceived(final JSONObject json) {
+		public boolean onReceived(@NonNull final String transaction,
+			final JSONObject json) {
+
+			if (DEBUG) Log.v(TAG, "onReceived:" + json);
 			return false;
 		}
 	};
@@ -648,10 +672,13 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				final String transaction = body.optString("transaction");
 				if (!TextUtils.isEmpty(transaction)) {
 					// トランザクションコールバックでの処理を試みる
+					// WebRTCイベントはトランザクションがない
 					if (TransactionManager.handleTransaction(transaction, body)) {
 						return;	// 処理済みの時はここで終了
 					}
 				}
+
+				if (DEBUG) Log.v(TAG, "handleLongPoll:unhandled transaction");
 				final String janus = body.optString("janus");
 				if (!TextUtils.isEmpty(janus)) {
 					switch (janus) {
@@ -691,11 +718,19 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	 * プラグインイベントの処理
 	 * @param body
 	 */
-	@Deprecated
 	private void handlePluginEvent(final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + body);
 		final Gson gson = new Gson();
 		final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
+
+		// Senderフィールドは対象のプラグインのidなので対応するプラグインを探して実行を試みる
+		final JanusPlugin plugin = getPlugin(event.sender);
+		if (plugin != null) {
+			if (DEBUG) Log.v(TAG, "handlePluginEvent: try handle message on plugin specified by sender");
+			if (plugin.onReceived("", body)) return;
+		}
+		
+		if (DEBUG) Log.v(TAG, "handlePluginEvent: unhandled event");
 		final String eventType = (event.plugindata != null) && (event.plugindata.data != null)
 			? event.plugindata.data.videoroom : null;
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + event);
@@ -741,7 +776,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 	}
 	
-	@Deprecated
 	private void handleOnJoin(final EventRoom room) {
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた

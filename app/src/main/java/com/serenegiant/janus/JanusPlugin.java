@@ -324,6 +324,7 @@ import retrofit2.Response;
 
 		if (DEBUG) Log.v(TAG, "onReceived:" + body);
 		final String janus = body.optString("janus");
+		boolean handled = false;
 		if (!TextUtils.isEmpty(janus)) {
 			switch (janus) {
 			case "ack":
@@ -335,13 +336,15 @@ import retrofit2.Response;
 				break;
 			case "event":
 				// プラグインイベント
-				return handlePluginEvent(body);
+				handled = handlePluginEvent(body);
+				break;
 			case "media":
 			case "webrtcup":
 			case "slowlink":
 			case "hangup":
 				// event for WebRTC
-				return handleWebRTCEvent(body);
+				handled = handleWebRTCEvent(body);
+				break;
 			case "error":
 				reportError(new RuntimeException("error response " + body));
 				return true;
@@ -350,7 +353,11 @@ import retrofit2.Response;
 				break;
 			}
 		}
-		return false;	// true: handled
+		if (handled) {
+			// FIXME ここで削除してしまっていいいかどうか要確認
+			TransactionManager.removeTransaction(transaction);
+		}
+		return handled;	// true: handled
 	}
 
 	/**
@@ -362,6 +369,8 @@ import retrofit2.Response;
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + body);
 		final Gson gson = new Gson();
 		final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
+		// XXX このsenderはPublisherとして接続したときのVideoRoomプラグインのidらしい
+		final BigInteger sender = event.sender;
 		final String eventType = (event.plugindata != null) && (event.plugindata.data != null)
 			? event.plugindata.data.videoroom : null;
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + event);
@@ -408,6 +417,7 @@ import retrofit2.Response;
 	 * @return
 	 */
 	protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
+		if (DEBUG) Log.v(TAG, "onRemoteDescription:");
 		mRemoteSdp = sdp;
 		return true;	// FIXME 本当はfalseなんだけど今はJanusRESTRTCClient側の処理が残っているのでtrueを返す
 	}
@@ -437,6 +447,7 @@ import retrofit2.Response;
 	}
 
 	protected void checkPublishers(final EventRoom room) {
+		if (DEBUG) Log.v(TAG, "checkPublishers:");
 		if ((room.plugindata != null)
 			&& (room.plugindata.data != null)) {
 
@@ -515,18 +526,13 @@ import retrofit2.Response;
 			if (DEBUG) Log.v(TAG, "Publisher:");
 		}
 		
+		@NonNull
 		@Override
-		public BigInteger id() {
-			return BigInteger.ZERO;
+		protected String getPType() {
+			return "publisher";
 		}
 	
-	@NonNull
-	@Override
-	protected String getPType() {
-		return "publisher";
-	}
-	
-	public void sendLocalIceCandidate(final IceCandidate candidate, final boolean isLoopback) {
+		public void sendLocalIceCandidate(final IceCandidate candidate, final boolean isLoopback) {
 			final Call<EventRoom> call;
 			if (candidate != null) {
 				call = mVideoRoom.trickle(
