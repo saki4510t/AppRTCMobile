@@ -49,7 +49,7 @@ public class EventRoom {
 		public final String audio_codec;
 		public final String video_codec;
 		public final String unpublished;
-		public final String leaving;
+		public final BigInteger leaving;
 		public final BigInteger id;
 		public final BigInteger private_id;
 		public PublisherInfo[] publishers;
@@ -59,7 +59,7 @@ public class EventRoom {
 			final boolean configured,
 			final String audio_codec, final String video_codec,
 			final String unpublished,
-			final String leaving,
+			final BigInteger leaving,
 			final BigInteger id, final BigInteger private_id,
 			final PublisherInfo[] publishers) {
 
