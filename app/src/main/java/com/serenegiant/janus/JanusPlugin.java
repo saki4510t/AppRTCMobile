@@ -377,38 +377,54 @@ import retrofit2.Response;
 		if (!TextUtils.isEmpty(eventType)) {
 			switch (eventType) {
 			case "joined":
-				handleOnJoin(event);
-				return true;	// true: 処理済み
+				return handlePluginEventJoined(event);
 			case "event":
-				// FIXME publisherの時はここではonRemoteDescriptionを呼び出さない
-				if (event.jsep != null) {
-					if ("answer".equals(event.jsep.type)) {
-						final SessionDescription answerSdp
-							= new SessionDescription(
-								SessionDescription.Type.fromCanonicalForm("answer"),
-								event.jsep.sdp);
-						return onRemoteDescription(answerSdp);
-					} else if ("offer".equals(event.jsep.type)) {
-						final SessionDescription offerSdp
-							= new SessionDescription(
-								SessionDescription.Type.fromCanonicalForm("offer"),
-								event.jsep.sdp);
-						return onRemoteDescription(offerSdp);
-					}
-				}
-				checkPublishers(event);
-				// FIXME remote candidateの処理がどっかに要る気がするんだけど
-//				IceCandidate remoteCandidate = null;
-//				// FIXME removeCandidateを生成する
-//				if (remoteCandidate != null) {
-//					events.onRemoteIceCandidate(remoteCandidate);
-//				} else {
-//					// FIXME remoteCandidateがなかった時
-//				}
-				break;
+				return handlePluginEventEvent(event);
 			}
 		}
 		return false;	// true: handled
+	}
+	
+	/**
+	 * eventTypeが"joined"のときの処理
+	 * @param event
+	 * @return
+	 */
+	protected boolean handlePluginEventJoined(@NonNull final EventRoom event) {
+		handleOnJoin(event);
+		return true;	// true: 処理済み
+	}
+	
+	/**
+	 * eventTypeが"event"のときの処理
+	 * @param event
+	 * @return
+	 */
+	protected boolean handlePluginEventEvent(@NonNull final EventRoom event) {
+		if (event.jsep != null) {
+			if ("answer".equals(event.jsep.type)) {
+				final SessionDescription answerSdp
+					= new SessionDescription(
+						SessionDescription.Type.fromCanonicalForm("answer"),
+						event.jsep.sdp);
+				return onRemoteDescription(answerSdp);
+			} else if ("offer".equals(event.jsep.type)) {
+				final SessionDescription offerSdp
+					= new SessionDescription(
+						SessionDescription.Type.fromCanonicalForm("offer"),
+						event.jsep.sdp);
+				return onRemoteDescription(offerSdp);
+			}
+		}
+		// FIXME remote candidateの処理がどっかに要る気がするんだけど
+//		IceCandidate remoteCandidate = null;
+//		// FIXME removeCandidateを生成する
+//		if (remoteCandidate != null) {
+//			events.onRemoteIceCandidate(remoteCandidate);
+//		} else {
+//			// FIXME remoteCandidateがなかった時
+//		}
+		return true;	// true: 処理済み
 	}
 	
 	/**
@@ -454,7 +470,7 @@ import retrofit2.Response;
 			@NonNull
 			final List<PublisherInfo> changed = mRoom.updatePublisher(room.plugindata.data.publishers);
 			if (!changed.isEmpty()) {
-				if (DEBUG) Log.v(TAG, "");
+				if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed");
 				// FIXME EventRoom#plugindata#data#publishersが変化した時になんかせなあかんのかも
 				// FIXME Subscriberの生成＆attach処理が必要
 			}
@@ -530,6 +546,13 @@ import retrofit2.Response;
 		@Override
 		protected String getPType() {
 			return "publisher";
+		}
+	
+		@Override
+		protected boolean handlePluginEventEvent(@NonNull final EventRoom event) {
+			super.handlePluginEventEvent(event);
+			checkPublishers(event);
+			return true;
 		}
 	
 		public void sendLocalIceCandidate(final IceCandidate candidate, final boolean isLoopback) {
