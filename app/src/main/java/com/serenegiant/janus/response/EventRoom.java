@@ -7,12 +7,12 @@ import java.util.Arrays;
 
 public class EventRoom {
 	public final String janus;
-	public final String sender;
+	public final BigInteger sender;
 	public final String transaction;
 	public final PluginData plugindata;
 	public final JsepSdp jsep;
 	
-	public EventRoom(final String janus, final String sender,
+	public EventRoom(final String janus, final BigInteger sender,
 		final String transaction,
 		final PluginData plugindata, final JsepSdp jsep) {
 		
