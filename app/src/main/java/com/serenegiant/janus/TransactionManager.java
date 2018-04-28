@@ -49,21 +49,23 @@ public class TransactionManager {
 	public interface TransactionCallback {
 		/**
 		 * usually this is called from from long poll
-		 * @param json
+		 * @param transaction
+		 * @param body
 		 * @return true: handled, if return true, assignment will be removed.
 		 */
-		public boolean onReceived(final JSONObject json);
+		public boolean onReceived(@NonNull final String transaction,
+			final JSONObject body);
 	}
 	
 	/**
 	 * call callback related to the specific transaction
 	 * @param transaction
-	 * @param json
-	 * @return true: handled and removed assignment
+	 * @param body
+	 * @return true: handled
 	 */
 	public static boolean handleTransaction(
 		@NonNull final String transaction,
-		@NonNull final JSONObject json) {
+		@NonNull final JSONObject body) {
 		
 		TransactionCallback callback = null;
 		final boolean result;
@@ -71,10 +73,7 @@ public class TransactionManager {
 			if (sTransactions.containsKey(transaction)) {
 				callback = sTransactions.get(transaction);
 			}
-			result = callback != null && callback.onReceived(json);
-			if (result) {
-				sTransactions.remove(transaction);
-			}
+			result = callback != null && callback.onReceived(transaction, body);
 		}
 		return result;
 	}

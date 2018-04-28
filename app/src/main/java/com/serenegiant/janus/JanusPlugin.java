@@ -303,12 +303,14 @@ import retrofit2.Response;
 		/**
 		 * usually this is called from from long poll
 		 * 実際の処理は上位クラスの#onReceivedへ移譲
-		 * @param json
+		 * @param body
 		 * @return
 		 */
 		@Override
-		public boolean onReceived(final JSONObject json) {
-			return JanusPlugin.this.onReceived(json);
+		public boolean onReceived(@NonNull final String transaction,
+			 final JSONObject body) {
+
+			return JanusPlugin.this.onReceived(transaction, body);
 		}
 	};
 	
@@ -317,7 +319,9 @@ import retrofit2.Response;
 	 * @param body
 	 * @return
 	 */
-	protected boolean onReceived(final JSONObject body) {
+	protected boolean onReceived(@NonNull final String transaction,
+		final JSONObject body) {
+
 		if (DEBUG) Log.v(TAG, "onReceived:" + body);
 		final String janus = body.optString("janus");
 		if (!TextUtils.isEmpty(janus)) {
