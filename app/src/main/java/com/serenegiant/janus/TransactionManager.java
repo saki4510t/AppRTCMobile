@@ -50,7 +50,7 @@ public class TransactionManager {
 		/**
 		 * usually this is called from from long poll
 		 * @param json
-		 * @return true: handled and removed assignment
+		 * @return true: handled, if return true, assignment will be removed.
 		 */
 		public boolean onReceived(final JSONObject json);
 	}
