@@ -1368,12 +1368,12 @@ public class PeerConnectionClient {
           // local SDP, then after receiving answer set remote SDP.
           if (peerConnection.getRemoteDescription() == null) {
             // We've just set our local SDP so time to send it.
-            Log.d(TAG, "Local SDP set succesfully");
+            Log.d(TAG, "Local SDP set successfully");
             events.onLocalDescription(localSdp);
           } else {
             // We've just set remote description, so drain remote
             // and send local ICE candidates.
-            Log.d(TAG, "Remote SDP set succesfully");
+            Log.d(TAG, "Remote SDP set successfully");
             drainCandidates();
           }
         } else {
@@ -1382,13 +1382,13 @@ public class PeerConnectionClient {
           if (peerConnection.getLocalDescription() != null) {
             // We've just set our local SDP so time to send it, drain
             // remote and send local ICE candidates.
-            Log.d(TAG, "Local SDP set succesfully");
+            Log.d(TAG, "Local SDP set successfully");
             events.onLocalDescription(localSdp);
             drainCandidates();
           } else {
             // We've just set remote SDP - do nothing for now -
             // answer will be created soon.
-            Log.d(TAG, "Remote SDP set succesfully");
+            Log.d(TAG, "Remote SDP set successfully");
           }
         }
       });
