@@ -1299,10 +1299,12 @@ public class PeerConnectionClient {
 		
 		@Override
 		public void onAddStream(final MediaStream stream) {
+			Log.d(TAG, "onAddStream:" + stream);
 		}
 		
 		@Override
 		public void onRemoveStream(final MediaStream stream) {
+			Log.d(TAG, "onRemoveStream:" + stream);
 		}
 		
 		@Override
