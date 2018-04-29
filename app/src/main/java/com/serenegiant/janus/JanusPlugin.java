@@ -630,7 +630,7 @@ import retrofit2.Response;
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
 			super.onRemoteDescription(sdp);
 //			// 通話準備完了
-			mCallback.onRemoteDescription(this, sdp);
+//			mCallback.onRemoteDescription(this, sdp);
 			return true;
 		}
 	
@@ -680,7 +680,7 @@ import retrofit2.Response;
 			@NonNull final SessionDescription remoteSdp) {
 
 			super(videoRoom, session, callback);
-			if (DEBUG) Log.v(TAG, "Subscriber:local=" + localSdp + "\nremote=" + remoteSdp);
+			if (DEBUG) Log.v(TAG, "Subscriber:local=" + localSdp + ",remote=" + remoteSdp);
 			this.feederId = feederId;
 			this.mLocalSdp = localSdp;
 			this.mRemoteSdp = remoteSdp;
@@ -698,13 +698,15 @@ import retrofit2.Response;
 
 		@Override
 		protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
-			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
+			if (DEBUG) Log.v(TAG, "onRemoteDescription:\n" + sdp.description);
+			if (DEBUG) Log.v(TAG, "onRemoteDescription:local:\n" + mLocalSdp.description);
+			if (DEBUG) Log.v(TAG, "onRemoteDescription:remote:\n" + mRemoteSdp.description);
 //			super.onRemoteDescription(sdp);
 			if (sdp.type == SessionDescription.Type.OFFER) {
 				sendAnswerSdp(mLocalSdp, false);
 			}
 //			// 通話準備完了
-//			mCallback.onRemoteDescription(this, mLocalSdp);
+			mCallback.onRemoteDescription(this, mRemoteSdp);
 			return true;
 		}
 

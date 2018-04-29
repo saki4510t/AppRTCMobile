@@ -574,14 +574,14 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			if (plugin instanceof JanusPlugin.Publisher) {
 				events.onRemoteDescription(sdp);
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
-//				if (sdp.type == SessionDescription.Type.ANSWER) {
-//					events.onRemoteDescription(sdp);
-//				} else {
-//					final SessionDescription answerSdp
-//						= new SessionDescription(SessionDescription.Type.ANSWER,
-//							sdp.description);
-//					events.onRemoteDescription(sdp);
-//				}
+				if (sdp.type == SessionDescription.Type.ANSWER) {
+					events.onRemoteDescription(sdp);
+				} else {
+					final SessionDescription answerSdp
+						= new SessionDescription(SessionDescription.Type.ANSWER,
+							sdp.description);
+					events.onRemoteDescription(sdp);
+				}
 			}
 		}
 		
