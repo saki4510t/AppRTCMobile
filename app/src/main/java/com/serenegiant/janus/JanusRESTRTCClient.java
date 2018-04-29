@@ -114,33 +114,24 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	public void connectToRoom(final RoomConnectionParameters connectionParameters) {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
 		this.connectionParameters = connectionParameters;
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
+		handler.post(() -> {
 				connectToRoomInternal();
-			}
 		});
 	}
 	
 	@Override
 	public void sendOfferSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
+		handler.post(() -> {
 				sendOfferSdpInternal(sdp);
-			}
 		});
 	}
 	
 	@Override
 	public void sendAnswerSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
+		handler.post(() -> {
 				sendAnswerSdpInternal(sdp);
-			}
 		});
 	}
 	
@@ -149,11 +140,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
 		if (candidate != null) {
 			handler.removeCallbacks(mTrySendTrickleCompletedTask);
-			handler.post(new Runnable() {
-				@Override
-				public void run() {
+			handler.post(() -> {
 					sendLocalIceCandidateInternal(candidate);
-				}
 			});
 			handler.postDelayed(mTrySendTrickleCompletedTask, 50);
 		} else {
@@ -172,9 +160,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	@Override
 	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
+		handler.post(() -> {
 				// FIXME 未実装
 //				final JSONObject json = new JSONObject();
 //				jsonPut(json, "type", "remove-candidates");
@@ -197,7 +183,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 //					// Call receiver sends ice candidates to websocket server.
 //					wsClient.send(json.toString());
 //				}
-			}
 		});
 	}
 	
@@ -205,16 +190,13 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	public void disconnectFromRoom() {
 		if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
 		cancelCall();
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
+		handler.post(() -> {
 				disconnectFromRoomInternal();
 				try {
 					handler.getLooper().quit();
 				} catch (final Exception e) {
 					if (DEBUG) Log.w(TAG, e);
 				}
-			}
 		});
 	}
 
@@ -278,24 +260,18 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			? BigInteger.ZERO
 			: ((JanusPlugin.Subscriber)plugin).feederId;
 		
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
+		handler.post(() -> {
 				synchronized (mAttachedPlugins) {
 					mAttachedPlugins.remove(key);
 				}
-			}
 		});
 	}
 
 	private void removePlugin(@NonNull final BigInteger key) {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
+		handler.post(() -> {
 				synchronized (mAttachedPlugins) {
 					mAttachedPlugins.remove(key);
 				}
-			}
 		});
 	}
 
@@ -316,14 +292,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		Log.w(TAG, t);
 		cancelCall();
 		try {
-			handler.post(new Runnable() {
-				@Override
-				public void run() {
+			handler.post(() -> {
 					if (mConnectionState != ConnectionState.ERROR) {
 						mConnectionState = ConnectionState.ERROR;
 						events.onChannelError(t.getMessage());
 					}
-				}
 			});
 		} catch (final Exception e) {
 			// ignore, will be already released.
@@ -343,11 +316,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		mLongPoll = setupRetrofit(
 			setupHttpClient(HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
 			baseUrl).create(LongPoll.class);
-					handler.post(new Runnable() {
-						@Override
-						public void run() {
+		handler.post(() -> {
 				requestServerInfo();
-			}
 		});
 	}
 
@@ -439,11 +409,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					removeCall(call);
 					mServerInfo = response.body();
 					if (DEBUG) Log.v(TAG, "requestServerInfo:success");
-					handler.post(new Runnable() {
-						@Override
-						public void run() {
+					handler.post(() -> {
 							createSession();
-						}
 					});
 				} else {
 					reportError(new RuntimeException("unexpected response:" + response));
@@ -477,9 +444,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 						// セッションを生成できた＼(^o^)／
 						if (DEBUG) Log.v(TAG, "createSession#onResponse:" + mSession);
 						// パブリッシャーをVideoRoomプラグインにアタッチ
-						handler.post(new Runnable() {
-							@Override
-							public void run() {
+						handler.post(() -> {
 								longPoll();
 								final JanusPlugin.Publisher publisher
 									= new JanusPlugin.Publisher(
@@ -489,7 +454,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 								// attachした時点で実際のプラグインのidでも登録される
 								addPlugin(BigInteger.ZERO, publisher);
 								publisher.attach();
-							}
 						});
 					} else {
 						mSession = null;
@@ -641,11 +605,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					&& (mConnectionState != ConnectionState.UNINITIALIZED)) {
 
 					try {
-						handler.post(new Runnable() {
-							@Override
-							public void run() {
+						handler.post(() -> {
 								handleLongPoll(call, response);
-							}
 						});
 						recall(call);
 //						longPoll();

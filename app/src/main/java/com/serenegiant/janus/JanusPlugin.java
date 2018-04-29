@@ -126,11 +126,8 @@ import retrofit2.Response;
 					TransactionManager.removeTransaction(attach.transaction);
 					mCallback.onAttach(JanusPlugin.this);
 					// ルームへjoin
-					handler.post(new Runnable() {
-						@Override
-						public void run() {
+						handler.post(() -> {
 							join();
-						}
 					});
 				} else {
 					reportError(new RuntimeException("unexpected response:" + response));
