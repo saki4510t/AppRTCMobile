@@ -343,34 +343,10 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		mLongPoll = setupRetrofit(
 			setupHttpClient(HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
 			baseUrl).create(LongPoll.class);
-		// Janus-gatewayサーバー情報を取得
-		final Call<ServerInfo> call = mJanus.getInfo();
-		addCall(call);
-		call.enqueue(new Callback<ServerInfo>() {
-			@Override
-			public void onResponse(@NonNull final Call<ServerInfo> call,
-				@NonNull final Response<ServerInfo> response) {
-			
-				if (response.isSuccessful() && (response.body() != null)) {
-					removeCall(call);
-					mServerInfo = response.body();
-					if (DEBUG) Log.v(TAG, "connectToRoomInternal#onResponse:" + mServerInfo);
 					handler.post(new Runnable() {
 						@Override
 						public void run() {
-							createSession();
-						}
-					});
-				} else {
-					reportError(new RuntimeException("unexpected response:" + response));
-				}
-			}
-			
-			@Override
-			public void onFailure(@NonNull final Call<ServerInfo> call,
-				@NonNull final Throwable t) {
-
-				reportError(t);
+				requestServerInfo();
 			}
 		});
 	}
@@ -449,6 +425,40 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	}
 	
 //--------------------------------------------------------------------
+	private void requestServerInfo() {
+		if (DEBUG) Log.v(TAG, "requestServerInfo:");
+		// Janus-gatewayサーバー情報を取得
+		final Call<ServerInfo> call = mJanus.getInfo();
+		addCall(call);
+		call.enqueue(new Callback<ServerInfo>() {
+			@Override
+			public void onResponse(@NonNull final Call<ServerInfo> call,
+				@NonNull final Response<ServerInfo> response) {
+			
+				if (response.isSuccessful() && (response.body() != null)) {
+					removeCall(call);
+					mServerInfo = response.body();
+					if (DEBUG) Log.v(TAG, "requestServerInfo:success");
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							createSession();
+						}
+					});
+				} else {
+					reportError(new RuntimeException("unexpected response:" + response));
+				}
+			}
+			
+			@Override
+			public void onFailure(@NonNull final Call<ServerInfo> call,
+				@NonNull final Throwable t) {
+
+				reportError(t);
+			}
+		});
+	}
+	
 	private void createSession() {
 		if (DEBUG) Log.v(TAG, "createSession:");
 		// サーバー情報を取得できたらセッションを生成
