@@ -10,6 +10,7 @@ import com.serenegiant.janus.response.Session;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Room {
@@ -45,6 +46,16 @@ public class Room {
 		this.pluginId = plugin.id();
 	}
 	
+	/**
+	 * 現在保持しているPublisherInfoリストのコピーを返す
+	 * @return
+	 */
+	public List<PublisherInfo> getPublishers() {
+		synchronized (this.publishers) {
+			return new ArrayList<>(this.publishers);
+		}
+	}
+
 	/**
 	 * Publisherをセット
 	 * @param newPublishers
