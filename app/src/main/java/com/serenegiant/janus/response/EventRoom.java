@@ -46,6 +46,7 @@ public class EventRoom {
 		public final int room;
 		public final String description;
 		public final boolean configured;
+		public final boolean started;
 		public final String audio_codec;
 		public final String video_codec;
 		public final String unpublished;
@@ -56,7 +57,7 @@ public class EventRoom {
 		
 		public Data(final String videoroom, final int room,
 			final String description,
-			final boolean configured,
+			final boolean configured, final boolean started,
 			final String audio_codec, final String video_codec,
 			final String unpublished,
 			final BigInteger leaving,
@@ -67,6 +68,7 @@ public class EventRoom {
 			this.room = room;
 			this.description = description;
 			this.configured = configured;
+			this.started = started;
 			this.audio_codec = audio_codec;
 			this.video_codec = video_codec;
 			this.unpublished = unpublished;
