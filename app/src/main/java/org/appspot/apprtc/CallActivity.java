@@ -991,6 +991,11 @@ public class CallActivity extends BaseActivity
 		}
 	
 		@Override
+		public void onSignalingChange(final PeerConnection.SignalingState newState) {
+			if (DEBUG) Log.v(TAG, "onSignalingChange:newState=" + newState);
+		}
+		
+		@Override
 		public void onIceConnected() {
 			if (DEBUG) Log.v(TAG, "onIceConnected:");
 			final long delta = System.currentTimeMillis() - callStartedTimeMs;

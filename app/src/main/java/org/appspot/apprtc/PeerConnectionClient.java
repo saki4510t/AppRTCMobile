@@ -288,6 +288,7 @@ public class PeerConnectionClient {
 		 */
 		void onIceCandidatesRemoved(final IceCandidate[] candidates);
 		
+		void onSignalingChange(PeerConnection.SignalingState newState);
 		/**
 		 * Callback fired once connection is established (IceConnectionState is
 		 * CONNECTED).
@@ -1258,7 +1259,7 @@ public class PeerConnectionClient {
 		
 		@Override
 		public void onSignalingChange(PeerConnection.SignalingState newState) {
-			Log.d(TAG, "SignalingState: " + newState);
+			executor.execute(() -> events.onSignalingChange(newState));
 		}
 		
 		@Override
