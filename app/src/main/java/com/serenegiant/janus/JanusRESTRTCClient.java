@@ -288,6 +288,17 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		});
 	}
 
+	private void removePlugin(@NonNull final BigInteger key) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				synchronized (mAttachedPlugins) {
+					mAttachedPlugins.remove(key);
+				}
+			}
+		});
+	}
+
 	private JanusPlugin getPlugin(@Nullable final BigInteger key) {
 		synchronized (mAttachedPlugins) {
 			if ((key != null) && mAttachedPlugins.containsKey(key)) {
