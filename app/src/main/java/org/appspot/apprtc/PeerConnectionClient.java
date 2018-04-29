@@ -1266,13 +1266,13 @@ public class PeerConnectionClient {
 		
 		@Override
 		public void onSignalingChange(PeerConnection.SignalingState newState) {
-			if (DEBUG) Log.v(TAG, "onSignalingChange:");
+			if (DEBUG) Log.v(TAG, "onSignalingChange:" + newState);
 			executor.execute(() -> events.onSignalingChange(newState));
 		}
 		
 		@Override
 		public void onIceConnectionChange(final PeerConnection.IceConnectionState newState) {
-			if (DEBUG) Log.v(TAG, "onIceConnectionChange:");
+			if (DEBUG) Log.v(TAG, "onIceConnectionChange:" + newState);
 			executor.execute(() -> {
 				if (DEBUG) Log.d(TAG, "IceConnectionState: " + newState);
 				if (newState == IceConnectionState.CONNECTED) {
