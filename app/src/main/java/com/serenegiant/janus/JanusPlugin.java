@@ -102,6 +102,13 @@ import retrofit2.Response;
 		return mPlugin != null ? mPlugin.id() : null;
 	}
 	
+	@NonNull
+	protected abstract String getPType();
+
+	protected BigInteger getFeedId() {
+		return null;
+	}
+
 	/**
 	 * attach to VideoRoom plugin
 	 */
@@ -109,7 +116,7 @@ import retrofit2.Response;
 		if (DEBUG) Log.v(TAG, "attach:");
 		final Attach attach = new Attach(mSession,
 			"janus.plugin.videoroom",
-			mTransactionCallback);
+			null);
 		final Call<Plugin> call = mVideoRoom.attach(mSession.id(), attach);
 		addCall(call);
 		call.enqueue(new Callback<Plugin>() {
@@ -119,17 +126,21 @@ import retrofit2.Response;
 
 				if (response.isSuccessful() && (response.body() != null)) {
 					removeCall(call);
-					mPlugin = response.body();
-					mRoom = new Room(mSession, mPlugin);
-					mRoomState = RoomState.ATTACHED;
-					// プラグインにアタッチできた＼(^o^)／
-					if (DEBUG) Log.v(TAG, "attach#onResponse:" + mRoom);
-					TransactionManager.removeTransaction(attach.transaction);
-					mCallback.onAttach(JanusPlugin.this);
-					// ルームへjoin
+					final Plugin plugin = response.body();
+					if ("success".equals(plugin.janus)) {
+						mPlugin = plugin;
+						mRoom = new Room(mSession, mPlugin);
+						mRoomState = RoomState.ATTACHED;
+						// プラグインにアタッチできた＼(^o^)／
+						if (DEBUG) Log.v(TAG, "attach:success");
+						mCallback.onAttach(JanusPlugin.this);
+						// ルームへjoin
 						handler.post(() -> {
 							join();
-					});
+						});
+					} else {
+						reportError(new RuntimeException("unexpected response:" + response));
+					}
 				} else {
 					reportError(new RuntimeException("unexpected response:" + response));
 				}
@@ -144,15 +155,8 @@ import retrofit2.Response;
 		});
 	}
 	
-	@NonNull
-	protected abstract String getPType();
-
-	protected BigInteger getFeedId() {
-		return null;
-	}
-
 	/**
-	 * join Room
+	 * join to Room
 	 * @throws IOException
 	 */
 	/*package*/ void join() {
@@ -165,24 +169,23 @@ import retrofit2.Response;
 		addCall(call);
 		try {
 			final Response<EventRoom> response = call.execute();
-			if (DEBUG) Log.v(TAG, "join:response=" + response + "\n" + response.body());
 			if (response.isSuccessful() && (response.body() != null)) {
 				removeCall(call);
 				final EventRoom join = response.body();
 				if ("event".equals(join.janus)) {
 					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
-					handleOnJoin(join);
-					TransactionManager.removeTransaction(message.transaction);
+					handlePluginEventJoined(message.transaction, join);
 				} else if (!"ack".equals(join.janus)
 					&& !"keepalive".equals(join.janus)) {
 
-					TransactionManager.removeTransaction(message.transaction);
 					throw new RuntimeException("unexpected response:" + response);
 				}
+				// 実際の応答はlong pollで待機
 			} else {
 				throw new RuntimeException("unexpected response:" + response);
 			}
 		} catch (final Exception e) {
+			TransactionManager.removeTransaction(message.transaction);
 			cancelCall();
 			detach();
 			reportError(e);
@@ -290,6 +293,59 @@ import retrofit2.Response;
 		}
 	}
 
+	public void sendLocalIceCandidate(final IceCandidate candidate, final boolean isLoopback) {
+		if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:");
+		final Call<EventRoom> call;
+		if (candidate != null) {
+			call = mVideoRoom.trickle(
+				mSession.id(),
+				mPlugin.id(),
+				new Trickle(mRoom, candidate, mTransactionCallback)
+			);
+		} else {
+			call = mVideoRoom.trickleCompleted(
+				mSession.id(),
+				mPlugin.id(),
+				new TrickleCompleted(mRoom, mTransactionCallback)
+			);
+		}
+		addCall(call);
+		try {
+			final Response<EventRoom> response = call.execute();
+//				if (DEBUG) Log.v(TAG, "sendLocalIceCandidate:response=" + response
+//					+ "\n" + response.body());
+			if (response.isSuccessful() && (response.body() != null)) {
+				removeCall(call);
+				final EventRoom join = response.body();
+				if ("event".equals(join.janus)) {
+					if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
+//					// FIXME 正常に処理できた…Roomの情報を更新する
+//					IceCandidate remoteCandidate = null;
+//					// FIXME removeCandidateを生成する
+//					if (remoteCandidate != null) {
+//						mCallback.onRemoteIceCandidate(this, remoteCandidate);
+//					} else {
+//						// FIXME remoteCandidateがなかった時
+//					}
+				} else if (!"ack".equals(join.janus)
+					&& !"keepalive".equals(join.janus)) {
+
+					throw new RuntimeException("unexpected response " + response);
+				}
+				// 実際の待機はlong pollで行う
+			} else {
+				throw new RuntimeException("unexpected response " + response);
+			}
+			if ((candidate != null) && isLoopback) {
+				mCallback.onRemoteIceCandidate(this, candidate);
+			}
+		} catch (final IOException e) {
+			cancelCall();
+			detach();
+			reportError(e);
+		}
+	}
+
 //--------------------------------------------------------------------------------
 // Long pollによるメッセージ受信時の処理関係
 	/**
@@ -320,40 +376,38 @@ import retrofit2.Response;
 	protected boolean onReceived(@NonNull final String transaction,
 		final JSONObject body) {
 
-		if (DEBUG) Log.v(TAG, "onReceived:" + body);
+		if (DEBUG) Log.v(TAG, "onReceived:");
 		final String janus = body.optString("janus");
 		boolean handled = false;
 		if (!TextUtils.isEmpty(janus)) {
 			switch (janus) {
 			case "ack":
 				// do nothing
-				break;
+				return true;
 			case "keepalive":
 				// サーバー側がタイムアウト(30秒？)した時は{"janus": "keepalive"}が来る
 				// do nothing
-				break;
+				return true;
 			case "event":
 				// プラグインイベント
-				handled = handlePluginEvent(body);
+				handled = handlePluginEvent(transaction, body);
 				break;
 			case "media":
 			case "webrtcup":
 			case "slowlink":
 			case "hangup":
 				// event for WebRTC
-				handled = handleWebRTCEvent(body);
+				handled = handleWebRTCEvent(transaction, body);
 				break;
 			case "error":
-				reportError(new RuntimeException("error response " + body));
+				reportError(new RuntimeException("error response\n" + body));
 				return true;
 			default:
-				Log.d(TAG, "handleLongPoll:unknown event:" + body);
+				Log.d(TAG, "handleLongPoll:unknown event\n" + body);
 				break;
 			}
-		}
-		if (handled) {
-			// FIXME ここで削除してしまっていいいかどうか要確認
-			TransactionManager.removeTransaction(transaction);
+		} else {
+			Log.d(TAG, "handleLongPoll:unexpected response\n" + body);
 		}
 		return handled;	// true: handled
 	}
@@ -363,8 +417,10 @@ import retrofit2.Response;
 	 * @param body
 	 * @return
 	 */
-	protected boolean handlePluginEvent(final JSONObject body) {
-		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + body);
+	protected boolean handlePluginEvent(@NonNull final String transaction,
+		final JSONObject body) {
+
+		if (DEBUG) Log.v(TAG, "handlePluginEvent:");
 		final Gson gson = new Gson();
 		final EventRoom event = gson.fromJson(body.toString(), EventRoom.class);
 		// XXX このsenderはPublisherとして接続したときのVideoRoomプラグインのidらしい
@@ -374,54 +430,94 @@ import retrofit2.Response;
 		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + event);
 		if (!TextUtils.isEmpty(eventType)) {
 			switch (eventType) {
+			case "attached":
+				return handlePluginEventAttached(transaction, event);
 			case "joined":
-				return handlePluginEventJoined(event);
+				return handlePluginEventJoined(transaction, event);
 			case "event":
-				return handlePluginEventEvent(event);
+				return handlePluginEventEvent(transaction, event);
 			}
 		}
 		return false;	// true: handled
 	}
 	
 	/**
-	 * eventTypeが"joined"のときの処理
-	 * @param event
+	 * eventTypeが"attached"のときの処理
+	 * Subscriberがリモート側へjoinした時のレスポンス
+	 * @param room
 	 * @return
 	 */
-	protected boolean handlePluginEventJoined(@NonNull final EventRoom event) {
-		handleOnJoin(event);
-		return true;	// true: 処理済み
-	}
-	
-	/**
-	 * eventTypeが"event"のときの処理
-	 * @param event
-	 * @return
-	 */
-	protected boolean handlePluginEventEvent(@NonNull final EventRoom event) {
-		if (event.jsep != null) {
-			if ("answer".equals(event.jsep.type)) {
+	protected boolean handlePluginEventAttached(@NonNull final String transaction,
+		@NonNull final EventRoom room) {
+
+		if (DEBUG) Log.v(TAG, "handlePluginEventAttached:");
+		// FIXME これが来たときはofferが一緒に来ているはずなのでanswerを送り返さないといけない
+		if (room.jsep != null) {
+			if ("answer".equals(room.jsep.type)) {
+				if (DEBUG) Log.v(TAG, "handlePluginEventAttached:answer");
+				// Janus-gatewayの相手している時にたぶんこれは来ない
 				final SessionDescription answerSdp
 					= new SessionDescription(
 						SessionDescription.Type.fromCanonicalForm("answer"),
-						event.jsep.sdp);
+					room.jsep.sdp);
 				return onRemoteDescription(answerSdp);
-			} else if ("offer".equals(event.jsep.type)) {
+			} else if ("offer".equals(room.jsep.type)) {
+				if (DEBUG) Log.v(TAG, "handlePluginEventAttached:offer");
+				// Janus-gatewayの相手している時はたぶんいつもこっち
+				final SessionDescription sdp
+					= new SessionDescription(
+						SessionDescription.Type.fromCanonicalForm("offer"),
+					room.jsep.sdp);
+				return onRemoteDescription(sdp);
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * eventTypeが"joined"のときの処理
+	 * @param room
+	 * @return
+	 */
+	protected boolean handlePluginEventJoined(@NonNull final String transaction,
+		@NonNull final EventRoom room) {
+
+		if (DEBUG) Log.v(TAG, "handlePluginEventJoined:");
+		mRoomState = RoomState.CONNECTED;
+		mRoom.publisherId = room.plugindata.data.id;
+		onJoin(room);
+		return true;	// true: 処理済み
+	}
+	
+	protected void onJoin(@NonNull final EventRoom room) {
+		if (DEBUG) Log.v(TAG, "onJoin:");
+		mCallback.onJoin(this, room);
+	}
+
+	/**
+	 * eventTypeが"event"のときの処理
+	 * @param room
+	 * @return
+	 */
+	protected boolean handlePluginEventEvent(@NonNull final String transaction,
+		@NonNull final EventRoom room) {
+
+		if (DEBUG) Log.v(TAG, "handlePluginEventEvent:");
+		if (room.jsep != null) {
+			if ("answer".equals(room.jsep.type)) {
+				final SessionDescription answerSdp
+					= new SessionDescription(
+						SessionDescription.Type.fromCanonicalForm("answer"),
+					room.jsep.sdp);
+				return onRemoteDescription(answerSdp);
+			} else if ("offer".equals(room.jsep.type)) {
 				final SessionDescription offerSdp
 					= new SessionDescription(
 						SessionDescription.Type.fromCanonicalForm("offer"),
-						event.jsep.sdp);
+					room.jsep.sdp);
 				return onRemoteDescription(offerSdp);
 			}
 		}
-		// FIXME remote candidateの処理がどっかに要る気がするんだけど
-//		IceCandidate remoteCandidate = null;
-//		// FIXME removeCandidateを生成する
-//		if (remoteCandidate != null) {
-//			events.onRemoteIceCandidate(remoteCandidate);
-//		} else {
-//			// FIXME remoteCandidateがなかった時
-//		}
 		return true;	// true: 処理済み
 	}
 	
@@ -431,9 +527,9 @@ import retrofit2.Response;
 	 * @return
 	 */
 	protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
-		if (DEBUG) Log.v(TAG, "onRemoteDescription:");
+		if (DEBUG) Log.v(TAG, "onRemoteDescription:" + sdp);
 		mRemoteSdp = sdp;
-		return true;	// FIXME 本当はfalseなんだけど今はJanusRESTRTCClient側の処理が残っているのでtrueを返す
+		return true;
 	}
 
 	/**
@@ -441,40 +537,14 @@ import retrofit2.Response;
 	 * @param body
 	 * @return
 	 */
-	protected boolean handleWebRTCEvent(final JSONObject body) {
+	protected boolean handleWebRTCEvent(@NonNull final String transaction,
+		final JSONObject body) {
+
 		if (DEBUG) Log.v(TAG, "handleWebRTCEvent:" + body);
 		return false;	// true: handled
 	}
 
-	/**
-	 * Join完了イベント受信時の処理
-	 * @param room
-	 */
-	protected void handleOnJoin(final EventRoom room) {
-		if (DEBUG) Log.v(TAG, "handleOnJoin:" + room);
-		mRoomState = RoomState.CONNECTED;
-		// FIXME 未実装
-		mRoom.publisherId = room.plugindata.data.id;
-		checkPublishers(room);
-
-		mCallback.onJoin(this, room);
-	}
-
-	protected void checkPublishers(final EventRoom room) {
-		if (DEBUG) Log.v(TAG, "checkPublishers:");
-		if ((room.plugindata != null)
-			&& (room.plugindata.data != null)) {
-
-			@NonNull
-			final List<PublisherInfo> changed = mRoom.updatePublisher(room.plugindata.data.publishers);
-			if (!changed.isEmpty()) {
-				if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed");
-				// FIXME EventRoom#plugindata#data#publishersが変化した時になんかせなあかんのかも
-				// FIXME Subscriberの生成＆attach処理が必要
-			}
-		}
-	}
-//--------------------------------------------------------------------------------
+//================================================================================
 	/**
 	 * set call that is currently in progress
 	 * @param call
@@ -547,61 +617,50 @@ import retrofit2.Response;
 		}
 	
 		@Override
-		protected boolean handlePluginEventEvent(@NonNull final EventRoom event) {
-			super.handlePluginEventEvent(event);
+		protected boolean handlePluginEventEvent(@NonNull final String transaction,
+			@NonNull final EventRoom event) {
+
+			super.handlePluginEventEvent(transaction, event);
 			checkPublishers(event);
 			return true;
 		}
 	
-		public void sendLocalIceCandidate(final IceCandidate candidate, final boolean isLoopback) {
-			final Call<EventRoom> call;
-			if (candidate != null) {
-				call = mVideoRoom.trickle(
-					mSession.id(),
-					mPlugin.id(),
-					new Trickle(mRoom, candidate, mTransactionCallback)
-				);
-			} else {
-				call = mVideoRoom.trickleCompleted(
-					mSession.id(),
-					mPlugin.id(),
-					new TrickleCompleted(mRoom, mTransactionCallback)
-				);
-			}
-			addCall(call);
-			try {
-				final Response<EventRoom> response = call.execute();
-				if (DEBUG) Log.v(TAG, "sendLocalIceCandidateInternal:response=" + response
-					+ "\n" + response.body());
-				if (response.isSuccessful() && (response.body() != null)) {
-					removeCall(call);
-					final EventRoom join = response.body();
-					if ("event".equals(join.janus)) {
-						if (DEBUG) Log.v(TAG, "多分ここにはこない, ackが返ってくるはず");
-//						// FIXME 正常に処理できた…Roomの情報を更新する
-//						IceCandidate remoteCandidate = null;
-//						// FIXME removeCandidateを生成する
-//						if (remoteCandidate != null) {
-//							mCallback.onRemoteIceCandidate(this, remoteCandidate);
-//						} else {
-//							// FIXME remoteCandidateがなかった時
-//						}
-					} else if (!"ack".equals(join.janus)
-						&& !"keepalive".equals(join.janus)) {
+		@Override
+		protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
+			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
+			super.onRemoteDescription(sdp);
+//			// 通話準備完了
+			mCallback.onRemoteDescription(this, sdp);
+			return true;
+		}
 	
-						throw new RuntimeException("unexpected response " + response);
+		private void checkPublishers(final EventRoom room) {
+			if (DEBUG) Log.v(TAG, "checkPublishers:");
+			if ((room.plugindata != null)
+				&& (room.plugindata.data != null)) {
+	
+				@NonNull
+				final List<PublisherInfo> changed = mRoom.updatePublisher(room.plugindata.data.publishers);
+				if (room.plugindata.data.leaving != null) {
+					for (final PublisherInfo info: changed) {
+						if (room.plugindata.data.leaving.equals(info.id)) {
+							// XXX ここで削除できたっけ?
+							changed.remove(info);
+						}
 					}
-					// 実際の待機はlong pollで行う
-				} else {
-					throw new RuntimeException("unexpected response " + response);
+					// FIXME 存在しなくなったPublisherの処理
 				}
-				if ((candidate != null) && isLoopback) {
-					mCallback.onRemoteIceCandidate(this, candidate);
+				if (!changed.isEmpty()) {
+					if (DEBUG) Log.v(TAG, "checkPublishers:number of publishers changed");
+					for (final PublisherInfo info: changed) {
+						handler.post(() -> {
+							if (DEBUG) Log.v(TAG, "checkPublishers:attach new Subscriber");
+							final Subscriber subscriber = new Subscriber(mVideoRoom,
+								mSession, mCallback, info.id, mLocalSdp, mRemoteSdp);
+							subscriber.attach();
+						});
+					}
 				}
-			} catch (final IOException e) {
-				cancelCall();
-				detach();
-				reportError(e);
 			}
 		}
 	}
@@ -617,12 +676,14 @@ import retrofit2.Response;
 			@NonNull final Session session,
 			@NonNull final JanusPluginCallback callback,
 			@NonNull final BigInteger feederId,
-			@NonNull final SessionDescription sdp) {
+			@NonNull final SessionDescription localSdp,
+			@NonNull final SessionDescription remoteSdp) {
 
 			super(videoRoom, session, callback);
-			if (DEBUG) Log.v(TAG, "Subscriber:");
+			if (DEBUG) Log.v(TAG, "Subscriber:local=" + localSdp + "\nremote=" + remoteSdp);
 			this.feederId = feederId;
-			this.mLocalSdp = sdp;
+			this.mLocalSdp = localSdp;
+			this.mRemoteSdp = remoteSdp;
 		}
 		
 		@NonNull
@@ -637,9 +698,13 @@ import retrofit2.Response;
 
 		@Override
 		protected boolean onRemoteDescription(@NonNull final SessionDescription sdp) {
-			super.onRemoteDescription(sdp);
-			// 通話準備完了
-			mCallback.onRemoteDescription(this, sdp);
+			if (DEBUG) Log.v(TAG, "onRemoteDescription:");
+//			super.onRemoteDescription(sdp);
+			if (sdp.type == SessionDescription.Type.OFFER) {
+				sendAnswerSdp(mLocalSdp, false);
+			}
+//			// 通話準備完了
+//			mCallback.onRemoteDescription(this, mLocalSdp);
 			return true;
 		}
 

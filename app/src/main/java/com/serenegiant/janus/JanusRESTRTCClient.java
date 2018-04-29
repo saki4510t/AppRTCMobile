@@ -13,7 +13,6 @@ import com.google.gson.internal.bind.DateTypeAdapter;
 import com.serenegiant.janus.request.Creator;
 import com.serenegiant.janus.request.Destroy;
 import com.serenegiant.janus.response.EventRoom;
-import com.serenegiant.janus.response.PublisherInfo;
 import com.serenegiant.janus.response.ServerInfo;
 import com.serenegiant.janus.response.Session;
 import com.serenegiant.utils.HandlerThreadHandler;
@@ -115,7 +114,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		if (DEBUG) Log.v(TAG, "connectToRoom:");
 		this.connectionParameters = connectionParameters;
 		handler.post(() -> {
-				connectToRoomInternal();
+			connectToRoomInternal();
 		});
 	}
 	
@@ -123,7 +122,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	public void sendOfferSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendOfferSdp:" + sdp);
 		handler.post(() -> {
-				sendOfferSdpInternal(sdp);
+			sendOfferSdpInternal(sdp);
 		});
 	}
 	
@@ -131,7 +130,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	public void sendAnswerSdp(final SessionDescription sdp) {
 		if (DEBUG) Log.v(TAG, "sendAnswerSdp:" + sdp);
 		handler.post(() -> {
-				sendAnswerSdpInternal(sdp);
+			sendAnswerSdpInternal(sdp);
 		});
 	}
 	
@@ -141,7 +140,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		if (candidate != null) {
 			handler.removeCallbacks(mTrySendTrickleCompletedTask);
 			handler.post(() -> {
-					sendLocalIceCandidateInternal(candidate);
+				sendLocalIceCandidateInternal(candidate);
 			});
 			handler.postDelayed(mTrySendTrickleCompletedTask, 50);
 		} else {
@@ -161,28 +160,28 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
 		if (DEBUG) Log.v(TAG, "sendLocalIceCandidateRemovals:");
 		handler.post(() -> {
-				// FIXME 未実装
-//				final JSONObject json = new JSONObject();
-//				jsonPut(json, "type", "remove-candidates");
-//				final JSONArray jsonArray = new JSONArray();
-//				for (final IceCandidate candidate : candidates) {
-//					jsonArray.put(toJsonCandidate(candidate));
+			// FIXME 未実装
+//			final JSONObject json = new JSONObject();
+//			jsonPut(json, "type", "remove-candidates");
+//			final JSONArray jsonArray = new JSONArray();
+//			for (final IceCandidate candidate : candidates) {
+//				jsonArray.put(toJsonCandidate(candidate));
+//			}
+//			jsonPut(json, "candidates", jsonArray);
+//			if (initiator) {
+//				// Call initiator sends ice candidates to GAE server.
+//				if (mConnectionState != WebSocketRTCClient.ConnectionState.CONNECTED) {
+//					reportError("Sending ICE candidate removals in non connected state.");
+//					return;
 //				}
-//				jsonPut(json, "candidates", jsonArray);
-//				if (initiator) {
-//					// Call initiator sends ice candidates to GAE server.
-//					if (mConnectionState != WebSocketRTCClient.ConnectionState.CONNECTED) {
-//						reportError("Sending ICE candidate removals in non connected state.");
-//						return;
-//					}
-//					sendPostMessage(WebSocketRTCClient.MessageType.MESSAGE, messageUrl, json.toString());
-//					if (connectionParameters.loopback) {
-//						events.onRemoteIceCandidatesRemoved(candidates);
-//					}
-//				} else {
-//					// Call receiver sends ice candidates to websocket server.
-//					wsClient.send(json.toString());
+//				sendPostMessage(WebSocketRTCClient.MessageType.MESSAGE, messageUrl, json.toString());
+//				if (connectionParameters.loopback) {
+//					events.onRemoteIceCandidatesRemoved(candidates);
 //				}
+//			} else {
+//				// Call receiver sends ice candidates to websocket server.
+//				wsClient.send(json.toString());
+//			}
 		});
 	}
 	
@@ -191,12 +190,12 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		if (DEBUG) Log.v(TAG, "disconnectFromRoom:");
 		cancelCall();
 		handler.post(() -> {
-				disconnectFromRoomInternal();
-				try {
-					handler.getLooper().quit();
-				} catch (final Exception e) {
-					if (DEBUG) Log.w(TAG, e);
-				}
+			disconnectFromRoomInternal();
+			try {
+				handler.getLooper().quit();
+			} catch (final Exception e) {
+				if (DEBUG) Log.w(TAG, e);
+			}
 		});
 	}
 
@@ -261,17 +260,17 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			: ((JanusPlugin.Subscriber)plugin).feederId;
 		
 		handler.post(() -> {
-				synchronized (mAttachedPlugins) {
-					mAttachedPlugins.remove(key);
-				}
+			synchronized (mAttachedPlugins) {
+				mAttachedPlugins.remove(key);
+			}
 		});
 	}
 
 	private void removePlugin(@NonNull final BigInteger key) {
 		handler.post(() -> {
-				synchronized (mAttachedPlugins) {
-					mAttachedPlugins.remove(key);
-				}
+			synchronized (mAttachedPlugins) {
+				mAttachedPlugins.remove(key);
+			}
 		});
 	}
 
@@ -291,12 +290,13 @@ public class JanusRESTRTCClient implements AppRTCClient {
 	private void reportError(@NonNull final Throwable t) {
 		Log.w(TAG, t);
 		cancelCall();
+		TransactionManager.clearTransactions();
 		try {
 			handler.post(() -> {
-					if (mConnectionState != ConnectionState.ERROR) {
-						mConnectionState = ConnectionState.ERROR;
-						events.onChannelError(t.getMessage());
-					}
+				if (mConnectionState != ConnectionState.ERROR) {
+					mConnectionState = ConnectionState.ERROR;
+					events.onChannelError(t.getMessage());
+				}
 			});
 		} catch (final Exception e) {
 			// ignore, will be already released.
@@ -317,7 +317,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			setupHttpClient(HTTP_READ_TIMEOUT_MS_LONG_POLL, HTTP_WRITE_TIMEOUT_MS),
 			baseUrl).create(LongPoll.class);
 		handler.post(() -> {
-				requestServerInfo();
+			requestServerInfo();
 		});
 	}
 
@@ -346,7 +346,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			plugin = mAttachedPlugins.containsKey(BigInteger.ZERO)
 				? mAttachedPlugins.get(BigInteger.ZERO) : null;
 		}
-		if (plugin instanceof JanusPlugin.Publisher) {
+		if (plugin != null) {
 			plugin.sendOfferSdp(sdp, connectionParameters.loopback);
 		} else {
 			reportError(new IllegalStateException("publisher not found"));
@@ -364,7 +364,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			plugin = mAttachedPlugins.containsKey(BigInteger.ZERO)
 				? mAttachedPlugins.get(BigInteger.ZERO) : null;
 		}
-		if (plugin instanceof JanusPlugin.Publisher) {
+		if (plugin != null) {
 			plugin.sendAnswerSdp(sdp, connectionParameters.loopback);
 		} else {
 			reportError(new IllegalStateException("publisher not found"));
@@ -381,13 +381,13 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			if (DEBUG) Log.d(TAG, "already disconnected");
 			return;
 		}
-		final JanusPlugin publisher;
+		final JanusPlugin plugin;
 		synchronized (mAttachedPlugins) {
-			publisher = mAttachedPlugins.containsKey(BigInteger.ZERO)
+			plugin = mAttachedPlugins.containsKey(BigInteger.ZERO)
 				? mAttachedPlugins.get(BigInteger.ZERO) : null;
 		}
-		if (publisher instanceof JanusPlugin.Publisher) {
-			((JanusPlugin.Publisher) publisher).sendLocalIceCandidate(candidate,
+		if (plugin != null) {
+			plugin.sendLocalIceCandidate(candidate,
 				connectionParameters.loopback);
 		} else {
 			reportError(new IllegalStateException("there is no publisher"));
@@ -410,7 +410,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					mServerInfo = response.body();
 					if (DEBUG) Log.v(TAG, "requestServerInfo:success");
 					handler.post(() -> {
-							createSession();
+						createSession();
 					});
 				} else {
 					reportError(new RuntimeException("unexpected response:" + response));
@@ -442,18 +442,18 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					if ("success".equals(mSession.janus)) {
 						mConnectionState = ConnectionState.READY;
 						// セッションを生成できた＼(^o^)／
-						if (DEBUG) Log.v(TAG, "createSession#onResponse:" + mSession);
+						if (DEBUG) Log.v(TAG, "createSession:success");
 						// パブリッシャーをVideoRoomプラグインにアタッチ
 						handler.post(() -> {
-								longPoll();
-								final JanusPlugin.Publisher publisher
-									= new JanusPlugin.Publisher(
-										mJanus, mSession, mJanusPluginCallback);
-								// ローカルのPublisherは1つしかないので検索の手間を省くために
-								// BigInteger.ZEROをキーとして登録しておく。
-								// attachした時点で実際のプラグインのidでも登録される
-								addPlugin(BigInteger.ZERO, publisher);
-								publisher.attach();
+							longPoll();
+							final JanusPlugin.Publisher publisher
+								= new JanusPlugin.Publisher(
+									mJanus, mSession, mJanusPluginCallback);
+							// ローカルのPublisherは1つしかないので検索の手間を省くために
+							// BigInteger.ZEROをキーとして登録しておく。
+							// attachした時点で実際のプラグインのidでも登録される
+							addPlugin(BigInteger.ZERO, publisher);
+							publisher.attach();
 						});
 					} else {
 						mSession = null;
@@ -519,6 +519,9 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		mJanus = null;
 	}
 
+	/**
+	 * JanusPluginからのコールバックリスナーの実装
+	 */
 	private final JanusPlugin.JanusPluginCallback mJanusPluginCallback
 		= new JanusPlugin.JanusPluginCallback() {
 		@Override
@@ -536,7 +539,8 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				mConnectionState = ConnectionState.CONNECTED;
 				handleOnJoin(room);	// FIXME publisherの時はhandleJoin呼んじゃダメかも
 			} else if (plugin instanceof JanusPlugin.Subscriber) {
-				handleOnJoin(room);
+//				mConnectionState = ConnectionState.CONNECTED;
+//				handleOnJoin(room);
 			}
 		}
 		
@@ -567,7 +571,18 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			
 			if (DEBUG) Log.v(TAG, "onRemoteDescription:" + plugin
 				+ "\n" + sdp);
-			events.onRemoteDescription(sdp);
+			if (plugin instanceof JanusPlugin.Publisher) {
+				events.onRemoteDescription(sdp);
+			} else if (plugin instanceof JanusPlugin.Subscriber) {
+//				if (sdp.type == SessionDescription.Type.ANSWER) {
+//					events.onRemoteDescription(sdp);
+//				} else {
+//					final SessionDescription answerSdp
+//						= new SessionDescription(SessionDescription.Type.ANSWER,
+//							sdp.description);
+//					events.onRemoteDescription(sdp);
+//				}
+			}
 		}
 		
 		@Override
@@ -605,7 +620,7 @@ public class JanusRESTRTCClient implements AppRTCClient {
 			public void onResponse(@NonNull final Call<ResponseBody> call,
 				@NonNull final Response<ResponseBody> response) {
 
-				if (DEBUG) Log.v(TAG, "longPoll:onResponse=" + response);
+				if (DEBUG) Log.v(TAG, "longPoll:onResponse");
 				removeCall(call);
 				if ((mConnectionState != ConnectionState.ERROR)
 					&& (mConnectionState != ConnectionState.CLOSED)
@@ -613,13 +628,14 @@ public class JanusRESTRTCClient implements AppRTCClient {
 
 					try {
 						handler.post(() -> {
-								handleLongPoll(call, response);
+							handleLongPoll(call, response);
 						});
 						recall(call);
-//						longPoll();
 					} catch (final Exception e) {
 						reportError(e);
 					}
+				} else {
+					Log.w(TAG, "unexpected state:" + mConnectionState);
 				}
 			}
 			
@@ -633,7 +649,6 @@ public class JanusRESTRTCClient implements AppRTCClient {
 				}
 				if (mConnectionState != ConnectionState.ERROR) {
 					recall(call);
-//					longPoll();
 				}
 			}
 			
@@ -673,11 +688,11 @@ public class JanusRESTRTCClient implements AppRTCClient {
 					switch (janus) {
 					case "ack":
 						// do nothing
-						break;
+						return;
 					case "keepalive":
 						// サーバー側がタイムアウト(30秒？)した時は{"janus": "keepalive"}が来る
 						// do nothing
-						break;
+						return;
 					case "event":
 						// プラグインイベント
 						handlePluginEvent(body);
@@ -720,66 +735,25 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 		
 		if (DEBUG) Log.v(TAG, "handlePluginEvent: unhandled event");
-		final String eventType = (event.plugindata != null) && (event.plugindata.data != null)
-			? event.plugindata.data.videoroom : null;
-		if (DEBUG) Log.v(TAG, "handlePluginEvent:" + event);
-		if (!TextUtils.isEmpty(eventType)) {
-			switch (eventType) {
-			case "joined":
-//				handleOnJoin(event);
-				break;
-			case "event":
-				if (event.jsep != null) {
-					if ("answer".equals(event.jsep.type)) {
-						final SessionDescription answerSdp
-							= new SessionDescription(
-								SessionDescription.Type.fromCanonicalForm("answer"),
-								event.jsep.sdp);
-						events.onRemoteDescription(answerSdp);
-					} else if ("offer".equals(event.jsep.type)) {
-						final SessionDescription offerSdp
-							= new SessionDescription(
-								SessionDescription.Type.fromCanonicalForm("offer"),
-								event.jsep.sdp);
-						events.onRemoteDescription(offerSdp);
-					}
-				}
-				if ((event.plugindata != null)
-					&& (event.plugindata.data != null)) {
-
-					final PublisherInfo[] publishers = event.plugindata.data.publishers;
-					final int n = publishers != null ? publishers.length : 0;
-					// FIXME EventRoom#plugindata#data#publishersが変化した時になんかせなあかんのかも
-					// FIXME Subscriberの生成＆attach処理が必要
-				}
-				// FIXME remote candidateの処理がどっかに要る気がするんだけど
-//				IceCandidate remoteCandidate = null;
-//				// FIXME removeCandidateを生成する
-//				if (remoteCandidate != null) {
-//					events.onRemoteIceCandidate(remoteCandidate);
-//				} else {
-//					// FIXME remoteCandidateがなかった時
-//				}
-				break;
-			}
-		}
 	}
 	
 	private void handleOnJoin(final EventRoom room) {
 		if (DEBUG) Log.v(TAG, "handleOnJoin:");
 		// roomにjoinできた
-		// FIXME Roomの情報を更新する
-		// FIXME ここから先はなにしたらええんやろ？この時点でCONNECTEDでええん？
-		// 適当にパラメータ作って呼び出してみる
 		final SignalingParameters params = new SignalingParameters(
 			mCallback.getIceServers(this),
-			true, room.plugindata.data.id.toString(),
-			null, null, null, null);
+				true,						// initiator=trueならこの端末側がofferする
+				room.plugindata.data.id.toString(),	// clientId
+				null, null,
+				null, null);	// この2つはinitiator=falseの時有効
 		// Fire connection and signaling parameters events.
 		events.onConnectedToRoom(params);
 	}
 
-	@Deprecated
+	/**
+	 * WebRTC関係のメッセージの処理
+	 * @param body
+	 */
 	private void handleWebRTCEvent(final JSONObject body) {
 		if (DEBUG) Log.v(TAG, "handleWebRTCEvent:" + body);
 		switch (body.optString("janus")) {
