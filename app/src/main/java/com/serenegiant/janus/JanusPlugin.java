@@ -37,7 +37,6 @@ import retrofit2.Response;
 
 /*package*/ abstract class JanusPlugin {
 	private static final boolean DEBUG = true;	// set false on production
-	private static final String TAG = JanusPlugin.class.getSimpleName();
 	
 	/**
 	 * callback interface for JanusPlugin
@@ -68,6 +67,7 @@ import retrofit2.Response;
 		CLOSED,
 		ERROR }
 
+	protected final String TAG = "JanusPlugin:" + getClass().getSimpleName();
 	@NonNull
 	protected final VideoRoom mVideoRoom;
 	@NonNull
