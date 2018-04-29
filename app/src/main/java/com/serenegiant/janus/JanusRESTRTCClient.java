@@ -547,6 +547,13 @@ public class JanusRESTRTCClient implements AppRTCClient {
 		}
 		
 		@Override
+		public void onLeave(@NonNull final JanusPlugin plugin,
+			@NonNull final BigInteger pluginId) {
+			
+			if (DEBUG) Log.v(TAG, "onLeave:" + plugin + ",leave=" + pluginId);
+		}
+		
+		@Override
 		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
 			final IceCandidate candidate) {
 

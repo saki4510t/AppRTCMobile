@@ -45,6 +45,7 @@ import retrofit2.Response;
 		public void onAttach(@NonNull final JanusPlugin plugin);
 		public void onJoin(@NonNull final JanusPlugin plugin, final EventRoom room);
 		public void onDetach(@NonNull final JanusPlugin plugin);
+		public void onLeave(@NonNull final JanusPlugin plugin, @NonNull final BigInteger pluginId);
 		public void onRemoteIceCandidate(@NonNull final JanusPlugin plugin,
 			final IceCandidate remoteCandidate);
 		/**
