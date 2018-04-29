@@ -44,4 +44,15 @@ public class PublisherInfo {
 	public int hashCode() {
 		return id != null ? id.hashCode() : super.hashCode();
 	}
+	
+	@Override
+	public String toString() {
+		return "PublisherInfo{" +
+			"id=" + id +
+			", display='" + display + '\'' +
+			", audio_codec='" + audio_codec + '\'' +
+			", video_codec='" + video_codec + '\'' +
+			", talking=" + talking +
+			'}';
+	}
 }
