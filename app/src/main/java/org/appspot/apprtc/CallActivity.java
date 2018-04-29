@@ -858,7 +858,7 @@ public class CallActivity extends BaseActivity
 				@Override
 				public void run() {
 					if (peerConnectionClient == null) {
-						Log.e(TAG, "Received remote SDP for non-initilized peer connection.");
+						Log.e(TAG, "Received remote SDP for non-initialized peer connection.");
 						return;
 					}
 					logAndToast("Received remote " + sdp.type + ", delay=" + delta + "ms");
