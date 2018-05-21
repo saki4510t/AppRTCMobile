@@ -54,7 +54,6 @@ import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
-import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSink;
 
 import java.io.IOException;
@@ -137,25 +136,6 @@ public class CallActivity extends BaseActivity
   // Peer connection statistics callback period in ms.
   private static final int STAT_CALLBACK_PERIOD = 1000;
 
-  private static class ProxyRenderer implements VideoRenderer.Callbacks {
-    private VideoRenderer.Callbacks target;
-
-    @Override
-    synchronized public void renderFrame(VideoRenderer.I420Frame frame) {
-      if (target == null) {
-        Logging.d(TAG, "Dropping frame in proxy because target is null.");
-        VideoRenderer.renderFrameDone(frame);
-        return;
-      }
-
-      target.renderFrame(frame);
-    }
-
-    synchronized public void setTarget(VideoRenderer.Callbacks target) {
-      this.target = target;
-    }
-  }
-
   private static class ProxyVideoSink implements VideoSink {
     private VideoSink target;
 
@@ -174,7 +154,7 @@ public class CallActivity extends BaseActivity
     }
   }
 
-  private final ProxyRenderer remoteProxyRenderer = new ProxyRenderer();
+  private final ProxyVideoSink remoteProxyRenderer = new ProxyVideoSink();
   private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
   @Nullable
   private PeerConnectionClient peerConnectionClient = null;
@@ -190,7 +170,7 @@ public class CallActivity extends BaseActivity
   private SurfaceViewRenderer fullscreenRenderer;
   @Nullable
   private VideoFileRenderer videoFileRenderer;
-  private final List<VideoRenderer.Callbacks> remoteRenderers = new ArrayList<>();
+  private final List<VideoSink> remoteSinks = new ArrayList<>();
   private Toast logToast;
   private boolean commandLineRun;
   private boolean activityRunning;
@@ -255,7 +235,7 @@ public class CallActivity extends BaseActivity
     });
 
     fullscreenRenderer.setOnClickListener(listener);
-    remoteRenderers.add(remoteProxyRenderer);
+    remoteSinks.add(remoteProxyRenderer);
 
     final Intent intent = getIntent();
     final EglBase eglBase = EglBase.create();
@@ -272,7 +252,7 @@ public class CallActivity extends BaseActivity
       try {
         videoFileRenderer = new VideoFileRenderer(
             saveRemoteVideoToFile, videoOutWidth, videoOutHeight, eglBase.getEglBaseContext());
-        remoteRenderers.add(videoFileRenderer);
+        remoteSinks.add(videoFileRenderer);
       } catch (IOException e) {
         throw new RuntimeException(
             "Failed to open video file for output: " + saveRemoteVideoToFile, e);
@@ -780,7 +760,7 @@ public class CallActivity extends BaseActivity
       videoCapturer = createVideoCapturer();
     }
     peerConnectionClient.createPeerConnection(
-        localProxyVideoSink, remoteRenderers, videoCapturer, signalingParameters);
+        localProxyVideoSink, remoteSinks, videoCapturer, signalingParameters);
 
     if (signalingParameters.initiator) {
       logAndToast("Creating OFFER...");
