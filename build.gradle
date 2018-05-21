@@ -38,7 +38,7 @@ ext {
 	constraintLayoutVersion = '1.1.0'
 	commonLibVersion= '2.4.0'
 	versionGson = '2.8.0'
-	webrtcVersion = '1.0.22920'
+	webrtcVersion = '1.0.23171'
 
 	versionCodeNum = 31
 	versionNameString = '1.7.2'
