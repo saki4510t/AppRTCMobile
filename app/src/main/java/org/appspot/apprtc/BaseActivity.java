@@ -1,18 +1,19 @@
 package org.appspot.apprtc;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 import com.serenegiant.apprtcmobile.R;
 import com.serenegiant.dialog.MessageDialogFragment;
+import com.serenegiant.dialog.MessageDialogFragmentV4;
 import com.serenegiant.utils.BuildCheck;
 import com.serenegiant.utils.PermissionCheck;
 
-public abstract class BaseActivity extends Activity
-	implements MessageDialogFragment.MessageDialogListener {
+public abstract class BaseActivity extends AppCompatActivity
+	implements MessageDialogFragmentV4.MessageDialogListener {
 
 	static int ID_PERMISSION_REASON_AUDIO = R.string.permission_audio_reason;
 	static int ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_request;
@@ -33,7 +34,7 @@ public abstract class BaseActivity extends Activity
 	 */
 	@SuppressLint("NewApi")
 	@Override
-	public void onMessageDialogResult(final MessageDialogFragment dialog,
+	public void onMessageDialogResult(final MessageDialogFragmentV4 dialog,
 		final int requestCode, final String[] permissions, final boolean result) {
 
 		if (result) {

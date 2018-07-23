@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <style name="AppRTCMobileActivityTheme" parent="android:Theme.Material">
+  <style name="CallActivityTheme" parent="Theme.AppCompat.Light.DarkActionBar">
     <item name="android:windowActionBar">false</item>
     <item name="android:windowFullscreen">true</item>
     <item name="android:windowNoTitle">true</item>
+    <item name="android:windowBackground">@color/BLACK</item>
+    <item name="android:colorBackground">@color/BLACK</item>
   </style>
 </resources>

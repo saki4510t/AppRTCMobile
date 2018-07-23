@@ -11,7 +11,6 @@ package org.appspot.apprtc;/*
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,6 +21,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -362,7 +362,7 @@ public class CallActivity extends BaseActivity
     callFragment.setArguments(intent.getExtras());
     hudFragment.setArguments(intent.getExtras());
     // Activate call and HUD fragments and start the call.
-    FragmentTransaction ft = getFragmentManager().beginTransaction();
+    final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     ft.add(R.id.call_fragment_container, callFragment);
     ft.add(R.id.hud_fragment_container, hudFragment);
     ft.commit();
@@ -564,7 +564,7 @@ public class CallActivity extends BaseActivity
     }
     // Show/hide call control fragment
     callControlFragmentVisible = !callControlFragmentVisible;
-    FragmentTransaction ft = getFragmentManager().beginTransaction();
+    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     if (callControlFragmentVisible) {
       ft.show(callFragment);
       ft.show(hudFragment);
