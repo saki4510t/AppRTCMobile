@@ -285,6 +285,9 @@ public class ConnectActivity extends BaseActivity {
 		String roomUrl = sharedPref.getString(
 			keyprefRoomServerUrl, getString(R.string.pref_room_server_url_default));
 		
+		boolean useSurfaceCameraCapture = sharedPrefGetBoolean(R.string.pref_screencapture_key,
+			CallActivity.EXTRA_SURFACE_CAMERA_CAPTURE, R.string.pref_screencapture_default, useValuesFromIntent);
+		
 		// Video call enabled flag.
 		boolean videoCallEnabled = sharedPrefGetBoolean(R.string.pref_videocall_key,
 			CallActivity.EXTRA_VIDEO_CALL, R.string.pref_videocall_default, useValuesFromIntent);
@@ -472,6 +475,7 @@ public class ConnectActivity extends BaseActivity {
 			intent.putExtra(CallActivity.EXTRA_ROOMID, roomId);
 			intent.putExtra(CallActivity.EXTRA_LOOPBACK, loopback);
 			intent.putExtra(CallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
+			intent.putExtra(CallActivity.EXTRA_SURFACE_CAMERA_CAPTURE, useSurfaceCameraCapture);
 			intent.putExtra(CallActivity.EXTRA_SCREENCAPTURE, useScreencapture);
 			intent.putExtra(CallActivity.EXTRA_CAMERA2, useCamera2);
 			intent.putExtra(CallActivity.EXTRA_VIDEO_WIDTH, videoWidth);

@@ -78,6 +78,7 @@ public class CallActivity extends BaseActivity
 	public static final String EXTRA_URLPARAMETERS = "org.appspot.apprtc.URLPARAMETERS";
 	public static final String EXTRA_LOOPBACK = "org.appspot.apprtc.LOOPBACK";
 	public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
+	public static final String EXTRA_SURFACE_CAMERA_CAPTURE = "org.appspot.apprtc.SURFACE_CAMERA_CAPTURE";
 	public static final String EXTRA_SCREENCAPTURE = "org.appspot.apprtc.SCREENCAPTURE";
 	public static final String EXTRA_CAMERA2 = "org.appspot.apprtc.CAMERA2";
 	public static final String EXTRA_VIDEO_WIDTH = "org.appspot.apprtc.VIDEO_WIDTH";
@@ -182,6 +183,7 @@ public class CallActivity extends BaseActivity
 	private boolean callControlFragmentVisible = true;
 	private long callStartedTimeMs = 0;
 	private boolean micEnabled = true;
+	private boolean surfaceCameraCaptureEnabled = false;
 	private boolean screencaptureEnabled = false;
 	private static Intent mediaProjectionPermissionResultData;
 	private static int mediaProjectionPermissionResultCode;
@@ -303,6 +305,7 @@ public class CallActivity extends BaseActivity
 		int videoWidth = intent.getIntExtra(EXTRA_VIDEO_WIDTH, 0);
 		int videoHeight = intent.getIntExtra(EXTRA_VIDEO_HEIGHT, 0);
 		
+		surfaceCameraCaptureEnabled = intent.getBooleanExtra(EXTRA_SURFACE_CAMERA_CAPTURE, false);
 		screencaptureEnabled = intent.getBooleanExtra(EXTRA_SCREENCAPTURE, false);
 		// If capturing format is not specified for screencapture, use screen resolution.
 		if (screencaptureEnabled && videoWidth == 0 && videoHeight == 0) {
@@ -388,6 +391,8 @@ public class CallActivity extends BaseActivity
 		
 		if (screencaptureEnabled) {
 			startScreenCapture();
+		} else if (surfaceCameraCaptureEnabled) {
+			startSurfaceCameraCapture();
 		} else {
 			startCall();
 		}
@@ -486,6 +491,15 @@ public class CallActivity extends BaseActivity
 		});
 	}
 	
+	@Nullable
+	private VideoCapturer createSurfaceCameraCapture() {
+		return null;	// FIXME 未実装
+	}
+
+	private void startSurfaceCameraCapture() {
+		// FIXME 未実装
+	}
+
 	// Activity interfaces
 	@Override
 	public void onStop() {
@@ -722,6 +736,8 @@ public class CallActivity extends BaseActivity
 			}
 		} else if (screencaptureEnabled) {
 			return createScreenCapturer();
+		} else if (surfaceCameraCaptureEnabled) {
+			return createSurfaceCameraCapture();
 		} else if (useCamera2()) {
 			if (!captureToTexture()) {
 				reportError(getString(R.string.camera2_texture_only_error));
