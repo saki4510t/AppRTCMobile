@@ -31,6 +31,7 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
 import com.serenegiant.apprtcmobile.R;
+import com.serenegiant.webrtc.Camera1SurfaceCaptureAndroid;
 
 import org.appspot.apprtc.AppRTCAudioManager.AudioDevice;
 import org.appspot.apprtc.AppRTCAudioManager.AudioManagerEvents;
@@ -391,8 +392,6 @@ public class CallActivity extends BaseActivity
 		
 		if (screencaptureEnabled) {
 			startScreenCapture();
-		} else if (surfaceCameraCaptureEnabled) {
-			startSurfaceCameraCapture();
 		} else {
 			startCall();
 		}
@@ -492,12 +491,36 @@ public class CallActivity extends BaseActivity
 	}
 	
 	@Nullable
-	private VideoCapturer createSurfaceCameraCapture() {
-		return null;	// FIXME 未実装
-	}
-
-	private void startSurfaceCameraCapture() {
-		// FIXME 未実装
+	private VideoCapturer createSurfaceCameraCapture(final CameraEnumerator enumerator) {
+		final String[] deviceNames = enumerator.getDeviceNames();
+		
+		// First, try to find front facing camera
+		Logging.d(TAG, "Looking for front facing cameras.");
+		for (String deviceName : deviceNames) {
+			if (enumerator.isFrontFacing(deviceName)) {
+				Logging.d(TAG, "Creating front facing camera capturer.");
+				VideoCapturer videoCapturer = new Camera1SurfaceCaptureAndroid(deviceName);
+				
+				if (videoCapturer != null) {
+					return videoCapturer;
+				}
+			}
+		}
+		
+		// Front facing camera not found, try something else
+		Logging.d(TAG, "Looking for other cameras.");
+		for (String deviceName : deviceNames) {
+			if (!enumerator.isFrontFacing(deviceName)) {
+				Logging.d(TAG, "Creating other camera capturer.");
+				VideoCapturer videoCapturer = new Camera1SurfaceCaptureAndroid(deviceName);
+				
+				if (videoCapturer != null) {
+					return videoCapturer;
+				}
+			}
+		}
+		
+		return null;
 	}
 
 	// Activity interfaces
@@ -737,7 +760,7 @@ public class CallActivity extends BaseActivity
 		} else if (screencaptureEnabled) {
 			return createScreenCapturer();
 		} else if (surfaceCameraCaptureEnabled) {
-			return createSurfaceCameraCapture();
+			return createSurfaceCameraCapture(new Camera1Enumerator(true));
 		} else if (useCamera2()) {
 			if (!captureToTexture()) {
 				reportError(getString(R.string.camera2_texture_only_error));
