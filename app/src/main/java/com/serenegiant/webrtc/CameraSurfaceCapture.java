@@ -30,6 +30,28 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 		IN_PROGRESS
 	}
 	
+	public static final CameraEventsHandler DEFAULT_EVENTS_HANDLER
+		= new CameraEventsHandler() {
+
+		public void onCameraError(String errorDescription) {
+		}
+		
+		public void onCameraDisconnected() {
+		}
+		
+		public void onFailure(String reason) {
+		}
+		
+		public void onCameraOpening(String cameraName) {
+		}
+		
+		public void onFirstFrameAvailable() {
+		}
+		
+		public void onCameraClosed() {
+		}
+	};
+		
 	private final CameraEnumerator cameraEnumerator;
 	@NonNull
 	private final CameraSurfaceVideoCapture.CameraEventsHandler eventsHandler;
@@ -43,37 +65,14 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	private CameraSurfaceCapture.SwitchState switchState;
 	@Nullable
 	private CameraSurfaceVideoCapture.CameraSwitchHandler switchEventsHandler;
-	@Nullable
-	private CameraSurfaceVideoCapture.CameraStatistics cameraStatistics;
 	
 	public CameraSurfaceCapture(final String cameraName,
 		@Nullable CameraSurfaceVideoCapture.CameraEventsHandler eventsHandler,
 		final CameraEnumerator cameraEnumerator) {
 
-		this.switchState = CameraSurfaceCapture.SwitchState.IDLE;
-		if (eventsHandler == null) {
-			eventsHandler = new CameraSurfaceVideoCapture.CameraEventsHandler() {
-				public void onCameraError(String errorDescription) {
-				}
-				
-				public void onCameraDisconnected() {
-				}
-				
-				public void onCameraFreezed(String errorDescription) {
-				}
-				
-				public void onCameraOpening(String cameraName) {
-				}
-				
-				public void onFirstFrameAvailable() {
-				}
-				
-				public void onCameraClosed() {
-				}
-			};
-		}
-		
-		this.eventsHandler = eventsHandler;
+		super(eventsHandler != null ? eventsHandler : DEFAULT_EVENTS_HANDLER);
+		switchState = CameraSurfaceCapture.SwitchState.IDLE;
+		this.eventsHandler = eventsHandler != null ? eventsHandler : DEFAULT_EVENTS_HANDLER;
 		this.cameraEnumerator = cameraEnumerator;
 		this.cameraName = cameraName;
 		this.uiThreadHandler = new Handler(Looper.getMainLooper());
@@ -129,8 +128,6 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 			
 			if (currentSession != null) {
 				Logging.d(TAG, "Stop capture: Nulling session");
-				cameraStatistics.release();
-				cameraStatistics = null;
 				final SurfaceCameraSession oldSession = currentSession;
 				post(() -> {
 					oldSession.stop();
@@ -161,11 +158,6 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 		post(() -> {
 			switchCameraInternal(switchEventsHandler);
 		});
-	}
-	
-	@Override
-	public boolean isScreencast() {
-		return false;
 	}
 	
 	@Override
@@ -218,8 +210,6 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 				
 				switchState = CameraSurfaceCapture.SwitchState.IN_PROGRESS;
 				Logging.d(TAG, "switchCamera: Stopping session");
-				this.cameraStatistics.release();
-				this.cameraStatistics = null;
 				final SurfaceCameraSession oldSession = currentSession;
 				post(() -> {
 					oldSession.stop();
@@ -266,7 +256,6 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 				capturerObserver.onCapturerStarted(true);
 				sessionOpening = false;
 				currentSession = session;
-				cameraStatistics = new CameraSurfaceVideoCapture.CameraStatistics(getSurfaceHelper(), eventsHandler);
 				stateLock.notifyAll();
 				if (switchState == CameraSurfaceCapture.SwitchState.IN_PROGRESS) {
 					if (switchEventsHandler != null) {

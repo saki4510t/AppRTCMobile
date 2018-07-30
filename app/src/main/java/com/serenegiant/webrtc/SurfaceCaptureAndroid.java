@@ -4,9 +4,11 @@ import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.Surface;
 
 import com.serenegiant.glutils.IRendererHolder;
+import com.serenegiant.glutils.RenderHolderCallback;
 import com.serenegiant.glutils.RendererHolder;
 
 import org.webrtc.Logging;
@@ -18,13 +20,14 @@ import org.webrtc.VideoFrame;
 import javax.annotation.Nullable;
 
 public class SurfaceCaptureAndroid
-	implements SurfaceVideoCapture,
-		SurfaceTextureHelper.OnTextureFrameAvailableListener {
+	implements SurfaceVideoCapture {
 
 	private static final boolean DEBUG = true; // set false on production
 	private static final String TAG = CameraSurfaceCapture.class.getSimpleName();
 
 	protected final Object stateLock = new Object();
+	@NonNull
+	private final EventsHandler eventsHandler;
 	@Nullable
 	private SurfaceTextureHelper surfaceHelper;
 	protected Context applicationContext;
@@ -37,11 +40,15 @@ public class SurfaceCaptureAndroid
 	private int width;
 	private int height;
 	private int framerate;
+	@Nullable
 	private IRendererHolder mRendererHolder;
 	private int mCaptureSurfaceId;
+	@Nullable
+	private Statistics mStatistics;
 
-	public SurfaceCaptureAndroid() {
-		mRendererHolder = new RendererHolder(width, height, null);
+	public SurfaceCaptureAndroid(@NonNull final EventsHandler eventsHandler) {
+		this.eventsHandler = eventsHandler;
+		mRendererHolder = createRendererHolder();
 	}
 
 	@Override
@@ -59,7 +66,7 @@ public class SurfaceCaptureAndroid
 					throw new RuntimeException("surfaceTextureHelper not set.");
 				} else {
 					this.surfaceHelper = surfaceTextureHelper;
-					this.captureThreadHandler = surfaceTextureHelper.getHandler();
+					captureThreadHandler = surfaceTextureHelper.getHandler();
 				}
 			}
 		}
@@ -67,13 +74,19 @@ public class SurfaceCaptureAndroid
 	
 	@Override
 	public void startCapture(final int width, final int height, final int framerate) {
+		if (DEBUG) Log.v(TAG, "startCapture:");
 		synchronized (stateLock) {
 			checkNotDisposed();
+			if (surfaceHelper != null) {
+				mStatistics = new Statistics(surfaceHelper, eventsHandler);
+			} else {
+				throw new IllegalStateException("not initialized");
+			}
 			this.width = width;
 			this.height = height;
 			this.framerate = framerate;
 			capturerObserver.onCapturerStarted(true);
-			surfaceHelper.startListening(this);
+			surfaceHelper.startListening(mOnTextureFrameAvailableListener);
 			resize(width, height);
 			setSurface();
 		}
@@ -81,23 +94,29 @@ public class SurfaceCaptureAndroid
 	
 	@Override
 	public void stopCapture() {
+		if (DEBUG) Log.v(TAG, "stopCapture:");
 		synchronized (stateLock) {
 			checkNotDisposed();
+			if (mStatistics != null) {
+				mStatistics.release();
+				mStatistics = null;
+			}
 			ThreadUtils.invokeAtFrontUninterruptibly(this.surfaceHelper.getHandler(), new Runnable() {
 				public void run() {
 					if (mRendererHolder != null) {
 						mRendererHolder.removeSurface(mCaptureSurfaceId);
 					}
 					mCaptureSurfaceId = 0;
-					SurfaceCaptureAndroid.this.surfaceHelper.stopListening();
-					SurfaceCaptureAndroid.this.capturerObserver.onCapturerStopped();
+					surfaceHelper.stopListening();
+					capturerObserver.onCapturerStopped();
 				}
 			});
 		}
 	}
 	
 	@Override
-	public void changeCaptureFormat(int width, int height, int framerate) {
+	public void changeCaptureFormat(final int width, final int height, final int framerate) {
+		if (DEBUG) Log.v(TAG, "changeCaptureFormat:");
 		synchronized (stateLock) {
 			checkNotDisposed();
 			this.width = width;
@@ -110,6 +129,7 @@ public class SurfaceCaptureAndroid
 	
 	@Override
 	public void dispose() {
+		if (DEBUG) Log.v(TAG, "dispose:");
 		stopCapture();
 		synchronized (stateLock) {
 			isDisposed = true;
@@ -125,28 +145,26 @@ public class SurfaceCaptureAndroid
 		return false;
 	}
 
-	@Override
-	public void onTextureFrameAvailable(final int oesTextureId, final float[] transformMatrix, final long timestampNs) {
-		++numCapturedFrames;
-		final VideoFrame.Buffer buffer = this.surfaceHelper.createTextureBuffer(this.width, this.height,
-			RendererCommon.convertMatrixToAndroidGraphicsMatrix(onUpdateTexMatrix(transformMatrix)));
-		final VideoFrame frame = new VideoFrame(buffer, getFrameRotation(), timestampNs);
-		try {
-			capturerObserver.onFrameCaptured(frame);
-		} finally {
-			frame.release();
-		}
-	}
-
-	@NonNull
-	protected float[] onUpdateTexMatrix(@NonNull final float[] transformMatrix) {
-		return transformMatrix;
-	}
+	private final SurfaceTextureHelper.OnTextureFrameAvailableListener
+		mOnTextureFrameAvailableListener = new SurfaceTextureHelper.OnTextureFrameAvailableListener() {
+		@Override
+		public void onTextureFrameAvailable(
+			final int oesTextureId, final float[] transformMatrix,
+			final long timestampNs) {
 	
-	protected int getFrameRotation() {
-		return 0;
-	}
-
+			++numCapturedFrames;
+			if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onTextureFrameAvailable:" + numCapturedFrames);
+			final VideoFrame.Buffer buffer = surfaceHelper.createTextureBuffer(width, height,
+				RendererCommon.convertMatrixToAndroidGraphicsMatrix(onUpdateTexMatrix(transformMatrix)));
+			final VideoFrame frame = new VideoFrame(buffer, getFrameRotation(), timestampNs);
+			try {
+				capturerObserver.onFrameCaptured(frame);
+			} finally {
+				frame.release();
+			}
+		}
+	};
+	
 	public long getNumCapturedFrames() {
 		return numCapturedFrames;
 	}
@@ -199,6 +217,20 @@ public class SurfaceCaptureAndroid
 		}
 	}
 
+	@NonNull
+	protected IRendererHolder createRendererHolder() {
+		return new RendererHolder(width, height, mRenderHolderCallback);
+	}
+
+	@NonNull
+	protected float[] onUpdateTexMatrix(@NonNull final float[] transformMatrix) {
+		return transformMatrix;
+	}
+	
+	protected int getFrameRotation() {
+		return 0;
+	}
+
 	protected void checkNotDisposed() {
 		if (isDisposed) {
 			throw new RuntimeException("capturer is disposed.");
@@ -224,19 +256,19 @@ public class SurfaceCaptureAndroid
 	
 	public void printStackTrace() {
 		Thread cameraThread = null;
-		if (this.captureThreadHandler != null) {
-			cameraThread = this.captureThreadHandler.getLooper().getThread();
+		if (captureThreadHandler != null) {
+			cameraThread = captureThreadHandler.getLooper().getThread();
 		}
 		
 		if (cameraThread != null) {
-			StackTraceElement[] cameraStackTrace = cameraThread.getStackTrace();
+			final StackTraceElement[] cameraStackTrace = cameraThread.getStackTrace();
 			if (cameraStackTrace.length > 0) {
 				Logging.d("CameraCapturer", "CameraCapturer stack trace:");
-				StackTraceElement[] var3 = cameraStackTrace;
-				int var4 = cameraStackTrace.length;
+				final StackTraceElement[] elements = cameraStackTrace;
+				final int n = cameraStackTrace.length;
 				
-				for (int var5 = 0; var5 < var4; ++var5) {
-					StackTraceElement traceElem = var3[var5];
+				for (int i = 0; i < n; i++) {
+					final StackTraceElement traceElem = elements[i];
 					Logging.d("CameraCapturer", traceElem.toString());
 				}
 			}
@@ -245,7 +277,7 @@ public class SurfaceCaptureAndroid
 	}
 
 	protected void checkIsOnCaptureThread() {
-		if (Thread.currentThread() != this.captureThreadHandler.getLooper().getThread()) {
+		if (Thread.currentThread() != captureThreadHandler.getLooper().getThread()) {
 			Logging.e("CameraCapturer", "Check is on camera thread failed.");
 			throw new RuntimeException("Not on camera thread.");
 		}
@@ -287,4 +319,27 @@ public class SurfaceCaptureAndroid
 		}
 	}
 	
+	private final RenderHolderCallback mRenderHolderCallback
+		= new RenderHolderCallback() {
+		@Override
+		public void onCreate(final Surface surface) {
+			if (DEBUG) Log.v(TAG, "onCreate:");
+		}
+		
+		@Override
+		public void onFrameAvailable() {
+			try {
+				if (mStatistics != null) {
+					mStatistics.addFrame();
+				}
+			} catch (final Exception e) {
+				// ignore
+			}
+		}
+		
+		@Override
+		public void onDestroy() {
+			if (DEBUG) Log.v(TAG, "onDestroy:");
+		}
+	};
 }
