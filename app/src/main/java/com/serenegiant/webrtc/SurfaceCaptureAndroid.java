@@ -19,11 +19,10 @@ import org.webrtc.VideoFrame;
 
 import javax.annotation.Nullable;
 
-public class SurfaceCaptureAndroid
-	implements SurfaceVideoCapture {
+public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 
 	private static final boolean DEBUG = true; // set false on production
-	private static final String TAG = CameraSurfaceCapture.class.getSimpleName();
+	private static final String TAG = SurfaceCaptureAndroid.class.getSimpleName();
 
 	protected final Object stateLock = new Object();
 	@NonNull
@@ -45,6 +44,7 @@ public class SurfaceCaptureAndroid
 	private int mCaptureSurfaceId;
 	@Nullable
 	private Statistics mStatistics;
+	private boolean firstFrameObserved;
 
 	public SurfaceCaptureAndroid(@NonNull final EventsHandler eventsHandler) {
 		this.eventsHandler = eventsHandler;
@@ -85,6 +85,7 @@ public class SurfaceCaptureAndroid
 			this.width = width;
 			this.height = height;
 			this.framerate = framerate;
+			firstFrameObserved = false;
 			capturerObserver.onCapturerStarted(true);
 			surfaceHelper.startListening(mOnTextureFrameAvailableListener);
 			resize(width, height);
@@ -101,6 +102,7 @@ public class SurfaceCaptureAndroid
 				mStatistics.release();
 				mStatistics = null;
 			}
+			firstFrameObserved = false;
 			ThreadUtils.invokeAtFrontUninterruptibly(this.surfaceHelper.getHandler(), new Runnable() {
 				public void run() {
 					if (mRendererHolder != null) {
@@ -328,6 +330,10 @@ public class SurfaceCaptureAndroid
 		
 		@Override
 		public void onFrameAvailable() {
+			if (!firstFrameObserved) {
+				eventsHandler.onFirstFrameAvailable();
+				firstFrameObserved = true;
+			}
 			try {
 				if (mStatistics != null) {
 					mStatistics.addFrame();

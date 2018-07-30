@@ -26,20 +26,26 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private static final String TAG = SurfaceCamera1Session.class.getSimpleName();
 
 	private static final int NUMBER_OF_CAPTURE_BUFFERS = 3;
+
+	@NonNull
 	private final Handler cameraThreadHandler;
+	@NonNull
 	private final SurfaceCameraSession.Events events;
+	@NonNull
 	private final Context applicationContext;
+	@NonNull
 	private final int cameraId;
+	@NonNull
 	private final Camera camera;
+	@NonNull
 	private final Camera.CameraInfo info;
 	private SessionState state;
-	private boolean firstFrameReported = false;
 	
-	public static void create(SurfaceCameraSession.CreateSessionCallback callback,
-		SurfaceCameraSession.Events events,
-		Context applicationContext,
+	public static void create(final SurfaceCameraSession.CreateSessionCallback callback,
+		@NonNull final SurfaceCameraSession.Events events,
+		final Context applicationContext,
 		@NonNull final SurfaceTexture inputSurface,
-		int cameraId, int width, int height, int framerate) {
+		final int cameraId, final int width, final int height, final int framerate) {
 
 		if (DEBUG) Log.v(TAG, "create:");
 		Logging.d(TAG, "Open camera " + cameraId);
@@ -48,8 +54,8 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		Camera camera;
 		try {
 			camera = Camera.open(cameraId);
-		} catch (RuntimeException var20) {
-			callback.onFailure(SurfaceCameraSession.FailureType.ERROR, var20.getMessage());
+		} catch (RuntimeException e) {
+			callback.onFailure(SurfaceCameraSession.FailureType.ERROR, e.getMessage());
 			return;
 		}
 		
@@ -58,17 +64,18 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		} else {
 			try {
 				camera.setPreviewTexture(inputSurface);
-			} catch (RuntimeException | IOException var19) {
+			} catch (final RuntimeException | IOException e) {
 				camera.release();
-				callback.onFailure(SurfaceCameraSession.FailureType.ERROR, var19.getMessage());
+				callback.onFailure(SurfaceCameraSession.FailureType.ERROR, e.getMessage());
 				return;
 			}
 			
 			Camera.CameraInfo info = new Camera.CameraInfo();
 			Camera.getCameraInfo(cameraId, info);
-			Camera.Parameters parameters = camera.getParameters();
-			CameraEnumerationAndroid.CaptureFormat captureFormat = findClosestCaptureFormat(parameters, width, height, framerate);
-			Size pictureSize = findClosestPictureSize(parameters, width, height);
+			final Camera.Parameters parameters = camera.getParameters();
+			final CameraEnumerationAndroid.CaptureFormat captureFormat
+				= findClosestCaptureFormat(parameters, width, height, framerate);
+			final Size pictureSize = findClosestPictureSize(parameters, width, height);
 			updateCameraParameters(camera, parameters, captureFormat, pictureSize);
 			
 			camera.setDisplayOrientation(0);
@@ -96,44 +103,50 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		camera.setParameters(parameters);
 	}
 	
+	@NonNull
 	private static CameraEnumerationAndroid.CaptureFormat findClosestCaptureFormat(
-		Camera.Parameters parameters, int width, int height, int framerate) {
+		@NonNull final Camera.Parameters parameters,
+		final int width, final int height, final int framerate) {
 		
 		if (DEBUG) Log.v(TAG, "findClosestCaptureFormat:");
 		final List<CameraEnumerationAndroid.CaptureFormat.FramerateRange> supportedFramerates
 			= convertFramerates(parameters.getSupportedPreviewFpsRange());
 		Logging.d(TAG, "Available fps ranges: " + supportedFramerates);
-		CameraEnumerationAndroid.CaptureFormat.FramerateRange fpsRange = CameraEnumerationAndroid.getClosestSupportedFramerateRange(supportedFramerates, framerate);
-		Size previewSize = CameraEnumerationAndroid.getClosestSupportedSize(convertSizes(parameters.getSupportedPreviewSizes()), width, height);
-//		CameraEnumerationAndroid.reportCameraResolution(camera1ResolutionHistogram, previewSize);
+		final CameraEnumerationAndroid.CaptureFormat.FramerateRange fpsRange
+			= CameraEnumerationAndroid.getClosestSupportedFramerateRange(supportedFramerates, framerate);
+		final Size previewSize = CameraEnumerationAndroid.getClosestSupportedSize(
+			convertSizes(parameters.getSupportedPreviewSizes()), width, height);
 		return new CameraEnumerationAndroid.CaptureFormat(previewSize.width, previewSize.height, fpsRange);
 	}
 	
-	private static Size findClosestPictureSize(Camera.Parameters parameters, int width, int height) {
-		return CameraEnumerationAndroid.getClosestSupportedSize(convertSizes(parameters.getSupportedPictureSizes()), width, height);
+	private static Size findClosestPictureSize(@NonNull final Camera.Parameters parameters,
+		final int width, final int height) {
+
+		return CameraEnumerationAndroid.getClosestSupportedSize(
+			convertSizes(parameters.getSupportedPictureSizes()), width, height);
 	}
 	
-	private SurfaceCamera1Session(final SurfaceCameraSession.Events events,
-		Context applicationContext,
-		int cameraId, Camera camera, Camera.CameraInfo info) {
+	private SurfaceCamera1Session(@NonNull final SurfaceCameraSession.Events events,
+		@NonNull final Context applicationContext,
+		final int cameraId, @NonNull final Camera camera, @NonNull final Camera.CameraInfo info) {
 
 		Logging.d(TAG, "Create new camera1 session on camera " + cameraId);
-		this.cameraThreadHandler = new Handler();
+		cameraThreadHandler = new Handler();
 		this.events = events;
 		this.applicationContext = applicationContext;
 		this.cameraId = cameraId;
 		this.camera = camera;
 		this.info = info;
-		this.startCapturing();
+		startCapturing();
 	}
 	
 	public void stop() {
 		Logging.d(TAG, "Stop camera1 session on camera " + this.cameraId);
-		this.checkIsOnCameraThread();
+		checkIsOnCameraThread();
 		if (this.state != SessionState.STOPPED) {
-			long stopStartTime = System.nanoTime();
-			this.stopInternal();
-			int stopTimeMs = (int) TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - stopStartTime);
+			final long stopStartTime = System.nanoTime();
+			stopInternal();
+			final int stopTimeMs = (int) TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - stopStartTime);
 //			camera1StopTimeMsHistogram.addSample(stopTimeMs);
 		}
 		
@@ -149,9 +162,9 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 
 	private void startCapturing() {
 		Logging.d(TAG, "Start capturing");
-		this.checkIsOnCameraThread();
-		this.state = SessionState.RUNNING;
-		this.camera.setErrorCallback(new Camera.ErrorCallback() {
+		checkIsOnCameraThread();
+		state = SessionState.RUNNING;
+		camera.setErrorCallback(new Camera.ErrorCallback() {
 			public void onError(int error, Camera camera) {
 				String errorMessage;
 				if (error == 100) {
@@ -170,34 +183,34 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 				
 			}
 		});
-//		this.listenForTextureFrames();
 		
 		try {
-			this.camera.startPreview();
-		} catch (RuntimeException var2) {
-			this.stopInternal();
-			this.events.onCameraError(this, var2.getMessage());
+			camera.startPreview();
+		} catch (RuntimeException e) {
+			stopInternal();
+			events.onCameraError(this, e.getMessage());
 		}
 		
 	}
 	
 	private void stopInternal() {
 		Logging.d(TAG, "Stop internal");
-		this.checkIsOnCameraThread();
-		if (this.state == SessionState.STOPPED) {
+		checkIsOnCameraThread();
+		if (state == SessionState.STOPPED) {
 			Logging.d(TAG, "Camera is already stopped");
 		} else {
-			this.state = SessionState.STOPPED;
-			this.camera.stopPreview();
-			this.camera.release();
-			this.events.onCameraClosed(this);
+			state = SessionState.STOPPED;
+			camera.stopPreview();
+			camera.release();
+			events.onCameraClosed(this);
 			Logging.d(TAG, "Stop done");
 		}
 	}
 	
 	private int getDeviceOrientation() {
 		int orientation;
-		WindowManager wm = (WindowManager) this.applicationContext.getSystemService(Context.WINDOW_SERVICE);
+		// XXX 毎フレーム呼ばれるからこれ毎回呼ぶよりもConfigChangedをひらってチェックするほうが負荷低減にいい気がする
+		WindowManager wm = (WindowManager) applicationContext.getSystemService(Context.WINDOW_SERVICE);
 		switch (wm.getDefaultDisplay().getRotation()) {
 		case Surface.ROTATION_90:
 			orientation = 90;
@@ -218,12 +231,12 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	}
 	
 	private int getFrameOrientation() {
-		int rotation = this.getDeviceOrientation();
-		if (this.info.facing == 0) {
+		int rotation = getDeviceOrientation();
+		if (info.facing == 0) {
 			rotation = 360 - rotation;
 		}
 		
-		return (this.info.orientation + rotation) % 360;
+		return (info.orientation + rotation) % 360;
 	}
 	
 	private void checkIsOnCameraThread() {
@@ -240,8 +253,8 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		}
 	}
 	
-	//================================================================================
-	static int getCameraIndex(String deviceName) {
+//================================================================================
+	static int getCameraIndex(final String deviceName) {
 		Logging.d("Camera1Enumerator", "getCameraIndex: " + deviceName);
 		
 		for (int i = 0; i < Camera.getNumberOfCameras(); ++i) {

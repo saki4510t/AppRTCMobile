@@ -1,31 +1,28 @@
 package com.serenegiant.webrtc;
 
 public interface SurfaceCameraSession {
-	void stop();
-	int getFace();
-	int getRotation();
+	public void stop();
+	public int getFace();
+	public int getRotation();
 	
 	public interface Events {
-		void onCameraOpening();
+		public void onCameraOpening();
 		
-		void onCameraError(SurfaceCameraSession session, String error);
+		public void onCameraError(final SurfaceCameraSession session, String error);
 		
-		void onCameraDisconnected(SurfaceCameraSession session);
+		public void onCameraDisconnected(final SurfaceCameraSession session);
 		
-		void onCameraClosed(SurfaceCameraSession session);
+		public void onCameraClosed(final SurfaceCameraSession session);
 	}
 	
 	public interface CreateSessionCallback {
-		void onDone(SurfaceCameraSession session);
+		public void onDone(final SurfaceCameraSession session);
 		
-		void onFailure(SurfaceCameraSession.FailureType failureType, String error);
+		public void onFailure(final SurfaceCameraSession.FailureType failureType, final String error);
 	}
 	
 	public static enum FailureType {
 		ERROR,
-		DISCONNECTED;
-		
-		private FailureType() {
-		}
+		DISCONNECTED
 	}
 }

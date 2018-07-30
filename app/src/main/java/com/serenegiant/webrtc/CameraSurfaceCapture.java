@@ -33,16 +33,16 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	public static final CameraEventsHandler DEFAULT_EVENTS_HANDLER
 		= new CameraEventsHandler() {
 
-		public void onCameraError(String errorDescription) {
+		public void onCameraError(final String errorDescription) {
 		}
 		
 		public void onCameraDisconnected() {
 		}
 		
-		public void onFailure(String reason) {
+		public void onFailure(final String reason) {
 		}
 		
-		public void onCameraOpening(String cameraName) {
+		public void onCameraOpening(final String cameraName) {
 		}
 		
 		public void onFirstFrameAvailable() {
@@ -184,7 +184,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	
 	private void switchCameraInternal(@Nullable CameraSurfaceVideoCapture.CameraSwitchHandler switchEventsHandler) {
 		Logging.d(TAG, "switchCamera internal");
-		final String[] deviceNames = this.cameraEnumerator.getDeviceNames();
+		final String[] deviceNames = cameraEnumerator.getDeviceNames();
 		if (deviceNames.length < 2) {
 			if (switchEventsHandler != null) {
 				switchEventsHandler.onCameraSwitchError("No camera to switch to.");
@@ -193,12 +193,12 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 		} else {
 			synchronized (stateLock) {
 				if (switchState != CameraSurfaceCapture.SwitchState.IDLE) {
-					this.reportCameraSwitchError("Camera switch already in progress.", switchEventsHandler);
+					reportCameraSwitchError("Camera switch already in progress.", switchEventsHandler);
 					return;
 				}
 				
 				if (!sessionOpening && currentSession == null) {
-					this.reportCameraSwitchError("switchCamera: camera is not running.", switchEventsHandler);
+					reportCameraSwitchError("switchCamera: camera is not running.", switchEventsHandler);
 					return;
 				}
 				
@@ -215,7 +215,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 					oldSession.stop();
 				});
 				currentSession = null;
-				int cameraNameIndex = Arrays.asList(deviceNames).indexOf(this.cameraName);
+				final int cameraNameIndex = Arrays.asList(deviceNames).indexOf(this.cameraName);
 				cameraName = deviceNames[(cameraNameIndex + 1) % deviceNames.length];
 				sessionOpening = true;
 				openAttemptsRemaining = 1;
@@ -235,7 +235,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	protected abstract void createCameraSession(
 		final SurfaceCameraSession.CreateSessionCallback createSessionCallback,
 		final SurfaceCameraSession.Events cameraSessionEventsHandler,
-		final Context applicationContext,
+		@NonNull final Context applicationContext,
 		final SurfaceTextureHelper surfaceHelper, String cameraName,
 		final int width, final int height, final int framerate);
 	

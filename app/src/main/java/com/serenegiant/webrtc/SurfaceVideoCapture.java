@@ -86,5 +86,6 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 	
 	public interface EventsHandler {
 		public void onFailure(final String reason);
+		public void onFirstFrameAvailable();
 	}
 }
