@@ -1,5 +1,9 @@
 package com.serenegiant.webrtc;
 
+/**
+ * 内蔵カメラ映像をSurface/SurfaceTextureを経由してWebRTCへ流し込むための
+ * SurfaceVideoCaptureインターフェース
+ */
 public interface CameraSurfaceVideoCapture extends SurfaceVideoCapture {
 
 	public void switchCamera(final CameraSwitchHandler handler);

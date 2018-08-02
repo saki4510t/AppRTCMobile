@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/autobanh-jar" />
             <option value="$PROJECT_DIR$/javalib" />
+            <option value="$PROJECT_DIR$/webrtc" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

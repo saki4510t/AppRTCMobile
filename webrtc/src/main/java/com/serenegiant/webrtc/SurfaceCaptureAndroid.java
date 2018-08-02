@@ -19,6 +19,14 @@ import org.webrtc.VideoFrame;
 
 import javax.annotation.Nullable;
 
+/**
+ * Surface/SurfaceTextureから映像入力してWebRTCへ流すための
+ * SurfaceVideoCaptureインターフェースの実装
+ * WebRTCのオフィシャル実装では直接カメラ映像をWebRTCへ引き渡すので
+ * 途中で映像効果を付与したり内蔵カメラ以外の映像を流すのが面倒なので
+ * Surface/SurfaceTextureから映像を入力してWebRTCへ流すための
+ * 汎用インターフェースとして作成
+ */
 public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 
 	private static final boolean DEBUG = true; // set false on production

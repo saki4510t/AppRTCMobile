@@ -42,4 +42,5 @@ ext {
 
 	versionCodeNum = 31
 	versionNameString = '1.7.2'
+	webrtcAarVersionString = '1.0.0'
 }

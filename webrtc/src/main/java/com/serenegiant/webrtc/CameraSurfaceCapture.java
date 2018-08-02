@@ -14,6 +14,10 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
+/**
+ * 内蔵カメラ映像をSurface/SurfaceTextureとIRendererHolderを経由して
+ * WebRTCへ流すためのCameraSurfaceVideoCaptureインターフェースの実装
+ */
 public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	implements CameraSurfaceVideoCapture {
 

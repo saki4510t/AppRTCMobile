@@ -10,6 +10,14 @@ import org.webrtc.VideoCapturer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Surface/SurfaceTextureからIRendererHolderへ映像入力して
+ * WebRTCへ流すためのVideoCapturerインターフェース
+ * WebRTCのオフィシャル実装では直接カメラ映像をWebRTCへ引き渡すので
+ * 途中で映像効果を付与したり内蔵カメラ以外の映像を流すのが面倒なので
+ * Surface/SurfaceTextureから映像を入力してWebRTCへ流すための
+ * 汎用インターフェースとして作成
+ */
 public interface SurfaceVideoCapture extends VideoCapturer {
 	@Nullable
 	public Surface getInputSurface();

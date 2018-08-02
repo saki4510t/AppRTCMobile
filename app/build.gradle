@@ -49,5 +49,6 @@ dependencies {
 	}
 
 	implementation "org.webrtc:google-webrtc:${webrtcVersion}"
+	implementation project(':webrtc')
 	implementation project(':autobanh-jar')
 }

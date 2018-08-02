@@ -1,5 +1,8 @@
 package com.serenegiant.webrtc;
 
+/**
+ * 内蔵カメラをSurfaceViewoCaptureで使うためのヘルパーインターフェース
+ */
 public interface SurfaceCameraSession {
 	public void stop();
 	public int getFace();
