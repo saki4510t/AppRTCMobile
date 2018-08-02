@@ -65,7 +65,6 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 
 	public SurfaceCaptureAndroid(@NonNull final CaptureListener captureListener) {
 		this.captureListener = captureListener;
-		mRendererHolder = createRendererHolder();
 	}
 
 	@Override
@@ -197,6 +196,9 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@Nullable
 	public Surface getInputSurface() {
 		synchronized (stateLock) {
+			if (!isDisposed && (mRendererHolder == null)) {
+				mRendererHolder = createRendererHolder();
+			}
 			return mRendererHolder != null ? mRendererHolder.getSurface() : null;
 		}
 	}
@@ -210,6 +212,9 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@Nullable
 	public SurfaceTexture getInputSurfaceTexture() {
 		synchronized (stateLock) {
+			if (!isDisposed && (mRendererHolder == null)) {
+				mRendererHolder = createRendererHolder();
+			}
 			return mRendererHolder != null ? mRendererHolder.getSurfaceTexture() : null;
 		}
 	}
@@ -226,9 +231,11 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 
 		synchronized (stateLock) {
 			checkNotDisposed();
-			final IRendererHolder rendererHolder = mRendererHolder;
-			if (!isDisposed && rendererHolder != null) {
-				rendererHolder.addSurface(id, surface, isRecordable);
+			if (!isDisposed && (mRendererHolder == null)) {
+				mRendererHolder = createRendererHolder();
+			}
+			if (mRendererHolder != null) {
+				mRendererHolder.addSurface(id, surface, isRecordable);
 			}
 		}
 	}
@@ -246,9 +253,11 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 
 		synchronized (stateLock) {
 			checkNotDisposed();
-			final IRendererHolder rendererHolder = mRendererHolder;
-			if (!isDisposed && rendererHolder != null) {
-				rendererHolder.addSurface(id, surface, isRecordable, maxFps);
+			if (!isDisposed && (mRendererHolder == null)) {
+				mRendererHolder = createRendererHolder();
+			}
+			if (mRendererHolder != null) {
+				mRendererHolder.addSurface(id, surface, isRecordable, maxFps);
 			}
 		}
 	}
@@ -260,9 +269,8 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@Override
 	public void removeSurface(final int id) {
 		synchronized (stateLock) {
-			final IRendererHolder rendererHolder = mRendererHolder;
-			if (!isDisposed && rendererHolder != null) {
-				rendererHolder.removeSurface(id);
+			if (mRendererHolder != null) {
+				mRendererHolder.removeSurface(id);
 			}
 		}
 	}
@@ -301,8 +309,14 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	}
 
 	private void resize(final int width, final int height) {
-		if (mRendererHolder != null) {
-			mRendererHolder.resize(width, height);
+		synchronized (stateLock) {
+			checkNotDisposed();
+			if (!isDisposed && (mRendererHolder == null)) {
+				mRendererHolder = createRendererHolder();
+			}
+			if (mRendererHolder != null) {
+				mRendererHolder.resize(width, height);
+			}
 		}
 	}
 	
@@ -311,14 +325,22 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	 * WebRTCへの映像入力用SurfaceTextureをセット
 	 */
 	private void setSurface() {
-		if ((mCaptureSurfaceId != 0) && (mRendererHolder != null)) {
-			mRendererHolder.removeSurface(mCaptureSurfaceId);
+		synchronized (stateLock) {
+			if ((mCaptureSurfaceId != 0) && (mRendererHolder != null)) {
+				mRendererHolder.removeSurface(mCaptureSurfaceId);
+			}
+			mCaptureSurfaceId = 0;
+			final SurfaceTexture st = surfaceHelper.getSurfaceTexture();
+			st.setDefaultBufferSize(width, height);
+			final Surface surface = new Surface(st);
+			if (!isDisposed && (mRendererHolder == null)) {
+				mRendererHolder = createRendererHolder();
+			}
+			if (mRendererHolder != null) {
+				mCaptureSurfaceId = surface.hashCode();
+				mRendererHolder.addSurface(mCaptureSurfaceId, surface, false);
+			}
 		}
-		final SurfaceTexture st = surfaceHelper.getSurfaceTexture();
-		st.setDefaultBufferSize(width, height);
-		final Surface surface = new Surface(st);
-		mCaptureSurfaceId = surface.hashCode();
-		mRendererHolder.addSurface(mCaptureSurfaceId, surface, false);
 	}
 	
 	protected void checkIsOnCaptureThread() {
