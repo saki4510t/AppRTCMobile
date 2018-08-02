@@ -36,11 +36,11 @@ ext {
 
 	supportLibVersion = '27.1.1'  // variable that can be referenced to keep support libs consistent
 	constraintLayoutVersion = '1.1.2'
-	commonLibVersion= '2.9.0'
+	commonLibVersion= '2.9.2'
 	versionGson = '2.8.4'
 	webrtcVersion = '1.0.23171'
 
-	versionCodeNum = 31
+	versionCodeNum = 32
 	versionNameString = '1.7.2'
-	webrtcAarVersionString = '1.0.0'
+	webrtcAarVersionString = '1.0.1'
 }
