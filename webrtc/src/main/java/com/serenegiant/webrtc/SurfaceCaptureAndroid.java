@@ -196,9 +196,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@Nullable
 	public Surface getInputSurface() {
 		synchronized (stateLock) {
-			if (!isDisposed && (mRendererHolder == null)) {
-				mRendererHolder = createRendererHolder();
-			}
+			getRendererHolder();
 			return mRendererHolder != null ? mRendererHolder.getSurface() : null;
 		}
 	}
@@ -212,9 +210,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@Nullable
 	public SurfaceTexture getInputSurfaceTexture() {
 		synchronized (stateLock) {
-			if (!isDisposed && (mRendererHolder == null)) {
-				mRendererHolder = createRendererHolder();
-			}
+			getRendererHolder();
 			return mRendererHolder != null ? mRendererHolder.getSurfaceTexture() : null;
 		}
 	}
@@ -227,16 +223,12 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	 */
 	@Override
 	public void addSurface(final int id, final Object surface,
-		final boolean isRecordable) {
+		final boolean isRecordable) throws IllegalStateException {
 
 		synchronized (stateLock) {
 			checkNotDisposed();
-			if (!isDisposed && (mRendererHolder == null)) {
-				mRendererHolder = createRendererHolder();
-			}
-			if (mRendererHolder != null) {
-				mRendererHolder.addSurface(id, surface, isRecordable);
-			}
+			requireRendererHolder();
+			mRendererHolder.addSurface(id, surface, isRecordable);
 		}
 	}
 	
@@ -249,16 +241,12 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	 */
 	@Override
 	public void addSurface(final int id, final Object surface,
-		final boolean isRecordable, final int maxFps) {
+		final boolean isRecordable, final int maxFps) throws IllegalStateException {
 
 		synchronized (stateLock) {
 			checkNotDisposed();
-			if (!isDisposed && (mRendererHolder == null)) {
-				mRendererHolder = createRendererHolder();
-			}
-			if (mRendererHolder != null) {
-				mRendererHolder.addSurface(id, surface, isRecordable, maxFps);
-			}
+			requireRendererHolder();
+			mRendererHolder.addSurface(id, surface, isRecordable, maxFps);
 		}
 	}
 
@@ -269,6 +257,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@Override
 	public void removeSurface(final int id) {
 		synchronized (stateLock) {
+			getRendererHolder();
 			if (mRendererHolder != null) {
 				mRendererHolder.removeSurface(id);
 			}
@@ -302,18 +291,47 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		return 0;
 	}
 
-	protected void checkNotDisposed() {
+	protected void checkNotDisposed() throws IllegalStateException {
 		if (isDisposed) {
-			throw new RuntimeException("capturer is disposed.");
+			throw new IllegalStateException("capturer is disposed.");
+		}
+	}
+	
+	/**
+	 * IRendererHolderがなければ生成する
+	 */
+	@Nullable
+	public IRendererHolder getRendererHolder() {
+		synchronized (stateLock) {
+			if (!isDisposed && (mRendererHolder == null)) {
+				mRendererHolder = createRendererHolder();
+			}
+			return mRendererHolder;
+		}
+	}
+	
+	/**
+	 * IRendererHolderがなければ生成する
+	 * @return
+	 * @throws IllegalStateException
+	 */
+	@NonNull
+	public IRendererHolder requireRendererHolder() throws IllegalStateException {
+		synchronized (stateLock) {
+			if (isDisposed) {
+				throw new IllegalStateException();
+			}
+			if (mRendererHolder == null) {
+				mRendererHolder = createRendererHolder();
+			}
+			return mRendererHolder;
 		}
 	}
 
 	private void resize(final int width, final int height) {
 		synchronized (stateLock) {
 			checkNotDisposed();
-			if (!isDisposed && (mRendererHolder == null)) {
-				mRendererHolder = createRendererHolder();
-			}
+			getRendererHolder();
 			if (mRendererHolder != null) {
 				mRendererHolder.resize(width, height);
 			}
@@ -333,13 +351,9 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			final SurfaceTexture st = surfaceHelper.getSurfaceTexture();
 			st.setDefaultBufferSize(width, height);
 			final Surface surface = new Surface(st);
-			if (!isDisposed && (mRendererHolder == null)) {
-				mRendererHolder = createRendererHolder();
-			}
-			if (mRendererHolder != null) {
-				mCaptureSurfaceId = surface.hashCode();
-				mRendererHolder.addSurface(mCaptureSurfaceId, surface, false);
-			}
+			requireRendererHolder();
+			mCaptureSurfaceId = surface.hashCode();
+			mRendererHolder.addSurface(mCaptureSurfaceId, surface, false);
 		}
 	}
 	
