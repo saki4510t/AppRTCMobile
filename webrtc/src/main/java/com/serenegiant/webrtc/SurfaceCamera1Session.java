@@ -21,6 +21,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+/**
+ * 内蔵カメラへCamera APIでアクセスするためのSurfaceCameraSession実装
+ */
 public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private static final boolean DEBUG = true; // set false on production
 	private static final String TAG = SurfaceCamera1Session.class.getSimpleName();
@@ -33,7 +36,6 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private final SurfaceCameraSession.Events events;
 	@NonNull
 	private final Context applicationContext;
-	@NonNull
 	private final int cameraId;
 	@NonNull
 	private final Camera camera;
@@ -41,6 +43,17 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private final Camera.CameraInfo info;
 	private SessionState state;
 	
+	/**
+	 * インスタンス生成用のヘルパーメソッド
+	 * @param callback
+	 * @param events
+	 * @param applicationContext
+	 * @param inputSurface
+	 * @param cameraId
+	 * @param width
+	 * @param height
+	 * @param framerate
+	 */
 	public static void create(final SurfaceCameraSession.CreateSessionCallback callback,
 		@NonNull final SurfaceCameraSession.Events events,
 		final Context applicationContext,
@@ -60,7 +73,8 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		}
 		
 		if (camera == null) {
-			callback.onFailure(SurfaceCameraSession.FailureType.ERROR, "android.hardware.Camera.open returned null for camera id = " + cameraId);
+			callback.onFailure(SurfaceCameraSession.FailureType.ERROR,
+				"android.hardware.Camera.open returned null for camera id = " + cameraId);
 		} else {
 			try {
 				camera.setPreviewTexture(inputSurface);
@@ -70,7 +84,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 				return;
 			}
 			
-			Camera.CameraInfo info = new Camera.CameraInfo();
+			final Camera.CameraInfo info = new Camera.CameraInfo();
 			Camera.getCameraInfo(cameraId, info);
 			final Camera.Parameters parameters = camera.getParameters();
 			final CameraEnumerationAndroid.CaptureFormat captureFormat
@@ -83,24 +97,27 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		}
 	}
 	
-	private static void updateCameraParameters(Camera camera, Camera.Parameters parameters,
-		CameraEnumerationAndroid.CaptureFormat captureFormat, Size pictureSize) {
+	private static void updateCameraParameters(@NonNull final Camera camera,
+		@NonNull final Camera.Parameters params,
+		@NonNull final CameraEnumerationAndroid.CaptureFormat captureFormat,
+		@NonNull final Size pictureSize) {
 	
 		if (DEBUG) Log.v(TAG, "updateCameraParameters:");
-		final List<String> focusModes = parameters.getSupportedFocusModes();
-		parameters.setPreviewFpsRange(captureFormat.framerate.min, captureFormat.framerate.max);
-		parameters.setPreviewSize(captureFormat.width, captureFormat.height);
-		parameters.setPictureSize(pictureSize.width, pictureSize.height);
+		final List<String> focusModes = params.getSupportedFocusModes();
+		params.setPreviewFpsRange(captureFormat.framerate.min, captureFormat.framerate.max);
+		params.setPreviewSize(captureFormat.width, captureFormat.height);
+		params.setPictureSize(pictureSize.width, pictureSize.height);
+		params.setRecordingHint(true);
 		
-		if (parameters.isVideoStabilizationSupported()) {
-			parameters.setVideoStabilization(true);
+		if (params.isVideoStabilizationSupported()) {
+			params.setVideoStabilization(true);
 		}
 		
 		if (focusModes.contains("continuous-video")) {
-			parameters.setFocusMode("continuous-video");
+			params.setFocusMode("continuous-video");
 		}
 		
-		camera.setParameters(parameters);
+		camera.setParameters(params);
 	}
 	
 	@NonNull
@@ -141,9 +158,9 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	}
 	
 	public void stop() {
-		Logging.d(TAG, "Stop camera1 session on camera " + this.cameraId);
+		Logging.d(TAG, "Stop camera1 session on camera " + cameraId);
 		checkIsOnCameraThread();
-		if (this.state != SessionState.STOPPED) {
+		if (state != SessionState.STOPPED) {
 			final long stopStartTime = System.nanoTime();
 			stopInternal();
 			final int stopTimeMs = (int) TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - stopStartTime);
@@ -240,7 +257,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	}
 	
 	private void checkIsOnCameraThread() {
-		if (Thread.currentThread() != this.cameraThreadHandler.getLooper().getThread()) {
+		if (Thread.currentThread() != cameraThreadHandler.getLooper().getThread()) {
 			throw new IllegalStateException("Wrong thread");
 		}
 	}
@@ -267,7 +284,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	}
 	
 	@Nullable
-	static String getDeviceName(int index) {
+	static String getDeviceName(final int index) {
 		Camera.CameraInfo info = getCameraInfo(index);
 		if (info == null) {
 			return null;
@@ -278,7 +295,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	}
 	
 	@Nullable
-	static Camera.CameraInfo getCameraInfo(int index) {
+	static Camera.CameraInfo getCameraInfo(final int index) {
 		Camera.CameraInfo info = new Camera.CameraInfo();
 		
 		try {
@@ -290,21 +307,23 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		}
 	}
 	
-	static List<CameraEnumerationAndroid.CaptureFormat.FramerateRange> convertFramerates(List<int[]> arrayRanges) {
-		List<CameraEnumerationAndroid.CaptureFormat.FramerateRange> ranges = new ArrayList<>();
-		Iterator var2 = arrayRanges.iterator();
+	static List<CameraEnumerationAndroid.CaptureFormat.FramerateRange>
+		convertFramerates(final List<int[]> arrayRanges) {
+
+		final List<CameraEnumerationAndroid.CaptureFormat.FramerateRange> ranges = new ArrayList<>();
+		final Iterator var2 = arrayRanges.iterator();
 		
 		while (var2.hasNext()) {
-			int[] range = (int[]) var2.next();
+			final int[] range = (int[]) var2.next();
 			ranges.add(new CameraEnumerationAndroid.CaptureFormat.FramerateRange(range[0], range[1]));
 		}
 		
 		return ranges;
 	}
 	
-	static List<org.webrtc.Size> convertSizes(List<Camera.Size> cameraSizes) {
-		List<org.webrtc.Size> sizes = new ArrayList<>();
-		Iterator var2 = cameraSizes.iterator();
+	static List<org.webrtc.Size> convertSizes(final List<Camera.Size> cameraSizes) {
+		final List<org.webrtc.Size> sizes = new ArrayList<>();
+		final Iterator var2 = cameraSizes.iterator();
 		
 		while (var2.hasNext()) {
 			Camera.Size size = (Camera.Size) var2.next();

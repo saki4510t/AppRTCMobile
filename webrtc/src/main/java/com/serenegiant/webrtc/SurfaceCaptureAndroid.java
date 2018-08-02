@@ -34,7 +34,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 
 	protected final Object stateLock = new Object();
 	@NonNull
-	private final EventsHandler eventsHandler;
+	private final CaptureListener captureListener;
 	@Nullable
 	private SurfaceTextureHelper surfaceHelper;
 	protected Context applicationContext;
@@ -54,8 +54,8 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	private Statistics mStatistics;
 	private boolean firstFrameObserved;
 
-	public SurfaceCaptureAndroid(@NonNull final EventsHandler eventsHandler) {
-		this.eventsHandler = eventsHandler;
+	public SurfaceCaptureAndroid(@NonNull final CaptureListener captureListener) {
+		this.captureListener = captureListener;
 		mRendererHolder = createRendererHolder();
 	}
 
@@ -86,7 +86,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		synchronized (stateLock) {
 			checkNotDisposed();
 			if (surfaceHelper != null) {
-				mStatistics = new Statistics(surfaceHelper, eventsHandler);
+				mStatistics = new Statistics(surfaceHelper, captureListener);
 			} else {
 				throw new IllegalStateException("not initialized");
 			}
@@ -111,7 +111,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 				mStatistics = null;
 			}
 			firstFrameObserved = false;
-			ThreadUtils.invokeAtFrontUninterruptibly(this.surfaceHelper.getHandler(), new Runnable() {
+			ThreadUtils.invokeAtFrontUninterruptibly(surfaceHelper.getHandler(), new Runnable() {
 				public void run() {
 					if (mRendererHolder != null) {
 						mRendererHolder.removeSurface(mCaptureSurfaceId);
@@ -179,6 +179,11 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		return numCapturedFrames;
 	}
 
+	/**
+	 * 映像入力用のSurfaceを取得
+	 * #getInputSurfaceTextureとは排他使用のこと
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public Surface getInputSurface() {
@@ -187,6 +192,11 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 
+	/**
+	 * 映像入力用のSurfaceTextureを取得
+	 * #getInputSurfaceとは排他使用のこと
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public SurfaceTexture getInputSurfaceTexture() {
@@ -195,8 +205,16 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 
+	/**
+	 * 分配描画用の描画先Surfaceをセット
+	 * @param id
+	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
+	 * @param isRecordable
+	 */
 	@Override
-	public void addSurface(final int id, final Object surface, final boolean isRecordable) {
+	public void addSurface(final int id, final Object surface,
+		final boolean isRecordable) {
+
 		synchronized (stateLock) {
 			checkNotDisposed();
 			final IRendererHolder rendererHolder = mRendererHolder;
@@ -206,8 +224,17 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 	
+	/**
+	 * 分配描画用の描画先Surfaceをセット
+	 * @param id
+	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
+	 * @param isRecordable
+	 * @param maxFps
+	 */
 	@Override
-	public void addSurface(final int id, final Object surface, final boolean isRecordable, final int maxFps) {
+	public void addSurface(final int id, final Object surface,
+		final boolean isRecordable, final int maxFps) {
+
 		synchronized (stateLock) {
 			checkNotDisposed();
 			final IRendererHolder rendererHolder = mRendererHolder;
@@ -217,6 +244,10 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 
+	/**
+	 * 分配描画先Surfaceを削除
+	 * @param id
+	 */
 	@Override
 	public void removeSurface(final int id) {
 		synchronized (stateLock) {
@@ -227,16 +258,29 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 
+	/**
+	 * オフスクリーン描画・分配描画用のIRendererHolderを生成
+	 * @return
+	 */
 	@NonNull
 	protected IRendererHolder createRendererHolder() {
 		return new RendererHolder(width, height, mRenderHolderCallback);
 	}
 
+	/**
+	 * 映像回転用のモデルビュー変換行列を取得
+	 * @param transformMatrix
+	 * @return
+	 */
 	@NonNull
 	protected float[] onUpdateTexMatrix(@NonNull final float[] transformMatrix) {
 		return transformMatrix;
 	}
 	
+	/**
+	 * 映像ブレームの回転角を取得
+	 * @return
+	 */
 	protected int getFrameRotation() {
 		return 0;
 	}
@@ -253,6 +297,10 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 	
+	/**
+	 * オフスクリーン描画/分配描画用のIRendererHolderへ
+	 * WebRTCへの映像入力用SurfaceTextureをセット
+	 */
 	private void setSurface() {
 		if ((mCaptureSurfaceId != 0) && (mRendererHolder != null)) {
 			mRendererHolder.removeSurface(mCaptureSurfaceId);
@@ -264,28 +312,6 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		mRendererHolder.addSurface(mCaptureSurfaceId, surface, false);
 	}
 	
-	public void printStackTrace() {
-		Thread cameraThread = null;
-		if (captureThreadHandler != null) {
-			cameraThread = captureThreadHandler.getLooper().getThread();
-		}
-		
-		if (cameraThread != null) {
-			final StackTraceElement[] cameraStackTrace = cameraThread.getStackTrace();
-			if (cameraStackTrace.length > 0) {
-				Logging.d("CameraCapturer", "CameraCapturer stack trace:");
-				final StackTraceElement[] elements = cameraStackTrace;
-				final int n = cameraStackTrace.length;
-				
-				for (int i = 0; i < n; i++) {
-					final StackTraceElement traceElem = elements[i];
-					Logging.d("CameraCapturer", traceElem.toString());
-				}
-			}
-		}
-		
-	}
-
 	protected void checkIsOnCaptureThread() {
 		if (Thread.currentThread() != captureThreadHandler.getLooper().getThread()) {
 			Logging.e("CameraCapturer", "Check is on camera thread failed.");
@@ -293,15 +319,27 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 	
-
+	/**
+	 * Run specific task on capture thread with delay in ms
+ 	 * @param task
+	 * @param delayMs
+	 */
 	protected void postDelayed(final Runnable task, final long delayMs) {
 		captureThreadHandler.postDelayed(task, delayMs);
 	}
 
+	/**
+	 * Run specific task on capture thread
+	 * @param task
+	 */
 	protected void post(final Runnable task) {
 		captureThreadHandler.post(task);
 	}
 	
+	/**
+	 * get handler for capture thread
+	 * @return
+	 */
 	protected Handler getCaptureHandler() {
 		return captureThreadHandler;
 	}
@@ -339,7 +377,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		@Override
 		public void onFrameAvailable() {
 			if (!firstFrameObserved) {
-				eventsHandler.onFirstFrameAvailable();
+				captureListener.onFirstFrameAvailable();
 				firstFrameObserved = true;
 			}
 			try {

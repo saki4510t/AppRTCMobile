@@ -19,33 +19,63 @@ import javax.annotation.Nullable;
  * 汎用インターフェースとして作成
  */
 public interface SurfaceVideoCapture extends VideoCapturer {
+	/**
+	 * 映像入力用のSurfaceを取得
+	 * #getInputSurfaceTextureとは排他使用のこと
+	 * @return
+	 */
 	@Nullable
 	public Surface getInputSurface();
 
+	/**
+	 * 映像入力用のSurfaceTextureを取得
+	 * #getInputSurfaceとは排他使用のこと
+	 * @return
+	 */
 	@Nullable
 	public SurfaceTexture getInputSurfaceTexture();
 
+	/**
+	 * 分配描画用の描画先Surfaceをセット
+	 * @param id
+	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
+	 * @param isRecordable
+	 */
 	public void addSurface(final int id, final Object surface, final boolean isRecordable);
 	
+	/**
+	 * 分配描画用の描画先Surfaceをセット
+	 * @param id
+	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
+	 * @param isRecordable
+	 * @param maxFps
+	 */
 	public void addSurface(final int id, final Object surface, final boolean isRecordable, final int maxFps);
 
+	/**
+	 * 分配描画先Surfaceを削除
+	 * @param id
+	 */
 	public void removeSurface(final int id);
 
+	/**
+	 * WebRTCへ流した映像の統計情報(フレームレート)計算用ヘルパークラス
+	 */
 	public static class Statistics {
 		private static final String TAG = Statistics.class.getSimpleName();
 
 		@NonNull
 		private final SurfaceTextureHelper surfaceTextureHelper;
 		@NonNull
-		private final EventsHandler eventsHandler;
+		private final CaptureListener captureListener;
 		private int frameCount;
 		private int freezePeriodCount;
 		
 		public Statistics(@NonNull final SurfaceTextureHelper surfaceTextureHelper,
-			@NonNull final EventsHandler eventsHandler) {
+			@NonNull final CaptureListener captureListener) {
 
 			this.surfaceTextureHelper = surfaceTextureHelper;
-			this.eventsHandler = eventsHandler;
+			this.captureListener = captureListener;
 			frameCount = 0;
 			freezePeriodCount = 0;
 			surfaceTextureHelper.getHandler().postDelayed(cameraObserver, 2000L);
@@ -75,9 +105,9 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 					if (2000 * freezePeriodCount >= 4000) {
 						Logging.e(TAG, "Camera freezed.");
 						if (surfaceTextureHelper.isTextureInUse()) {
-							eventsHandler.onFailure("Camera failure. Client must return video buffers.");
+							captureListener.onFailure("Camera failure. Client must return video buffers.");
 						} else {
-							eventsHandler.onFailure("Camera failure.");
+							captureListener.onFailure("Camera failure.");
 						}
 						
 						return;
@@ -92,7 +122,10 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 		};
 	}
 	
-	public interface EventsHandler {
+	/**
+	 * SurfaceVideoCaptureからのイベント通知用コールバックリスナー
+	 */
+	public interface CaptureListener {
 		public void onFailure(final String reason);
 		public void onFirstFrameAvailable();
 	}

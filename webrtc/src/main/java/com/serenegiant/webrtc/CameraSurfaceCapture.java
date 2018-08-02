@@ -11,6 +11,7 @@ import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceTextureHelper;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import javax.annotation.Nullable;
 
@@ -34,8 +35,12 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 		IN_PROGRESS
 	}
 	
-	public static final CameraEventsHandler DEFAULT_EVENTS_HANDLER
-		= new CameraEventsHandler() {
+	/**
+	 * デフォルトのCameraCaptureListener実装
+	 * 特に何もしない
+	 */
+	public static final CameraCaptureListener DEFAULT_CAPTURE_LISTENER
+		= new CameraCaptureListener() {
 
 		public void onCameraError(final String errorDescription) {
 		}
@@ -58,7 +63,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 		
 	private final CameraEnumerator cameraEnumerator;
 	@NonNull
-	private final CameraSurfaceVideoCapture.CameraEventsHandler eventsHandler;
+	private final CameraCaptureListener captureListener;
 	private final Handler uiThreadHandler;
 
 	private boolean sessionOpening;
@@ -68,23 +73,29 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	private int openAttemptsRemaining;
 	private CameraSurfaceCapture.SwitchState switchState;
 	@Nullable
-	private CameraSurfaceVideoCapture.CameraSwitchHandler switchEventsHandler;
+	private CameraSwitchListener switchEventsHandler;
 	
+	/**
+	 * コンストラクタ
+	 * @param cameraName
+	 * @param captureListener
+	 * @param cameraEnumerator
+	 */
 	public CameraSurfaceCapture(final String cameraName,
-		@Nullable CameraSurfaceVideoCapture.CameraEventsHandler eventsHandler,
+		@Nullable CameraCaptureListener captureListener,
 		final CameraEnumerator cameraEnumerator) {
 
-		super(eventsHandler != null ? eventsHandler : DEFAULT_EVENTS_HANDLER);
+		super(captureListener != null ? captureListener : DEFAULT_CAPTURE_LISTENER);
 		switchState = CameraSurfaceCapture.SwitchState.IDLE;
-		this.eventsHandler = eventsHandler != null ? eventsHandler : DEFAULT_EVENTS_HANDLER;
+		this.captureListener = captureListener != null ? captureListener : DEFAULT_CAPTURE_LISTENER;
 		this.cameraEnumerator = cameraEnumerator;
 		this.cameraName = cameraName;
 		this.uiThreadHandler = new Handler(Looper.getMainLooper());
 		final String[] deviceNames = cameraEnumerator.getDeviceNames();
 		if (deviceNames.length == 0) {
 			throw new RuntimeException("No cameras attached.");
-		} else if (!Arrays.asList(deviceNames).contains(this.cameraName)) {
-			throw new IllegalArgumentException("Camera name " + this.cameraName + " does not match any known camera device.");
+		} else if (!Arrays.asList(deviceNames).contains(cameraName)) {
+			throw new IllegalArgumentException("Camera name " + cameraName + " does not match any known camera device.");
 		}
 	}
 	
@@ -93,7 +104,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 		super.startCapture(width, height, framerate);
 		Logging.d(TAG, "startCapture: " + width + "x" + height + "@" + framerate);
 		synchronized (stateLock) {
-			if (!this.sessionOpening && this.currentSession == null) {
+			if (!sessionOpening && currentSession == null) {
 				sessionOpening = true;
 				openAttemptsRemaining = 3;
 				createSessionInternal(0);
@@ -104,7 +115,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	}
 	
 	private void createSessionInternal(int delayMs) {
-		this.uiThreadHandler.postDelayed(openCameraTimeoutRunnable, (long) (delayMs + 10000));
+		uiThreadHandler.postDelayed(openCameraTimeoutRunnable, (long) (delayMs + 10000));
 		postDelayed(() -> {
 			createCameraSession(createSessionCallback,
 				cameraSessionEventsHandler,
@@ -148,7 +159,9 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	
 	@Override
 	public void changeCaptureFormat(final int width, final int height, final int framerate) {
-		Logging.d(TAG, "changeCaptureFormat: " + width + "x" + height + "@" + framerate);
+		Logging.d(TAG,
+			String.format(Locale.US, "changeCaptureFormat:(%dx%d@%d)",
+				width, height, framerate));
 		super.changeCaptureFormat(width, height, framerate);
 		synchronized (stateLock) {
 			stopCapture();
@@ -157,10 +170,10 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	}
 	
 	@Override
-	public void switchCamera(final CameraSurfaceVideoCapture.CameraSwitchHandler switchEventsHandler) {
+	public void switchCamera(final CameraSwitchListener listener) {
 		Logging.d(TAG, "switchCamera");
 		post(() -> {
-			switchCameraInternal(switchEventsHandler);
+			switchCameraInternal(listener);
 		});
 	}
 	
@@ -179,34 +192,34 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 		return currentSession.getRotation();
 	}
 
-	private void reportCameraSwitchError(String error, @Nullable CameraSurfaceVideoCapture.CameraSwitchHandler switchEventsHandler) {
+	private void reportCameraSwitchError(String error, @Nullable CameraSwitchListener listener) {
 		Logging.e(TAG, error);
-		if (switchEventsHandler != null) {
-			switchEventsHandler.onCameraSwitchError(error);
+		if (listener != null) {
+			listener.onCameraSwitchError(error);
 		}
 	}
 	
-	private void switchCameraInternal(@Nullable CameraSurfaceVideoCapture.CameraSwitchHandler switchEventsHandler) {
+	private void switchCameraInternal(@Nullable CameraSwitchListener listener) {
 		Logging.d(TAG, "switchCamera internal");
 		final String[] deviceNames = cameraEnumerator.getDeviceNames();
 		if (deviceNames.length < 2) {
-			if (switchEventsHandler != null) {
-				switchEventsHandler.onCameraSwitchError("No camera to switch to.");
+			if (listener != null) {
+				listener.onCameraSwitchError("No camera to switch to.");
 			}
 			
 		} else {
 			synchronized (stateLock) {
 				if (switchState != CameraSurfaceCapture.SwitchState.IDLE) {
-					reportCameraSwitchError("Camera switch already in progress.", switchEventsHandler);
+					reportCameraSwitchError("Camera switch already in progress.", listener);
 					return;
 				}
 				
 				if (!sessionOpening && currentSession == null) {
-					reportCameraSwitchError("switchCamera: camera is not running.", switchEventsHandler);
+					reportCameraSwitchError("switchCamera: camera is not running.", listener);
 					return;
 				}
 				
-				this.switchEventsHandler = switchEventsHandler;
+				switchEventsHandler = listener;
 				if (sessionOpening) {
 					switchState = CameraSurfaceCapture.SwitchState.PENDING;
 					return;
@@ -219,7 +232,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 					oldSession.stop();
 				});
 				currentSession = null;
-				final int cameraNameIndex = Arrays.asList(deviceNames).indexOf(this.cameraName);
+				final int cameraNameIndex = Arrays.asList(deviceNames).indexOf(cameraName);
 				cameraName = deviceNames[(cameraNameIndex + 1) % deviceNames.length];
 				sessionOpening = true;
 				openAttemptsRemaining = 1;
@@ -232,10 +245,21 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	
 	protected String getCameraName() {
 		synchronized (stateLock) {
-			return this.cameraName;
+			return cameraName;
 		}
 	}
 	
+	/**
+	 * SurfaceCameraSessionを生成する
+	 * @param createSessionCallback
+	 * @param cameraSessionEventsHandler
+	 * @param applicationContext
+	 * @param surfaceHelper
+	 * @param cameraName
+	 * @param width
+	 * @param height
+	 * @param framerate
+	 */
 	protected abstract void createCameraSession(
 		final SurfaceCameraSession.CreateSessionCallback createSessionCallback,
 		final SurfaceCameraSession.Events cameraSessionEventsHandler,
@@ -245,7 +269,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	
 	private final Runnable openCameraTimeoutRunnable = new Runnable() {
 		public void run() {
-			eventsHandler.onCameraError("Camera failed to start within timeout.");
+			captureListener.onCameraError("Camera failed to start within timeout.");
 		}
 	};
 
@@ -296,9 +320,9 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 					}
 					
 					if (failureType == SurfaceCameraSession.FailureType.DISCONNECTED) {
-						eventsHandler.onCameraDisconnected();
+						captureListener.onCameraDisconnected();
 					} else {
-						eventsHandler.onCameraError(error);
+						captureListener.onCameraError(error);
 					}
 				} else {
 					Logging.w(TAG, "Opening camera failed, retry: " + error);
@@ -319,7 +343,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 				if (currentSession != null) {
 					Logging.w(TAG, "onCameraOpening while session was open.");
 				} else {
-					eventsHandler.onCameraOpening(cameraName);
+					captureListener.onCameraOpening(cameraName);
 				}
 			}
 		}
@@ -331,7 +355,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 				if (session != currentSession) {
 					Logging.w(TAG, "onCameraError from another session: " + error);
 				} else {
-					eventsHandler.onCameraError(error);
+					captureListener.onCameraError(error);
 					stopCapture();
 				}
 			}
@@ -344,7 +368,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 				if (session != currentSession) {
 					Logging.w(TAG, "onCameraDisconnected from another session.");
 				} else {
-					eventsHandler.onCameraDisconnected();
+					captureListener.onCameraDisconnected();
 					stopCapture();
 				}
 			}
@@ -357,7 +381,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 				if (session != currentSession && currentSession != null) {
 					Logging.d(TAG, "onCameraClosed from another session.");
 				} else {
-					eventsHandler.onCameraClosed();
+					captureListener.onCameraClosed();
 				}
 			}
 		}
@@ -369,7 +393,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 //					Logging.w(TAG, "onFrameCaptured from another session.");
 //				} else {
 //					if (!firstFrameObserved) {
-//						eventsHandler.onFirstFrameAvailable();
+//						captureListener.onFirstFrameAvailable();
 //						firstFrameObserved = true;
 //					}
 //

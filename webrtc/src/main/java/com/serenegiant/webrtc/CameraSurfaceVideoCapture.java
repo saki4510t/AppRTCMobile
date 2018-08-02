@@ -6,15 +6,19 @@ package com.serenegiant.webrtc;
  */
 public interface CameraSurfaceVideoCapture extends SurfaceVideoCapture {
 
-	public void switchCamera(final CameraSwitchHandler handler);
+	/**
+	 * 内蔵カメラを切り替え
+	 * @param listener
+	 */
+	public void switchCamera(final CameraSwitchListener listener);
 	
-	public interface CameraSwitchHandler {
+	public interface CameraSwitchListener {
 		public void onCameraSwitchDone(final boolean var1);
 		
 		public void onCameraSwitchError(final String errorDescription);
 	}
 	
-	public interface CameraEventsHandler extends EventsHandler {
+	public interface CameraCaptureListener extends CaptureListener {
 		public void onCameraError(String errorDescription);
 		
 		public void onCameraDisconnected();
