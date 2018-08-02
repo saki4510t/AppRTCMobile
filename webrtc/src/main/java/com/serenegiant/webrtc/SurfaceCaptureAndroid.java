@@ -1,4 +1,13 @@
 package com.serenegiant.webrtc;
+/*
+ *  Copyright 2018 saki t_saki@serenegiant.com　All rights reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
@@ -29,7 +38,7 @@ import javax.annotation.Nullable;
  */
 public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 
-	private static final boolean DEBUG = true; // set false on production
+	private static final boolean DEBUG = false; // set false on production
 	private static final String TAG = SurfaceCaptureAndroid.class.getSimpleName();
 
 	protected final Object stateLock = new Object();
