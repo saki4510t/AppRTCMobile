@@ -1025,6 +1025,7 @@ public class PeerConnectionClient {
         return VIDEO_CODEC_VP8;
       case VIDEO_CODEC_VP9:
         return VIDEO_CODEC_VP9;
+      case VIDEO_CODEC_H264:
       case VIDEO_CODEC_H264_HIGH:
       case VIDEO_CODEC_H264_BASELINE:
         return VIDEO_CODEC_H264;
