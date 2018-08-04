@@ -62,6 +62,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@Nullable
 	private Statistics mStatistics;
 	private boolean firstFrameObserved;
+	private volatile CaptureState state;
 
 	public SurfaceCaptureAndroid(@NonNull final CaptureListener captureListener) {
 		this.captureListener = captureListener;
@@ -102,6 +103,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			this.height = height;
 			this.framerate = framerate;
 			firstFrameObserved = false;
+			state = CaptureState.RUNNING;
 			capturerObserver.onCapturerStarted(true);
 			surfaceHelper.startListening(mOnTextureFrameAvailableListener);
 			resize(width, height);
@@ -113,6 +115,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	public void stopCapture() {
 		if (DEBUG) Log.v(TAG, "stopCapture:");
 		synchronized (stateLock) {
+			state = CaptureState.STOPPED;
 			checkNotDisposed();
 			if (mStatistics != null) {
 				mStatistics.release();
@@ -167,15 +170,31 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			final int oesTextureId, final float[] transformMatrix,
 			final long timestampNs) {
 	
-			++numCapturedFrames;
-			if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onTextureFrameAvailable:" + numCapturedFrames);
-			final VideoFrame.Buffer buffer = surfaceHelper.createTextureBuffer(width, height,
-				RendererCommon.convertMatrixToAndroidGraphicsMatrix(onUpdateTexMatrix(transformMatrix)));
-			final VideoFrame frame = new VideoFrame(buffer, getFrameRotation(), timestampNs);
-			try {
-				capturerObserver.onFrameCaptured(frame);
-			} finally {
-				frame.release();
+			if (state != CaptureState.RUNNING) {
+				Logging.d(TAG, "Texture frame captured but this is no longer running.");
+				surfaceHelper.returnTextureFrame();
+			} else {
+				++numCapturedFrames;
+				if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onTextureFrameAvailable:" + numCapturedFrames);
+				final VideoFrame.Buffer buffer = surfaceHelper.createTextureBuffer(width, height,
+					RendererCommon.convertMatrixToAndroidGraphicsMatrix(onUpdateTexMatrix(transformMatrix)));
+				final VideoFrame frame = new VideoFrame(buffer, getFrameRotation(), timestampNs);
+				try {
+					capturerObserver.onFrameCaptured(frame);
+				} finally {
+					frame.release();
+				}
+				if (!firstFrameObserved) {
+					captureListener.onFirstFrameAvailable();
+					firstFrameObserved = true;
+				}
+				try {
+					if (mStatistics != null) {
+						mStatistics.addFrame();
+					}
+				} catch (final Exception e) {
+					// ignore
+				}
 			}
 		}
 	};
@@ -267,7 +286,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	 */
 	@NonNull
 	protected IRendererHolder createRendererHolder() {
-		return new RendererHolder(width, height, mRenderHolderCallback);
+		return new RendererHolder(width, height, DEBUG ? mRenderHolderCallback : null);
 	}
 	
 	/**
@@ -428,17 +447,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		
 		@Override
 		public void onFrameAvailable() {
-			if (!firstFrameObserved) {
-				captureListener.onFirstFrameAvailable();
-				firstFrameObserved = true;
-			}
-			try {
-				if (mStatistics != null) {
-					mStatistics.addFrame();
-				}
-			} catch (final Exception e) {
-				// ignore
-			}
+//			if (DEBUG) Log.v(TAG, "onFrameAvailable:");
 		}
 		
 		@Override

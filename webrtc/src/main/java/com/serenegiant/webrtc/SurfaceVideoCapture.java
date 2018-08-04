@@ -30,6 +30,11 @@ import javax.annotation.Nullable;
  * WebRTCオフィシャルライブラリの内蔵カメラアクセスクラスCameraVideoCapture.javaを参考に作成
  */
 public interface SurfaceVideoCapture extends VideoCapturer {
+	public static enum CaptureState {
+		RUNNING,
+		STOPPED
+	}
+
 	/**
 	 * 映像入力用のSurfaceを取得
 	 * #getInputSurfaceTextureとは排他使用のこと
