@@ -366,8 +366,8 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	
 	protected void checkIsOnCaptureThread() {
 		if (Thread.currentThread() != captureThreadHandler.getLooper().getThread()) {
-			Logging.e("CameraCapturer", "Check is on camera thread failed.");
-			throw new RuntimeException("Not on camera thread.");
+			Logging.e(TAG, "Check is on capture thread failed.");
+			throw new RuntimeException("Not on capture thread.");
 		}
 	}
 	
