@@ -151,10 +151,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		stopCapture();
 		synchronized (stateLock) {
 			isDisposed = true;
-			if (mRendererHolder != null) {
-				mRendererHolder.release();
-				mRendererHolder = null;
-			}
+			releaseRendererHolder();
 		}
 	}
 	
@@ -271,6 +268,16 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	@NonNull
 	protected IRendererHolder createRendererHolder() {
 		return new RendererHolder(width, height, mRenderHolderCallback);
+	}
+	
+	/**
+	 * オフスクリーン描画・分配描画用のIRendererHolderを破棄
+	 */
+	protected void releaseRendererHolder() {
+		if (mRendererHolder != null) {
+			mRendererHolder.release();
+			mRendererHolder = null;
+		}
 	}
 
 	/**
