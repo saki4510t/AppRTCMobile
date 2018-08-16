@@ -107,7 +107,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			capturerObserver.onCapturerStarted(true);
 			surfaceHelper.startListening(mOnTextureFrameAvailableListener);
 			resize(width, height);
-			setSurface();
+			setSurface(false);
 		}
 	}
 	
@@ -144,7 +144,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			this.height = height;
 			this.framerate = framerate;
 			resize(width, height);
-			setSurface();
+			setSurface(false);
 		}
 	}
 	
@@ -368,7 +368,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	 * オフスクリーン描画/分配描画用のIRendererHolderへ
 	 * WebRTCへの映像入力用SurfaceTextureをセット
 	 */
-	private void setSurface() {
+	protected void setSurface(final boolean isRecordable) {
 		synchronized (stateLock) {
 			if ((mCaptureSurfaceId != 0) && (mRendererHolder != null)) {
 				mRendererHolder.removeSurface(mCaptureSurfaceId);
@@ -379,7 +379,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			final Surface surface = new Surface(st);
 			requireRendererHolder();
 			mCaptureSurfaceId = surface.hashCode();
-			mRendererHolder.addSurface(mCaptureSurfaceId, surface, false);
+			mRendererHolder.addSurface(mCaptureSurfaceId, surface, isRecordable);
 		}
 	}
 	
