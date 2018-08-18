@@ -310,7 +310,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	}
 	
 	/**
-	 * 映像ブレームの回転角を取得
+	 * 映像フレームの回転角を取得
 	 * @return
 	 */
 	protected int getFrameRotation() {
