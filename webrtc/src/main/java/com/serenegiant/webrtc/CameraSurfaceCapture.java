@@ -188,7 +188,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	@NonNull
 	protected float[] onUpdateTexMatrix(@NonNull final float[] transformMatrix) {
 		float[] matrix = transformMatrix;
-		if (currentSession.getFace() == 1) {
+		if ((currentSession != null) && (currentSession.getFace() == 1)) {
 			matrix = RendererCommon.multiplyMatrices(matrix, RendererCommon.horizontalFlipMatrix());
 		}
 		return matrix;
@@ -196,7 +196,7 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 
 	@Override
 	protected int getFrameRotation() {
-		return currentSession.getRotation();
+		return currentSession != null ? currentSession.getRotation() : 0;
 	}
 
 	private void reportCameraSwitchError(String error, @Nullable CameraSwitchListener listener) {
