@@ -32,6 +32,15 @@ public interface SurfaceCameraSession {
 	 */
 	public int getRotation();
 	
+	/**
+	 * 画面のの回転方向をセット
+ 	 * @param rotation 0, 90, 180, 270のどれか,
+ 	 * 		それぞれDisplay#getRotationで取得した
+ 	 * 		Surface.ROTATION_90, Surface.ROTATION_90,
+ 	 * 		Surface.ROTATION_180, Surface.ROTATION_270に対応
+	 */
+	public void setDeviceRotation(final int rotation);
+	
 	public interface Events {
 		public void onCameraOpening();
 		

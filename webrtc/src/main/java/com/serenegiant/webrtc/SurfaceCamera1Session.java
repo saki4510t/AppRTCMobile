@@ -233,24 +233,32 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		}
 	}
 	
+	private volatile int mDeviceRotation = -1;
+	public void setDeviceRotation(final int rotation) {
+		mDeviceRotation = rotation;
+	}
+
 	private int getDeviceOrientation() {
-		int orientation;
-		// XXX 毎フレーム呼ばれるからこれ毎回呼ぶよりもConfigChangedをひらってチェックするほうが負荷低減にいい気がする
-		WindowManager wm = (WindowManager) applicationContext.getSystemService(Context.WINDOW_SERVICE);
-		switch (wm.getDefaultDisplay().getRotation()) {
-		case Surface.ROTATION_90:
-			orientation = 90;
-			break;
-		case Surface.ROTATION_180:
-			orientation = 180;
-			break;
-		case Surface.ROTATION_270:
-			orientation = 270;
-			break;
-		case Surface.ROTATION_0:
-		default:
-			orientation = 0;
-			break;
+		// #setDeviceRotationが呼ばれて有効な値がセットされていればそれを使う
+		int orientation = mDeviceRotation;
+		if ((orientation != -1) || ((orientation % 90) != 0)) {
+			// XXX 毎フレーム呼ばれるからこれ毎回呼ぶよりもConfigChangedをひらってチェックするほうが負荷低減にいい気がする
+			final WindowManager wm = (WindowManager) applicationContext.getSystemService(Context.WINDOW_SERVICE);
+			switch (wm.getDefaultDisplay().getRotation()) {
+			case Surface.ROTATION_90:
+				orientation = 90;
+				break;
+			case Surface.ROTATION_180:
+				orientation = 180;
+				break;
+			case Surface.ROTATION_270:
+				orientation = 270;
+				break;
+			case Surface.ROTATION_0:
+			default:
+				orientation = 0;
+				break;
+			}
 		}
 		
 		return orientation;
