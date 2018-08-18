@@ -187,11 +187,12 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	@Override
 	@NonNull
 	protected float[] onUpdateTexMatrix(@NonNull final float[] transformMatrix) {
-		float[] matrix = transformMatrix;
-		if ((currentSession != null) && (currentSession.getFace() == 1)) {
-			matrix = RendererCommon.multiplyMatrices(matrix, RendererCommon.horizontalFlipMatrix());
-		}
-		return matrix;
+//		float[] matrix = transformMatrix;
+//		if ((currentSession != null) && (currentSession.getFace() == 1)) {
+//			matrix = RendererCommon.multiplyMatrices(matrix, RendererCommon.horizontalFlipMatrix());
+//		}
+//		return matrix;
+		return transformMatrix;
 	}
 
 	@Override

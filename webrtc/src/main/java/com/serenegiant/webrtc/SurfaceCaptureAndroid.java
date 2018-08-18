@@ -20,11 +20,12 @@ import com.serenegiant.glutils.IRendererHolder;
 import com.serenegiant.glutils.RenderHolderCallback;
 import com.serenegiant.glutils.RendererHolder;
 
+import org.webrtc.CapturerObserver;
 import org.webrtc.Logging;
-import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.ThreadUtils;
 import org.webrtc.VideoFrame;
+import org.webrtc.VideoSink;
 
 import javax.annotation.Nullable;
 
@@ -105,7 +106,8 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			firstFrameObserved = false;
 			state = CaptureState.RUNNING;
 			capturerObserver.onCapturerStarted(true);
-			surfaceHelper.startListening(mOnTextureFrameAvailableListener);
+//			surfaceHelper.startListening(mOnTextureFrameAvailableListener);
+			surfaceHelper.startListening(mVideoSink);
 			resize(width, height);
 			setSurface(false);
 		}
@@ -163,42 +165,62 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		return false;
 	}
 
-	private final SurfaceTextureHelper.OnTextureFrameAvailableListener
-		mOnTextureFrameAvailableListener = new SurfaceTextureHelper.OnTextureFrameAvailableListener() {
+//	private final SurfaceTextureHelper.OnTextureFrameAvailableListener
+//		mOnTextureFrameAvailableListener = new SurfaceTextureHelper.OnTextureFrameAvailableListener() {
+//		@Override
+//		public void onTextureFrameAvailable(
+//			final int oesTextureId, final float[] transformMatrix,
+//			final long timestampNs) {
+//
+//			if (state != CaptureState.RUNNING) {
+//				Logging.d(TAG, "Texture frame captured but this is no longer running.");
+//				surfaceHelper.returnTextureFrame();
+//			} else {
+//				++numCapturedFrames;
+//				if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onTextureFrameAvailable:" + numCapturedFrames);
+//				final VideoFrame.Buffer buffer = surfaceHelper.createTextureBuffer(width, height,
+//					RendererCommon.convertMatrixToAndroidGraphicsMatrix(onUpdateTexMatrix(transformMatrix)));
+//				final VideoFrame frame = new VideoFrame(buffer, getFrameRotation(), timestampNs);
+//				try {
+//					capturerObserver.onFrameCaptured(frame);
+//				} finally {
+//					frame.release();
+//				}
+//				if (!firstFrameObserved) {
+//					captureListener.onFirstFrameAvailable();
+//					firstFrameObserved = true;
+//				}
+//				try {
+//					if (mStatistics != null) {
+//						mStatistics.addFrame();
+//					}
+//				} catch (final Exception e) {
+//					// ignore
+//				}
+//			}
+//		}
+//	};
+//
+	private final VideoSink mVideoSink = new VideoSink() {
 		@Override
-		public void onTextureFrameAvailable(
-			final int oesTextureId, final float[] transformMatrix,
-			final long timestampNs) {
-	
-			if (state != CaptureState.RUNNING) {
-				Logging.d(TAG, "Texture frame captured but this is no longer running.");
-				surfaceHelper.returnTextureFrame();
-			} else {
-				++numCapturedFrames;
-				if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onTextureFrameAvailable:" + numCapturedFrames);
-				final VideoFrame.Buffer buffer = surfaceHelper.createTextureBuffer(width, height,
-					RendererCommon.convertMatrixToAndroidGraphicsMatrix(onUpdateTexMatrix(transformMatrix)));
-				final VideoFrame frame = new VideoFrame(buffer, getFrameRotation(), timestampNs);
-				try {
-					capturerObserver.onFrameCaptured(frame);
-				} finally {
-					frame.release();
+		public void onFrame(final VideoFrame frame) {
+			++numCapturedFrames;
+			if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onFrame:" + numCapturedFrames);
+			capturerObserver.onFrameCaptured(frame);
+			if (!firstFrameObserved) {
+				captureListener.onFirstFrameAvailable();
+				firstFrameObserved = true;
+			}
+			try {
+				if (mStatistics != null) {
+					mStatistics.addFrame();
 				}
-				if (!firstFrameObserved) {
-					captureListener.onFirstFrameAvailable();
-					firstFrameObserved = true;
-				}
-				try {
-					if (mStatistics != null) {
-						mStatistics.addFrame();
-					}
-				} catch (final Exception e) {
-					// ignore
-				}
+			} catch (final Exception e) {
+				// ignore
 			}
 		}
 	};
-	
+
 	public long getNumCapturedFrames() {
 		return numCapturedFrames;
 	}

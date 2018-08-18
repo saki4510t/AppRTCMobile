@@ -39,6 +39,7 @@ import org.webrtc.SoftwareVideoDecoderFactory;
 import org.webrtc.SoftwareVideoEncoderFactory;
 import org.webrtc.StatsObserver;
 import org.webrtc.StatsReport;
+import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
@@ -137,6 +138,8 @@ public class PeerConnectionClient {
   private PeerConnection peerConnection;
   @Nullable
   private AudioSource audioSource;
+  @Nullable
+  private SurfaceTextureHelper surfaceTextureHelper;
   @Nullable
   private VideoSource videoSource;
   private boolean preferIsac;
@@ -772,6 +775,10 @@ public class PeerConnectionClient {
       videoSource.dispose();
       videoSource = null;
     }
+	if (surfaceTextureHelper != null) {
+      surfaceTextureHelper.dispose();
+      surfaceTextureHelper = null;
+    }
     if (saveRecordedAudioToFile != null) {
       Log.d(TAG, "Closing audio file for recorded input audio.");
       saveRecordedAudioToFile.stop();
@@ -987,8 +994,13 @@ public class PeerConnectionClient {
 
   @Nullable
   private VideoTrack createVideoTrack(VideoCapturer capturer) {
-    videoSource = factory.createVideoSource(capturer);
-    capturer.startCapture(videoWidth, videoHeight, videoFps);
+//    videoSource = factory.createVideoSource(capturer);
+//    capturer.startCapture(videoWidth, videoHeight, videoFps);
+  surfaceTextureHelper =
+    SurfaceTextureHelper.create("CaptureThread", rootEglBase.getEglBaseContext());
+   videoSource = factory.createVideoSource(capturer.isScreencast());
+   capturer.initialize(surfaceTextureHelper, appContext, videoSource.getCapturerObserver());
+   capturer.startCapture(videoWidth, videoHeight, videoFps);
 
     localVideoTrack = factory.createVideoTrack(VIDEO_TRACK_ID, videoSource);
     localVideoTrack.setEnabled(renderVideo);
