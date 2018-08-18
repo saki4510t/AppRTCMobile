@@ -23,6 +23,7 @@ import com.serenegiant.glutils.RendererHolder;
 import org.webrtc.CapturerObserver;
 import org.webrtc.Logging;
 import org.webrtc.SurfaceTextureHelper;
+import org.webrtc.TextureBufferImpl;
 import org.webrtc.ThreadUtils;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
@@ -106,7 +107,6 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			firstFrameObserved = false;
 			state = CaptureState.RUNNING;
 			capturerObserver.onCapturerStarted(true);
-//			surfaceHelper.startListening(mOnTextureFrameAvailableListener);
 			surfaceHelper.startListening(mVideoSink);
 			resize(width, height);
 			setSurface(false);
@@ -206,7 +206,13 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		public void onFrame(final VideoFrame frame) {
 			++numCapturedFrames;
 			if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onFrame:" + numCapturedFrames);
-			capturerObserver.onFrameCaptured(frame);
+
+			final VideoFrame modifiedFrame = new VideoFrame(
+				SurfaceVideoCapture.createTextureBufferWithModifiedTransformMatrix(
+					(TextureBufferImpl)frame.getBuffer(), isMirror(), 0),
+				getFrameRotation(), frame.getTimestampNs());
+			capturerObserver.onFrameCaptured(modifiedFrame);
+			modifiedFrame.release();
 			if (!firstFrameObserved) {
 				captureListener.onFirstFrameAvailable();
 				firstFrameObserved = true;
@@ -322,21 +328,19 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 	}
 
 	/**
-	 * 映像回転用のモデルビュー変換行列を取得
-	 * @param transformMatrix
-	 * @return
-	 */
-	@NonNull
-	protected float[] onUpdateTexMatrix(@NonNull final float[] transformMatrix) {
-		return transformMatrix;
-	}
-	
-	/**
 	 * 映像フレームの回転角を取得
 	 * @return
 	 */
 	protected int getFrameRotation() {
 		return 0;
+	}
+	
+	/**
+	 * 映像を左右反転させるかどうか
+	 * @return false: 反転させない, true:左右反転させる
+	 */
+	protected boolean isMirror() {
+		return false;
 	}
 
 	protected void checkNotDisposed() throws IllegalStateException {
@@ -382,6 +386,9 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 			getRendererHolder();
 			if (mRendererHolder != null) {
 				mRendererHolder.resize(width, height);
+			}
+			if (surfaceHelper != null) {
+				surfaceHelper.setTextureSize(width, height);
 			}
 		}
 	}

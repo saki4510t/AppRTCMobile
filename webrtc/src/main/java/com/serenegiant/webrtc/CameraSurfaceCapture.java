@@ -183,21 +183,15 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 			switchCameraInternal(listener);
 		});
 	}
-	
-	@Override
-	@NonNull
-	protected float[] onUpdateTexMatrix(@NonNull final float[] transformMatrix) {
-//		float[] matrix = transformMatrix;
-//		if ((currentSession != null) && (currentSession.getFace() == 1)) {
-//			matrix = RendererCommon.multiplyMatrices(matrix, RendererCommon.horizontalFlipMatrix());
-//		}
-//		return matrix;
-		return transformMatrix;
-	}
 
 	@Override
 	protected int getFrameRotation() {
 		return currentSession != null ? currentSession.getRotation() : 0;
+	}
+
+	@Override
+	protected boolean isMirror() {
+		return (currentSession != null) && (currentSession.getFace() == 1);
 	}
 
 	private void reportCameraSwitchError(String error, @Nullable CameraSwitchListener listener) {

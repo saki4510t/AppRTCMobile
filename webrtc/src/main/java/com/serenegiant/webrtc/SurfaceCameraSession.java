@@ -9,6 +9,11 @@ package com.serenegiant.webrtc;
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.graphics.Matrix;
+
+import org.webrtc.TextureBufferImpl;
+import org.webrtc.VideoFrame;
+
 /**
  * 内蔵カメラをSurfaceVideoCaptureで使うためのヘルパーインターフェース
  *

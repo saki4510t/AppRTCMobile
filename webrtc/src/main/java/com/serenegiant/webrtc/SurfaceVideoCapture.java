@@ -9,13 +9,16 @@ package com.serenegiant.webrtc;
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.support.annotation.NonNull;
 import android.view.Surface;
 
 import org.webrtc.Logging;
 import org.webrtc.SurfaceTextureHelper;
+import org.webrtc.TextureBufferImpl;
 import org.webrtc.VideoCapturer;
+import org.webrtc.VideoFrame;
 
 import javax.annotation.Nullable;
 
@@ -144,5 +147,19 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 	public interface CaptureListener {
 		public void onFailure(final String reason);
 		public void onFirstFrameAvailable();
+	}
+
+	static VideoFrame.TextureBuffer createTextureBufferWithModifiedTransformMatrix(
+		@NonNull final TextureBufferImpl buffer, final boolean mirror, final int rotation) {
+
+		final Matrix transformMatrix = new Matrix();
+		transformMatrix.preTranslate(0.5F, 0.5F);
+		if (mirror) {
+			transformMatrix.preScale(-1.0F, 1.0F);
+		}
+
+		transformMatrix.preRotate((float)rotation);
+		transformMatrix.preTranslate(-0.5F, -0.5F);
+		return buffer.applyTransformMatrix(transformMatrix, buffer.getWidth(), buffer.getHeight());
 	}
 }
