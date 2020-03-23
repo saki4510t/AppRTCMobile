@@ -426,6 +426,7 @@ public class CallActivity extends BaseActivity
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode != CAPTURE_PERMISSION_REQUEST_CODE)
 			return;
 		mediaProjectionPermissionResultCode = resultCode;

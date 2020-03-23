@@ -203,6 +203,7 @@ public class ConnectActivity extends BaseActivity {
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == CONNECTION_REQUEST && commandLineRun) {
 			Log.d(TAG, "Return: " + resultCode);
 			setResult(resultCode);
