@@ -11,7 +11,7 @@ package com.serenegiant.webrtc;
 
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.Surface;
 
 import org.webrtc.Logging;

@@ -15,7 +15,7 @@ android {
 		versionCode versionCodeNum
 		versionName versionNameString
 
-		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
 	}
 
@@ -31,10 +31,10 @@ android {
 dependencies {
 	api fileTree(dir: 'libs', include: ['*.jar'])
 
-	implementation "com.android.support:support-v4:${supportLibVersion}"
+	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 	testImplementation 'junit:junit:4.12'
-	androidTestImplementation 'com.android.support.test:runner:1.0.2'
-	androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+	androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+	androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
 
 	api "org.webrtc:google-webrtc:${webrtcVersion}"
 	api project(':autobanh-jar')

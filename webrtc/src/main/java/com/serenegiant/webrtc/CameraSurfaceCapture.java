@@ -12,11 +12,10 @@ package com.serenegiant.webrtc;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.webrtc.CameraEnumerator;
 import org.webrtc.Logging;
-import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceTextureHelper;
 
 import java.util.Arrays;
