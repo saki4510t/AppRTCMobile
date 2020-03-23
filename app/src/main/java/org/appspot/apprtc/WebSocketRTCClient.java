@@ -24,7 +24,7 @@ import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.SessionDescription;
 
-import javax.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Negotiates signaling for chatting with https://appr.tc "rooms".

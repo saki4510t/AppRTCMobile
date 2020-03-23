@@ -13,6 +13,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.webrtc.CameraEnumerator;
 import org.webrtc.Logging;
@@ -20,8 +21,6 @@ import org.webrtc.SurfaceTextureHelper;
 
 import java.util.Arrays;
 import java.util.Locale;
-
-import javax.annotation.Nullable;
 
 /**
  * 内蔵カメラ映像をSurface/SurfaceTextureとIRendererHolderを経由して

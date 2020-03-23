@@ -30,7 +30,7 @@ import org.webrtc.ThreadUtils;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * org.appspot.apprtc.AppRTCProximitySensor manages functions related to Bluetoth devices in the

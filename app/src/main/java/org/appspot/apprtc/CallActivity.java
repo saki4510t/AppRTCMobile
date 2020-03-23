@@ -21,6 +21,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentTransaction;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -61,8 +63,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Activity for peer connection call setup, call waiting

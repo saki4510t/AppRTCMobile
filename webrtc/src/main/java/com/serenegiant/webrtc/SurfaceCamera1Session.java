@@ -14,6 +14,8 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Handler;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import android.util.Log;
 import android.view.Surface;
 import android.view.WindowManager;
@@ -27,8 +29,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
 
 /**
  * 内蔵カメラへCamera APIでアクセスするためのSurfaceCameraSession実装

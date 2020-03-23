@@ -12,6 +12,8 @@ package com.serenegiant.webrtc;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import android.view.Surface;
 
 import org.webrtc.Logging;
@@ -19,8 +21,6 @@ import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.TextureBufferImpl;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFrame;
-
-import javax.annotation.Nullable;
 
 /**
  * Surface/SurfaceTextureからIRendererHolderへ映像入力して

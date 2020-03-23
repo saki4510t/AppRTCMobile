@@ -13,6 +13,8 @@ import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import android.util.Log;
 import android.view.Surface;
 
@@ -26,8 +28,6 @@ import org.webrtc.TextureBufferImpl;
 import org.webrtc.ThreadUtils;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
-
-import javax.annotation.Nullable;
 
 /**
  * Surface/SurfaceTextureから映像入力してWebRTCへ流すための

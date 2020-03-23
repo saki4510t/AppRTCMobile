@@ -24,7 +24,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 
-import javax.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Replacement for org.appspot.apprtc.WebSocketChannelClient for direct communication between two IP addresses. Handles

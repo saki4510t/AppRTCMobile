@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Implementation of org.appspot.apprtc.AppRTCClient that uses direct TCP connection as the signaling channel.
