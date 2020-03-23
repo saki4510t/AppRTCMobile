@@ -34,14 +34,16 @@ dependencies {
 	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 	testImplementation 'junit:junit:4.12'
 	androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-	androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+	implementation "androidx.appcompat:appcompat:${androidXVersion}"
+//	implementation "com.google.android.material:material:${androidXMaterial}"
+	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 
 	api "org.webrtc:google-webrtc:${webrtcVersion}"
 	api project(':autobanh-jar')
 
-	implementation("com.serenegiant:common:${commonLibVersion}") {
-		exclude module: 'support-v4'
-	}
+	implementation "com.serenegiant:common:${commonLibVersion}"
 }
 
 def repo = new File(rootDir, "repository")
