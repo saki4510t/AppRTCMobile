@@ -17,7 +17,6 @@ import android.util.Log;
 import android.view.Surface;
 
 import com.serenegiant.glutils.IRendererHolder;
-import com.serenegiant.glutils.RenderHolderCallback;
 import com.serenegiant.glutils.RendererHolder;
 
 import org.webrtc.CapturerObserver;
@@ -467,8 +466,8 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		}
 	}
 	
-	private final RenderHolderCallback mRenderHolderCallback
-		= new RenderHolderCallback() {
+	private final IRendererHolder.RenderHolderCallback mRenderHolderCallback
+		= new IRendererHolder.RenderHolderCallback() {
 		@Override
 		public void onCreate(final Surface surface) {
 			if (DEBUG) Log.v(TAG, "onCreate:");

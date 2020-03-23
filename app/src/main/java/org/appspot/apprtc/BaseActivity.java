@@ -8,8 +8,8 @@ import android.widget.Toast;
 
 import com.serenegiant.apprtcmobile.R;
 import com.serenegiant.dialog.MessageDialogFragmentV4;
-import com.serenegiant.utils.BuildCheck;
-import com.serenegiant.utils.PermissionCheck;
+import com.serenegiant.system.BuildCheck;
+import com.serenegiant.system.PermissionCheck;
 
 public abstract class BaseActivity extends AppCompatActivity
 	implements MessageDialogFragmentV4.MessageDialogListener {
@@ -33,8 +33,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 */
 	@SuppressLint("NewApi")
 	@Override
-	public void onMessageDialogResult(final MessageDialogFragmentV4 dialog,
-		final int requestCode, final String[] permissions, final boolean result) {
+	public void onMessageDialogResult(@NonNull final MessageDialogFragmentV4 dialog,
+		final int requestCode, @NonNull final String[] permissions, final boolean result) {
 
 		if (result) {
 			// メッセージダイアログでOKを押された時はパーミッション要求する
