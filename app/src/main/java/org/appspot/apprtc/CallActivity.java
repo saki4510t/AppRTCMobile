@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.os.Handler;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
 import androidx.fragment.app.FragmentTransaction;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -643,6 +644,7 @@ public class CallActivity extends BaseActivity
 	}
 	
 	// Should be called from UI thread
+	@UiThread
 	private void callConnected() {
 		final long delta = System.currentTimeMillis() - callStartedTimeMs;
 		Log.i(TAG, "Call connected: delay=" + delta + "ms");
