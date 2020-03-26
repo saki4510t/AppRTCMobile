@@ -164,42 +164,6 @@ public class SurfaceCaptureAndroid implements SurfaceVideoCapture {
 		return false;
 	}
 
-//	private final SurfaceTextureHelper.OnTextureFrameAvailableListener
-//		mOnTextureFrameAvailableListener = new SurfaceTextureHelper.OnTextureFrameAvailableListener() {
-//		@Override
-//		public void onTextureFrameAvailable(
-//			final int oesTextureId, final float[] transformMatrix,
-//			final long timestampNs) {
-//
-//			if (state != CaptureState.RUNNING) {
-//				Logging.d(TAG, "Texture frame captured but this is no longer running.");
-//				surfaceHelper.returnTextureFrame();
-//			} else {
-//				++numCapturedFrames;
-//				if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onTextureFrameAvailable:" + numCapturedFrames);
-//				final VideoFrame.Buffer buffer = surfaceHelper.createTextureBuffer(width, height,
-//					RendererCommon.convertMatrixToAndroidGraphicsMatrix(onUpdateTexMatrix(transformMatrix)));
-//				final VideoFrame frame = new VideoFrame(buffer, getFrameRotation(), timestampNs);
-//				try {
-//					capturerObserver.onFrameCaptured(frame);
-//				} finally {
-//					frame.release();
-//				}
-//				if (!firstFrameObserved) {
-//					captureListener.onFirstFrameAvailable();
-//					firstFrameObserved = true;
-//				}
-//				try {
-//					if (mStatistics != null) {
-//						mStatistics.addFrame();
-//					}
-//				} catch (final Exception e) {
-//					// ignore
-//				}
-//			}
-//		}
-//	};
-//
 	private final VideoSink mVideoSink = new VideoSink() {
 		@Override
 		public void onFrame(final VideoFrame frame) {
