@@ -12,6 +12,9 @@ package com.serenegiant.webrtc;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+
+import com.serenegiant.glutils.IRendererHolder;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -86,11 +89,13 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	 * @param captureListener
 	 * @param cameraEnumerator
 	 */
-	public CameraSurfaceCapture(final String cameraName,
+	public CameraSurfaceCapture(
+		@Nullable final IRendererHolder rendererHolder,
+		final String cameraName,
 		@Nullable CameraCaptureListener captureListener,
 		final CameraEnumerator cameraEnumerator) {
 
-		super(captureListener != null ? captureListener : DEFAULT_CAPTURE_LISTENER);
+		super(rendererHolder, captureListener != null ? captureListener : DEFAULT_CAPTURE_LISTENER);
 		switchState = CameraSurfaceCapture.SwitchState.IDLE;
 		this.captureListener = captureListener != null ? captureListener : DEFAULT_CAPTURE_LISTENER;
 		this.cameraEnumerator = cameraEnumerator;

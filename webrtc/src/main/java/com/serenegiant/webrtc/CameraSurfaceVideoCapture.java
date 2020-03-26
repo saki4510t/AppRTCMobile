@@ -15,7 +15,7 @@ package com.serenegiant.webrtc;
  *
  * WebRTCオフィシャルライブラリの内蔵カメラアクセスクラスCameraVideoCapture.javaを参考に作成
  */
-public interface CameraSurfaceVideoCapture extends SurfaceVideoCapture {
+public interface CameraSurfaceVideoCapture extends SurfaceVideoDistributeCapture {
 
 	/**
 	 * 内蔵カメラを切り替え

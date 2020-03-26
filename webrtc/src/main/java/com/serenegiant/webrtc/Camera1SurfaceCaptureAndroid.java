@@ -31,7 +31,7 @@ public class Camera1SurfaceCaptureAndroid extends CameraSurfaceCapture {
 	 * @param cameraName
 	 */
 	public Camera1SurfaceCaptureAndroid(final String cameraName) {
-		super(cameraName, null, new Camera1Enumerator(true));
+		super(null, cameraName, null, new Camera1Enumerator(true));
 	}
 	
 	/**

@@ -11,9 +11,6 @@ package com.serenegiant.webrtc;
 
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import android.view.Surface;
 
 import org.webrtc.Logging;
@@ -22,16 +19,9 @@ import org.webrtc.TextureBufferImpl;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFrame;
 
-/**
- * Surface/SurfaceTextureからIRendererHolderへ映像入力して
- * WebRTCへ流すためのVideoCapturerインターフェース
- * WebRTCのオフィシャル実装では直接カメラ映像をWebRTCへ引き渡すので
- * 途中で映像効果を付与したり内蔵カメラ以外の映像を流すのが面倒なので
- * Surface/SurfaceTextureから映像を入力してWebRTCへ流すための
- * 汎用インターフェースとして作成
- *
- * WebRTCオフィシャルライブラリの内蔵カメラアクセスクラスCameraVideoCapture.javaを参考に作成
- */
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 public interface SurfaceVideoCapture extends VideoCapturer {
 	public static enum CaptureState {
 		RUNNING,
@@ -55,29 +45,6 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 	public SurfaceTexture getInputSurfaceTexture();
 
 	/**
-	 * 分配描画用の描画先Surfaceをセット
-	 * @param id
-	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
-	 * @param isRecordable
-	 */
-	public void addSurface(final int id, final Object surface, final boolean isRecordable);
-	
-	/**
-	 * 分配描画用の描画先Surfaceをセット
-	 * @param id
-	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
-	 * @param isRecordable
-	 * @param maxFps
-	 */
-	public void addSurface(final int id, final Object surface, final boolean isRecordable, final int maxFps);
-
-	/**
-	 * 分配描画先Surfaceを削除
-	 * @param id
-	 */
-	public void removeSurface(final int id);
-
-	/**
 	 * WebRTCへ流した映像の統計情報(フレームレート)計算用ヘルパークラス
 	 */
 	public static class Statistics {
@@ -89,7 +56,7 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 		private final CaptureListener captureListener;
 		private int frameCount;
 		private int freezePeriodCount;
-		
+
 		public Statistics(@NonNull final SurfaceTextureHelper surfaceTextureHelper,
 			@NonNull final CaptureListener captureListener) {
 
@@ -99,18 +66,18 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 			freezePeriodCount = 0;
 			surfaceTextureHelper.getHandler().postDelayed(cameraObserver, 2000L);
 		}
-		
+
 		private void checkThread() {
 			if (Thread.currentThread() != surfaceTextureHelper.getHandler().getLooper().getThread()) {
 				throw new IllegalStateException("Wrong thread");
 			}
 		}
-		
+
 		public void addFrame() {
 			checkThread();
 			++frameCount;
 		}
-		
+
 		public void release() {
 			surfaceTextureHelper.getHandler().removeCallbacks(cameraObserver);
 		}
@@ -128,19 +95,19 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 						} else {
 							captureListener.onFailure("Camera failure.");
 						}
-						
+
 						return;
 					}
 				} else {
 					freezePeriodCount = 0;
 				}
-				
+
 				frameCount = 0;
 				surfaceTextureHelper.getHandler().postDelayed(this, 2000L);
 			}
 		};
 	}
-	
+
 	/**
 	 * SurfaceVideoCaptureからのイベント通知用コールバックリスナー
 	 */

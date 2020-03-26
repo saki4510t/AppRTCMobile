@@ -50,7 +50,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private final Camera camera;
 	@NonNull
 	private final Camera.CameraInfo info;
-	private SurfaceVideoCapture.CaptureState state;
+	private SurfaceVideoDistributeCapture.CaptureState state;
 	
 	/**
 	 * インスタンス生成用のヘルパーメソッド
@@ -169,7 +169,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	public void stop() {
 		Logging.d(TAG, "Stop camera1 session on camera " + cameraId);
 		checkIsOnCameraThread();
-		if (state != SurfaceVideoCapture.CaptureState.STOPPED) {
+		if (state != SurfaceVideoDistributeCapture.CaptureState.STOPPED) {
 			final long stopStartTime = System.nanoTime();
 			stopInternal();
 			final int stopTimeMs = (int) TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - stopStartTime);
@@ -189,7 +189,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private void startCapturing() {
 		Logging.d(TAG, "Start capturing");
 		checkIsOnCameraThread();
-		state = SurfaceVideoCapture.CaptureState.RUNNING;
+		state = SurfaceVideoDistributeCapture.CaptureState.RUNNING;
 		camera.setErrorCallback(new Camera.ErrorCallback() {
 			public void onError(int error, Camera camera) {
 				String errorMessage;
@@ -222,10 +222,10 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private void stopInternal() {
 		Logging.d(TAG, "Stop internal");
 		checkIsOnCameraThread();
-		if (state == SurfaceVideoCapture.CaptureState.STOPPED) {
+		if (state == SurfaceVideoDistributeCapture.CaptureState.STOPPED) {
 			Logging.d(TAG, "Camera is already stopped");
 		} else {
-			state = SurfaceVideoCapture.CaptureState.STOPPED;
+			state = SurfaceVideoDistributeCapture.CaptureState.STOPPED;
 			camera.stopPreview();
 			camera.release();
 			events.onCameraClosed(this);

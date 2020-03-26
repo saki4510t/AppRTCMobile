@@ -9,17 +9,12 @@ package com.serenegiant.webrtc;
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import android.util.Log;
 import android.view.Surface;
-
-import com.serenegiant.glutils.IRendererHolder;
-import com.serenegiant.glutils.RendererHolder;
 
 import org.webrtc.CapturerObserver;
 import org.webrtc.Logging;
@@ -29,6 +24,9 @@ import org.webrtc.ThreadUtils;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * Surface/SurfaceTextureから映像入力してWebRTCへ流すための
  * SurfaceVideoCaptureインターフェースの実装
@@ -37,10 +35,10 @@ import org.webrtc.VideoSink;
  * Surface/SurfaceTextureから映像を入力してWebRTCへ流すための
  * 汎用インターフェースとして作成
  */
-public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
+public class SurfaceCaptureAndroidSimple implements SurfaceVideoCapture {
 
 	private static final boolean DEBUG = false; // set false on production
-	private static final String TAG = SurfaceCaptureAndroid.class.getSimpleName();
+	private static final String TAG = SurfaceCaptureAndroidSimple.class.getSimpleName();
 
 	protected final Object stateLock = new Object();
 	@NonNull
@@ -57,29 +55,12 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 	private int width;
 	private int height;
 	private int framerate;
-	/**
-	 * このクラス内でIRendererHolderを生成したかどうか
-	 */
-	private boolean mOwnRendererHolder;
-	@Nullable
-	private IRendererHolder mRendererHolder;
-	private int mCaptureSurfaceId;
 	@Nullable
 	private Statistics mStatistics;
 	private boolean firstFrameObserved;
 	private volatile CaptureState state;
 
-	/**
-	 * コンストラクタ
-	 * @param rendererHolder
-	 * @param captureListener
-	 */
-	public SurfaceCaptureAndroid(
-		@Nullable final IRendererHolder rendererHolder,
-		@NonNull final CaptureListener captureListener) {
-
-		mOwnRendererHolder = rendererHolder == null;
-		mRendererHolder = rendererHolder;
+	public SurfaceCaptureAndroidSimple(@NonNull final CaptureListener captureListener) {
 		this.captureListener = captureListener;
 	}
 
@@ -122,7 +103,6 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 			capturerObserver.onCapturerStarted(true);
 			surfaceHelper.startListening(mVideoSink);
 			resize(width, height);
-			setSurface(false);
 		}
 	}
 	
@@ -139,10 +119,6 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 			firstFrameObserved = false;
 			ThreadUtils.invokeAtFrontUninterruptibly(surfaceHelper.getHandler(), new Runnable() {
 				public void run() {
-					if (mRendererHolder != null) {
-						mRendererHolder.removeSurface(mCaptureSurfaceId);
-					}
-					mCaptureSurfaceId = 0;
 					surfaceHelper.stopListening();
 					capturerObserver.onCapturerStopped();
 				}
@@ -159,7 +135,6 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 			this.height = height;
 			this.framerate = framerate;
 			resize(width, height);
-			setSurface(false);
 		}
 	}
 	
@@ -169,7 +144,10 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		stopCapture();
 		synchronized (stateLock) {
 			isDisposed = true;
-			releaseRendererHolder();
+			if (surfaceHelper != null) {
+				surfaceHelper.dispose();
+				surfaceHelper = null;
+			}
 		}
 	}
 	
@@ -182,8 +160,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		@Override
 		public void onFrame(final VideoFrame frame) {
 			++numCapturedFrames;
-			if (DEBUG && ((numCapturedFrames % 100) == 0))
-				Log.v(TAG, "onFrame:" + numCapturedFrames);
+			if (DEBUG && ((numCapturedFrames % 100) == 0)) Log.v(TAG, "onFrame:" + numCapturedFrames);
 
 			final VideoFrame modifiedFrame = new VideoFrame(
 				SurfaceVideoCapture.createTextureBufferWithModifiedTransformMatrix(
@@ -214,13 +191,12 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 	 * #getInputSurfaceTextureとは排他使用のこと
 	 * @return
 	 */
+	@SuppressLint("Recycle")
 	@Override
 	@Nullable
 	public Surface getInputSurface() {
-		synchronized (stateLock) {
-			getRendererHolder();
-			return mRendererHolder != null ? mRendererHolder.getSurface() : null;
-		}
+		final SurfaceTexture st = getInputSurfaceTexture();
+		return st != null ? new Surface(st) : null;
 	}
 
 	/**
@@ -232,94 +208,10 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 	@Nullable
 	public SurfaceTexture getInputSurfaceTexture() {
 		synchronized (stateLock) {
-			getRendererHolder();
-			return mRendererHolder != null ? mRendererHolder.getSurfaceTexture() : null;
+			final SurfaceTexture st = surfaceHelper.getSurfaceTexture();
+			st.setDefaultBufferSize(width, height);
+			return st;
 		}
-	}
-
-	/**
-	 * 分配描画用の描画先Surfaceをセット
-	 * @param id
-	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
-	 * @param isRecordable
-	 */
-	@Override
-	public void addSurface(final int id, final Object surface,
-		final boolean isRecordable) throws IllegalStateException {
-
-		synchronized (stateLock) {
-			checkNotDisposed();
-			requireRendererHolder();
-			mRendererHolder.addSurface(id, surface, isRecordable);
-		}
-	}
-	
-	/**
-	 * 分配描画用の描画先Surfaceをセット
-	 * @param id
-	 * @param surface　Surface/SurfaceTexture/SurfaceHolderのいずれか
-	 * @param isRecordable
-	 * @param maxFps
-	 */
-	@Override
-	public void addSurface(final int id, final Object surface,
-		final boolean isRecordable, final int maxFps) throws IllegalStateException {
-
-		synchronized (stateLock) {
-			checkNotDisposed();
-			requireRendererHolder();
-			mRendererHolder.addSurface(id, surface, isRecordable, maxFps);
-		}
-	}
-
-	/**
-	 * 分配描画先Surfaceを削除
-	 * @param id
-	 */
-	@Override
-	public void removeSurface(final int id) {
-		synchronized (stateLock) {
-			getRendererHolder();
-			if (mRendererHolder != null) {
-				mRendererHolder.removeSurface(id);
-			}
-		}
-	}
-
-	@Override
-	public boolean isEnabled() {
-		synchronized (stateLock) {
-			return (mRendererHolder != null)
-				&& mRendererHolder.isEnabled(mCaptureSurfaceId);
-		}
-	}
-
-	@Override
-	public void setEnabled(final boolean enabled) {
-		synchronized (stateLock) {
-			if (mRendererHolder != null) {
-				mRendererHolder.setEnabled(mCaptureSurfaceId, enabled);
-			}
-		}
-	}
-
-	/**
-	 * オフスクリーン描画・分配描画用のIRendererHolderを生成
-	 * @return
-	 */
-	@NonNull
-	protected IRendererHolder createRendererHolder() {
-		return new RendererHolder(width, height, DEBUG ? mRenderHolderCallback : null);
-	}
-	
-	/**
-	 * オフスクリーン描画・分配描画用のIRendererHolderを破棄
-	 */
-	protected void releaseRendererHolder() {
-		if (mOwnRendererHolder && (mRendererHolder != null)) {
-			mRendererHolder.release();
-		}
-		mRendererHolder = null;
 	}
 
 	/**
@@ -344,68 +236,12 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		}
 	}
 	
-	/**
-	 * IRendererHolderがなければ生成する
-	 */
-	@Nullable
-	public IRendererHolder getRendererHolder() {
-		synchronized (stateLock) {
-			if (!isDisposed && (mRendererHolder == null)) {
-				mOwnRendererHolder = true;
-				mRendererHolder = createRendererHolder();
-			}
-			return mRendererHolder;
-		}
-	}
-	
-	/**
-	 * IRendererHolderがなければ生成する
-	 * @return
-	 * @throws IllegalStateException
-	 */
-	@NonNull
-	public IRendererHolder requireRendererHolder() throws IllegalStateException {
-		synchronized (stateLock) {
-			if (isDisposed) {
-				throw new IllegalStateException();
-			}
-			if (mRendererHolder == null) {
-				mOwnRendererHolder = true;
-				mRendererHolder = createRendererHolder();
-			}
-			return mRendererHolder;
-		}
-	}
-
 	private void resize(final int width, final int height) {
 		synchronized (stateLock) {
 			checkNotDisposed();
-			getRendererHolder();
-			if (mRendererHolder != null) {
-				mRendererHolder.resize(width, height);
-			}
 			if (surfaceHelper != null) {
 				surfaceHelper.setTextureSize(width, height);
 			}
-		}
-	}
-	
-	/**
-	 * オフスクリーン描画/分配描画用のIRendererHolderへ
-	 * WebRTCへの映像入力用SurfaceTextureをセット
-	 */
-	protected void setSurface(final boolean isRecordable) {
-		synchronized (stateLock) {
-			if ((mCaptureSurfaceId != 0) && (mRendererHolder != null)) {
-				mRendererHolder.removeSurface(mCaptureSurfaceId);
-			}
-			mCaptureSurfaceId = 0;
-			final SurfaceTexture st = surfaceHelper.getSurfaceTexture();
-			st.setDefaultBufferSize(width, height);
-			final Surface surface = new Surface(st);
-			requireRendererHolder();
-			mCaptureSurfaceId = surface.hashCode();
-			mRendererHolder.addSurface(mCaptureSurfaceId, surface, isRecordable);
 		}
 	}
 	
@@ -464,21 +300,4 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		}
 	}
 	
-	private final IRendererHolder.RenderHolderCallback mRenderHolderCallback
-		= new IRendererHolder.RenderHolderCallback() {
-		@Override
-		public void onCreate(final Surface surface) {
-			if (DEBUG) Log.v(TAG, "onCreate:");
-		}
-		
-		@Override
-		public void onFrameAvailable() {
-//			if (DEBUG) Log.v(TAG, "onFrameAvailable:");
-		}
-		
-		@Override
-		public void onDestroy() {
-			if (DEBUG) Log.v(TAG, "onDestroy:");
-		}
-	};
 }
