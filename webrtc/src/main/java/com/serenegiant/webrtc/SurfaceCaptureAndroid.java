@@ -12,9 +12,6 @@ package com.serenegiant.webrtc;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import android.util.Log;
 import android.view.Surface;
 
@@ -28,6 +25,9 @@ import org.webrtc.TextureBufferImpl;
 import org.webrtc.ThreadUtils;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Surface/SurfaceTextureから映像入力してWebRTCへ流すための
@@ -102,6 +102,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 				}
 			}
 		}
+		captureListener.onInitialized(this);
 	}
 	
 	@Override
@@ -110,7 +111,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		synchronized (stateLock) {
 			checkNotDisposed();
 			if (surfaceHelper != null) {
-				mStatistics = new Statistics(surfaceHelper, captureListener);
+				mStatistics = new Statistics(this, surfaceHelper, captureListener);
 			} else {
 				throw new IllegalStateException("not initialized");
 			}
@@ -192,7 +193,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 			capturerObserver.onFrameCaptured(modifiedFrame);
 			modifiedFrame.release();
 			if (!firstFrameObserved) {
-				captureListener.onFirstFrameAvailable();
+				captureListener.onFirstFrameAvailable(SurfaceCaptureAndroid.this);
 				firstFrameObserved = true;
 			}
 			try {

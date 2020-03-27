@@ -83,6 +83,7 @@ public class SurfaceCaptureAndroidSimple implements SurfaceVideoCapture {
 				}
 			}
 		}
+		captureListener.onInitialized(this);
 	}
 	
 	@Override
@@ -91,7 +92,7 @@ public class SurfaceCaptureAndroidSimple implements SurfaceVideoCapture {
 		synchronized (stateLock) {
 			checkNotDisposed();
 			if (surfaceHelper != null) {
-				mStatistics = new Statistics(surfaceHelper, captureListener);
+				mStatistics = new Statistics(this, surfaceHelper, captureListener);
 			} else {
 				throw new IllegalStateException("not initialized");
 			}
@@ -169,7 +170,7 @@ public class SurfaceCaptureAndroidSimple implements SurfaceVideoCapture {
 			capturerObserver.onFrameCaptured(modifiedFrame);
 			modifiedFrame.release();
 			if (!firstFrameObserved) {
-				captureListener.onFirstFrameAvailable();
+				captureListener.onFirstFrameAvailable(SurfaceCaptureAndroidSimple.this);
 				firstFrameObserved = true;
 			}
 			try {

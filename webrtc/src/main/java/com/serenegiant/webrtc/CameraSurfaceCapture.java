@@ -50,21 +50,25 @@ public abstract class CameraSurfaceCapture extends SurfaceCaptureAndroid
 	public static final CameraCaptureListener DEFAULT_CAPTURE_LISTENER
 		= new CameraCaptureListener() {
 
+		@Override
+		public void onInitialized(@NonNull final SurfaceVideoCapture capture) {
+		}
+
+		public void onFailure(@NonNull final SurfaceVideoCapture capture, final String reason) {
+		}
+
+		public void onFirstFrameAvailable(@NonNull final SurfaceVideoCapture capture) {
+		}
+
 		public void onCameraError(final String errorDescription) {
 		}
 		
 		public void onCameraDisconnected() {
 		}
 		
-		public void onFailure(final String reason) {
-		}
-		
 		public void onCameraOpening(final String cameraName) {
 		}
-		
-		public void onFirstFrameAvailable() {
-		}
-		
+
 		public void onCameraClosed() {
 		}
 	};

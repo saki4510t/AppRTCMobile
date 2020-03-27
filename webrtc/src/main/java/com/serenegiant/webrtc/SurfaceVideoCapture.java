@@ -51,15 +51,20 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 		private static final String TAG = Statistics.class.getSimpleName();
 
 		@NonNull
+		private final SurfaceVideoCapture mParent;
+		@NonNull
 		private final SurfaceTextureHelper surfaceTextureHelper;
 		@NonNull
 		private final CaptureListener captureListener;
 		private int frameCount;
 		private int freezePeriodCount;
 
-		public Statistics(@NonNull final SurfaceTextureHelper surfaceTextureHelper,
+		public Statistics(
+			@NonNull final SurfaceVideoCapture parent,
+			@NonNull final SurfaceTextureHelper surfaceTextureHelper,
 			@NonNull final CaptureListener captureListener) {
 
+			mParent = parent;
 			this.surfaceTextureHelper = surfaceTextureHelper;
 			this.captureListener = captureListener;
 			frameCount = 0;
@@ -91,9 +96,9 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 					if (2000 * freezePeriodCount >= 4000) {
 						Logging.e(TAG, "Camera freezed.");
 						if (surfaceTextureHelper.isTextureInUse()) {
-							captureListener.onFailure("Camera failure. Client must return video buffers.");
+							captureListener.onFailure(mParent, "Camera failure. Client must return video buffers.");
 						} else {
-							captureListener.onFailure("Camera failure.");
+							captureListener.onFailure(mParent, "Camera failure.");
 						}
 
 						return;
@@ -112,8 +117,9 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 	 * SurfaceVideoCaptureからのイベント通知用コールバックリスナー
 	 */
 	public interface CaptureListener {
-		public void onFailure(final String reason);
-		public void onFirstFrameAvailable();
+		public void onInitialized(@NonNull final SurfaceVideoCapture capture);
+		public void onFailure(@NonNull final SurfaceVideoCapture capture, final String reason);
+		public void onFirstFrameAvailable(@NonNull final SurfaceVideoCapture capture);
 	}
 
 	static VideoFrame.TextureBuffer createTextureBufferWithModifiedTransformMatrix(
