@@ -17,6 +17,8 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.serenegiant.apprtcmobile.BuildConfig;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -289,7 +291,7 @@ public class CpuMonitor {
 				&& SystemClock.elapsedRealtime() - lastStatLogTimeMs >= CPU_STAT_LOG_PERIOD_MS) {
 				lastStatLogTimeMs = SystemClock.elapsedRealtime();
 				String statString = getStatString();
-				Log.d(TAG, statString);
+				if (BuildConfig.DEBUG) Log.d(TAG, statString);
 			}
 		}
 	}
@@ -385,7 +387,7 @@ public class CpuMonitor {
 				// We have never found this CPU's max frequency.  Attempt to read it.
 				long cpufreqMax = readFreqFromFile(maxPath[i]);
 				if (cpufreqMax > 0) {
-					Log.d(TAG, "Core " + i + ". Max frequency: " + cpufreqMax);
+					if (DEBUG) Log.d(TAG, "Core " + i + ". Max frequency: " + cpufreqMax);
 					lastSeenMaxFreq = cpufreqMax;
 					cpuFreqMax[i] = cpufreqMax;
 					maxPath[i] = null; // Kill path to free its memory.
