@@ -590,7 +590,7 @@ public class PeerConnectionClient {
 
     // Set INFO libjingle logging.
     // NOTE: this _must_ happen while |factory| is alive!
-    Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
+    Logging.enableLogToDebugOutput(Logging.Severity.LS_WARNING);
 
     List<String> mediaStreamLabels = Collections.singletonList("ARDAMS");
     if (isVideoCallEnabled()) {
