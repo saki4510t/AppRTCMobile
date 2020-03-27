@@ -109,6 +109,8 @@ public class CpuMonitor {
 	private double[] curFreqScales;
 	@Nullable
 	private ProcStat lastProcStat;
+	private Future<?> mActiveFuture;
+	private boolean mReleased;
 
 	private static class ProcStat {
 		final long userTime;
@@ -200,20 +202,20 @@ public class CpuMonitor {
 		}
 	}
 
-	public void release() {
-		if (DEBUG) Log.d(TAG, "release:");
-		if (executor != null) {
-			executor.shutdownNow();
-			executor = null;
+	/**
+	 * 関連するリソースを破棄する
+	 */
+	public synchronized void release() {
+		if (!mReleased) {
+			mReleased = true;
+			if (DEBUG) Log.d(TAG, "release:");
+			releaseExecutor();
 		}
 	}
 
-	public void pause() {
-		if (executor != null) {
-			if (DEBUG) Log.d(TAG, "pause:");
-			executor.shutdownNow();
-			executor = null;
-		}
+	public synchronized void pause() {
+		if (DEBUG) Log.d(TAG, "pause:");
+		releaseExecutor();
 	}
 
 	public void resume() {
@@ -250,29 +252,45 @@ public class CpuMonitor {
 		return doubleToPercent(frequencyScale.getAverage());
 	}
 
-	private void scheduleCpuUtilizationTask() {
-		if (executor != null) {
-			executor.shutdownNow();
-			executor = null;
-		}
+//--------------------------------------------------------------------------------
 
-		executor = Executors.newSingleThreadScheduledExecutor();
-		@SuppressWarnings("unused") // Prevent downstream linter warnings.
-			Future<?> possiblyIgnoredError = executor.scheduleAtFixedRate(new Runnable() {
-			@Override
-			public void run() {
-				cpuUtilizationTask();
-			}
-		}, 0, CPU_STAT_SAMPLE_PERIOD_MS, TimeUnit.MILLISECONDS);
+	/**
+	 * 実行中のタスクがあれば終了させる
+	 * Executorがあればシャットダウンして破棄する
+	 */
+	private synchronized void releaseExecutor() {
+		if (mActiveFuture != null) {
+			mActiveFuture.cancel(true);
+			mActiveFuture = null;
+		}
+		if ((executor != null) && !executor.isShutdown()) {
+			executor.shutdownNow();
+		}
+		executor = null;
+	}
+
+	private synchronized void scheduleCpuUtilizationTask() {
+		releaseExecutor();
+		if (!mReleased) {
+			executor = Executors.newSingleThreadScheduledExecutor();
+			mActiveFuture = executor.scheduleAtFixedRate(new Runnable() {
+				@Override
+				public void run() {
+					cpuUtilizationTask();
+				}
+			}, 0, CPU_STAT_SAMPLE_PERIOD_MS, TimeUnit.MILLISECONDS);
+		}
 	}
 
 	private void cpuUtilizationTask() {
-		boolean cpuMonitorAvailable = sampleCpuUtilization();
-		if (cpuMonitorAvailable
-			&& SystemClock.elapsedRealtime() - lastStatLogTimeMs >= CPU_STAT_LOG_PERIOD_MS) {
-			lastStatLogTimeMs = SystemClock.elapsedRealtime();
-			String statString = getStatString();
-			Log.d(TAG, statString);
+		if (!mReleased) {
+			final boolean cpuMonitorAvailable = sampleCpuUtilization();
+			if (cpuMonitorAvailable
+				&& SystemClock.elapsedRealtime() - lastStatLogTimeMs >= CPU_STAT_LOG_PERIOD_MS) {
+				lastStatLogTimeMs = SystemClock.elapsedRealtime();
+				String statString = getStatString();
+				Log.d(TAG, statString);
+			}
 		}
 	}
 
