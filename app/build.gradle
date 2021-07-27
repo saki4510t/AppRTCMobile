@@ -17,6 +17,8 @@ android {
 		vectorDrawables.useSupportLibrary = true
         applicationId "com.serenegiant.apprtcmobile"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+		multiDexEnabled true
     }
 
     buildTypes {
@@ -40,6 +42,7 @@ dependencies {
 	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 	implementation "androidx.recyclerview:recyclerview:${androidXRecyclerview}"
 	implementation "androidx.constraintlayout:constraintlayout:${constraintLibVersion}"
+	implementation "androidx.multidex:multidex:${androidXMultidex}"
 
 	implementation "org.webrtc:google-webrtc:${webrtcVersion}"
 	implementation "com.serenegiant:common:${commonLibVersion}"
