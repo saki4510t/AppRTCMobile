@@ -32,8 +32,8 @@ ext {
 	javaSourceCompatibility = JavaVersion.VERSION_1_8
 	javaTargetCompatibility = JavaVersion.VERSION_1_8
 
-	versionBuildTool = "28.0.3"
-	versionCompiler = 28
+	versionBuildTool = "30.0.3"
+	versionCompiler = 30
 	versionTarget = 27
 
 	supportLibVersion = '1.1.0'
@@ -41,12 +41,13 @@ ext {
 	androidXLegacyV4 = '1.0.0'
 	androidXMaterial = '1.1.0-beta01'
 	androidXRecyclerview = '1.1.0-rc01'
-	constraintLibVersion = '1.1.3'
+	androidXMultidex = '2.0.1'
+	constraintLibVersion = '2.0.4'
 
 	versionGson = '2.8.4'
 	webrtcVersion = '1.0.28513'
 
-	commonLibVersion= '7.8.1'
+	commonLibVersion= '7.15.1'
 
 	versionCodeNum = 39
 	versionNameString = '1.7.2'
