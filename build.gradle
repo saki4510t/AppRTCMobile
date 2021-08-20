@@ -45,7 +45,7 @@ ext {
 	constraintLibVersion = '2.0.4'
 
 	versionGson = '2.8.4'
-	webrtcVersion = '1.0.28513'
+	webrtcVersion = '1.0.32006'
 
 	commonLibVersion= '7.15.1'
 
