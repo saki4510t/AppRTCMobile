@@ -74,7 +74,7 @@ public class CallActivity extends BaseActivity
 	PeerConnectionClient.PeerConnectionEvents,
 	CallFragment.OnCallEvents {
 	
-	private static final String TAG = "CallRTCClient";
+	private static final String TAG = "CallActivity";
 	
 	public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
 	public static final String EXTRA_URLPARAMETERS = "org.appspot.apprtc.URLPARAMETERS";
@@ -279,7 +279,7 @@ public class CallActivity extends BaseActivity
 			}
 		}
 		
-		Uri roomUri = intent.getData();
+		final Uri roomUri = intent.getData();
 		if (roomUri == null) {
 			logAndToast(getString(R.string.missing_url));
 			Log.e(TAG, "Didn't get any URL in intent!");
@@ -289,7 +289,7 @@ public class CallActivity extends BaseActivity
 		}
 		
 		// Get Intent parameters.
-		String roomId = intent.getStringExtra(EXTRA_ROOMID);
+		final String roomId = intent.getStringExtra(EXTRA_ROOMID);
 		Log.d(TAG, "Room ID: " + roomId);
 		if (roomId == null || roomId.length() == 0) {
 			logAndToast(getString(R.string.missing_url));
@@ -347,7 +347,7 @@ public class CallActivity extends BaseActivity
 		if (loopback || !DirectRTCClient.IP_PATTERN.matcher(roomId).matches()) {
 			appRtcClient = new WebSocketRTCClient(this);
 		} else {
-			Log.i(TAG, "Using org.appspot.apprtc.DirectRTCClient because room name looks like an IP.");
+			Log.i(TAG, "Using org.appspot.apprtc.DirectRTCClient because room name looks like an IP." + roomId);
 			appRtcClient = new DirectRTCClient(this);
 		}
 		// Create connection parameters.
