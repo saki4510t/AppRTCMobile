@@ -8,6 +8,7 @@ package org.appspot.apprtc;/*
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -61,7 +62,7 @@ public class AppRTCAudioManager {
 
   private final Context apprtcContext;
   @Nullable
-  private AudioManager audioManager;
+  private final AudioManager audioManager;
 
   @Nullable
   private AudioManagerEvents audioManagerEvents;
@@ -96,7 +97,7 @@ public class AppRTCAudioManager {
   // assist device switching (close to ear <=> use headset earpiece if
   // available, far from ear <=> use speaker phone).
   @Nullable
-  private AppRTCProximitySensor proximitySensor = null;
+  private AppRTCProximitySensor proximitySensor;
 
   // Handles all tasks related to Bluetooth headset devices.
   private final AppRTCBluetoothManager bluetoothManager;
@@ -106,7 +107,7 @@ public class AppRTCAudioManager {
   private Set<AudioDevice> audioDevices = new HashSet<>();
 
   // Broadcast receiver for wired headset intent broadcasts.
-  private BroadcastReceiver wiredHeadsetReceiver;
+  private final BroadcastReceiver wiredHeadsetReceiver;
 
   // Callback method for changes in audio focus.
   @Nullable
@@ -196,6 +197,7 @@ public class AppRTCAudioManager {
     AppRTCUtils.logDeviceInfo(TAG);
   }
 
+  @SuppressLint("WrongConstant")
   @SuppressWarnings("deprecation") // TODO(henrika): audioManager.requestAudioFocus() is deprecated.
   public void start(AudioManagerEvents audioManagerEvents) {
     Log.d(TAG, "start");
@@ -294,7 +296,7 @@ public class AppRTCAudioManager {
     Log.d(TAG, "AudioManager started");
   }
 
-  @SuppressWarnings("deprecation") // TODO(henrika): audioManager.abandonAudioFocus() is deprecated.
+  @SuppressLint("WrongConstant")
   public void stop() {
     Log.d(TAG, "stop");
     ThreadUtils.checkIsOnMainThread();
@@ -337,11 +339,7 @@ public class AppRTCAudioManager {
         setSpeakerphoneOn(true);
         break;
       case EARPIECE:
-        setSpeakerphoneOn(false);
-        break;
       case WIRED_HEADSET:
-        setSpeakerphoneOn(false);
-        break;
       case BLUETOOTH:
         setSpeakerphoneOn(false);
         break;
@@ -439,11 +437,13 @@ public class AppRTCAudioManager {
    * only use it as an early indicator (during initialization) of an attached
    * wired headset.
    */
+  @SuppressWarnings("deprecation")
   @Deprecated
   private boolean hasWiredHeadset() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       return audioManager.isWiredHeadsetOn();
     } else {
+      @SuppressLint("WrongConstant")
       final AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_ALL);
       for (AudioDeviceInfo device : devices) {
         final int type = device.getType();

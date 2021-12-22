@@ -18,7 +18,6 @@ import android.content.pm.PackageManager;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 
@@ -198,7 +197,6 @@ public class CallActivity extends BaseActivity
 	@Override
 	// TODO(bugs.webrtc.org/8580): LayoutParams.FLAG_TURN_SCREEN_ON and
 	// LayoutParams.FLAG_SHOW_WHEN_LOCKED are deprecated.
-	@SuppressWarnings("deprecation")
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Thread.setDefaultUncaughtExceptionHandler(new UnhandledExceptionHandler(this));
@@ -407,10 +405,8 @@ public class CallActivity extends BaseActivity
 	
 	@TargetApi(19)
 	private static int getSystemUiVisibility() {
-		int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-			flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-		}
+		int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
+			| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 		return flags;
 	}
 	

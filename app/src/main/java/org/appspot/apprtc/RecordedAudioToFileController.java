@@ -86,10 +86,7 @@ public class RecordedAudioToFileController
   // Checks if external storage is available for read and write.
   private boolean isExternalStorageWritable() {
     String state = Environment.getExternalStorageState();
-    if (Environment.MEDIA_MOUNTED.equals(state)) {
-      return true;
-    }
-    return false;
+    return Environment.MEDIA_MOUNTED.equals(state);
   }
 
   // Utilizes audio parameters to create a file name which contains sufficient
@@ -97,7 +94,7 @@ public class RecordedAudioToFileController
   // Example: /sdcard/recorded_audio_16bits_48000Hz_mono.pcm.
   private void openRawAudioOutputFile(int sampleRate, int channelCount) {
     final String fileName = Environment.getExternalStorageDirectory().getPath() + File.separator
-        + "recorded_audio_16bits_" + String.valueOf(sampleRate) + "Hz"
+        + "recorded_audio_16bits_" + sampleRate + "Hz"
         + ((channelCount == 1) ? "_mono" : "_stereo") + ".pcm";
     final File outputFile = new File(fileName);
     try {

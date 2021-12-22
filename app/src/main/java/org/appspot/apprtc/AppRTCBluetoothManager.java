@@ -37,6 +37,7 @@ import androidx.annotation.Nullable;
  * AppRTC demo.
  */
 public class AppRTCBluetoothManager {
+  private static final boolean DEBUG = false; // set false on production
   private static final String TAG = "org.appspot.apprtc.AppRTCBluetoothManager";
 
   // Timeout interval for starting or stopping audio to a Bluetooth SCO device.
@@ -111,8 +112,8 @@ public class AppRTCBluetoothManager {
       Log.d(TAG, "onServiceConnected done: BT state=" + bluetoothState);
     }
 
-    @Override
     /** Notifies the client when the proxy object has been disconnected from the service. */
+    @Override
     public void onServiceDisconnected(int profile) {
       if (profile != BluetoothProfile.HEADSET || bluetoothState == State.UNINITIALIZED) {
         return;
@@ -152,8 +153,10 @@ public class AppRTCBluetoothManager {
           scoConnectionAttempts = 0;
           updateAudioDeviceState();
         } else if (state == BluetoothHeadset.STATE_CONNECTING) {
+          if (DEBUG) Log.v(TAG, "onReceive:STATE_CONNECTING");
           // No action needed.
         } else if (state == BluetoothHeadset.STATE_DISCONNECTING) {
+          if (DEBUG) Log.v(TAG, "onReceive:STATE_DISCONNECTING");
           // No action needed.
         } else if (state == BluetoothHeadset.STATE_DISCONNECTED) {
           // Bluetooth is probably powered off during the call.

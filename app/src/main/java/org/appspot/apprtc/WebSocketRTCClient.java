@@ -48,7 +48,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
 
   private final Handler handler;
   private boolean initiator;
-  private SignalingEvents events;
+  private final SignalingEvents events;
   private WebSocketChannelClient wsClient;
   private ConnectionState roomState;
   private RoomConnectionParameters connectionParameters;

@@ -18,6 +18,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.serenegiant.apprtcmobile.BuildConfig;
+import com.serenegiant.nio.CharsetsUtils;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -25,7 +26,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
@@ -133,31 +133,31 @@ public class CpuMonitor {
 		private final int size;
 		private double sum;
 		private double currentValue;
-		private double[] circBuffer;
-		private int circBufferIndex;
+		private final double[] circularBuffer;
+		private int circularBufferIndex;
 
 		public MovingAverage(int size) {
 			if (size <= 0) {
 				throw new AssertionError("Size value in MovingAverage ctor should be positive.");
 			}
 			this.size = size;
-			circBuffer = new double[size];
+			circularBuffer = new double[size];
 		}
 
 		public void reset() {
-			Arrays.fill(circBuffer, 0);
-			circBufferIndex = 0;
+			Arrays.fill(circularBuffer, 0);
+			circularBufferIndex = 0;
 			sum = 0;
 			currentValue = 0;
 		}
 
 		public void addValue(double value) {
-			sum -= circBuffer[circBufferIndex];
-			circBuffer[circBufferIndex++] = value;
+			sum -= circularBuffer[circularBufferIndex];
+			circularBuffer[circularBufferIndex++] = value;
 			currentValue = value;
 			sum += value;
-			if (circBufferIndex >= size) {
-				circBufferIndex = 0;
+			if (circularBufferIndex >= size) {
+				circularBufferIndex = 0;
 			}
 		}
 
@@ -171,8 +171,7 @@ public class CpuMonitor {
 	}
 
 	public static boolean isSupported() {
-		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-			&& Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
+		return Build.VERSION.SDK_INT < Build.VERSION_CODES.N;
 	}
 
 	/**
@@ -298,12 +297,11 @@ public class CpuMonitor {
 
 	private void init() {
 		try (FileInputStream fin = new FileInputStream("/sys/devices/system/cpu/present");
-			 InputStreamReader streamReader = new InputStreamReader(fin, Charset.forName("UTF-8"));
-			 BufferedReader reader = new BufferedReader(streamReader);
-			 Scanner scanner = new Scanner(reader).useDelimiter("[-\n]");) {
+			final InputStreamReader streamReader = new InputStreamReader(fin, CharsetsUtils.UTF8);
+			final BufferedReader reader = new BufferedReader(streamReader);
+			final Scanner scanner = new Scanner(reader).useDelimiter("[-\n]")) {
 			scanner.nextInt(); // Skip leading number 0.
 			cpusPresent = 1 + scanner.nextInt();
-			scanner.close();
 		} catch (FileNotFoundException e) {
 			if (DEBUG) Log.e(TAG, "Cannot do CPU stats since /sys/devices/system/cpu/present is missing");
 		} catch (IOException e) {
@@ -510,7 +508,7 @@ public class CpuMonitor {
 	private long readFreqFromFile(String fileName) {
 		long number = 0;
 		try (FileInputStream stream = new FileInputStream(fileName);
-			 InputStreamReader streamReader = new InputStreamReader(stream, Charset.forName("UTF-8"));
+			 InputStreamReader streamReader = new InputStreamReader(stream, CharsetsUtils.UTF8);
 			 BufferedReader reader = new BufferedReader(streamReader)) {
 			String line = reader.readLine();
 			number = parseLong(line);
@@ -545,7 +543,7 @@ public class CpuMonitor {
 		long systemTime = 0;
 		long idleTime = 0;
 		try (FileInputStream stream = new FileInputStream("/proc/stat");
-			 InputStreamReader streamReader = new InputStreamReader(stream, Charset.forName("UTF-8"));
+			 InputStreamReader streamReader = new InputStreamReader(stream, CharsetsUtils.UTF8);
 			 BufferedReader reader = new BufferedReader(streamReader)) {
 			// line should contain something like this:
 			// cpu  5093818 271838 3512830 165934119 101374 447076 272086 0 0 0

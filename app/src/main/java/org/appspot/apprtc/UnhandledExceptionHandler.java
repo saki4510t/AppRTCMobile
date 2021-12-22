@@ -19,6 +19,8 @@ import android.widget.TextView;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import androidx.annotation.NonNull;
+
 /**
  * Singleton helper: install a default unhandled exception handler which shows
  * an informative dialog and kills the app.  Useful for apps whose
@@ -36,7 +38,7 @@ public class UnhandledExceptionHandler implements Thread.UncaughtExceptionHandle
   }
 
   @Override
-  public void uncaughtException(Thread unusedThread, final Throwable e) {
+  public void uncaughtException(@NonNull Thread unusedThread, final Throwable e) {
     activity.runOnUiThread(new Runnable() {
       @Override
       public void run() {

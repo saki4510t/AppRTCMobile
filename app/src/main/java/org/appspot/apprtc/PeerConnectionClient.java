@@ -13,6 +13,8 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.serenegiant.nio.CharsetsUtils;
+
 import org.appspot.apprtc.AppRTCClient.SignalingParameters;
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
@@ -54,7 +56,6 @@ import org.webrtc.audio.JavaAudioDeviceModule.AudioTrackErrorCallback;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -843,7 +844,8 @@ public class PeerConnectionClient {
         Log.d(TAG, "Stop video source.");
         try {
           videoCapturer.stopCapture();
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
+          // ignore
         }
         videoCapturerStopped = true;
       }
@@ -947,14 +949,13 @@ public class PeerConnectionClient {
 
   private static String getSdpVideoCodecName(PeerConnectionParameters parameters) {
     switch (parameters.videoCodec) {
-      case VIDEO_CODEC_VP8:
-        return VIDEO_CODEC_VP8;
       case VIDEO_CODEC_VP9:
         return VIDEO_CODEC_VP9;
       case VIDEO_CODEC_H264:
       case VIDEO_CODEC_H264_HIGH:
       case VIDEO_CODEC_H264_BASELINE:
         return VIDEO_CODEC_H264;
+    case VIDEO_CODEC_VP8:
       default:
         return VIDEO_CODEC_VP8;
     }
@@ -1240,7 +1241,7 @@ public class PeerConnectionClient {
           ByteBuffer data = buffer.data;
           final byte[] bytes = new byte[data.capacity()];
           data.get(bytes);
-          String strData = new String(bytes, Charset.forName("UTF-8"));
+          String strData = new String(bytes, CharsetsUtils.UTF8);
           Log.d(TAG, "Got msg: " + strData + " over " + dc);
         }
       });

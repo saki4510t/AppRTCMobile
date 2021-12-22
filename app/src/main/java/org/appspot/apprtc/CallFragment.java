@@ -8,8 +8,10 @@ package org.appspot.apprtc;/*
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -127,11 +129,8 @@ public class CallFragment extends Fragment {
     }
   }
 
-  // TODO(sakal): Replace with onAttach(Context) once we only support API level 23+.
-  @SuppressWarnings("deprecation")
-  @Override
-  public void onAttach(Activity activity) {
-    super.onAttach(activity);
-    callEvents = (OnCallEvents) activity;
+  public void onAttach(@NonNull Context context) {
+    super.onAttach(context);
+    callEvents = (OnCallEvents) context;
   }
 }

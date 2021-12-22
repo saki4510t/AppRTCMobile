@@ -320,7 +320,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 		convertFramerates(final List<int[]> arrayRanges) {
 
 		final List<CameraEnumerationAndroid.CaptureFormat.FramerateRange> ranges = new ArrayList<>();
-		final Iterator var2 = arrayRanges.iterator();
+		final Iterator<int[]> var2 = arrayRanges.iterator();
 		
 		while (var2.hasNext()) {
 			final int[] range = (int[]) var2.next();
@@ -332,7 +332,7 @@ public class SurfaceCamera1Session implements SurfaceCameraSession {
 	
 	static List<org.webrtc.Size> convertSizes(final List<Camera.Size> cameraSizes) {
 		final List<org.webrtc.Size> sizes = new ArrayList<>();
-		final Iterator var2 = cameraSizes.iterator();
+		final Iterator<Camera.Size> var2 = cameraSizes.iterator();
 		
 		while (var2.hasNext()) {
 			Camera.Size size = (Camera.Size) var2.next();

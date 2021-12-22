@@ -10,6 +10,8 @@
 
 package org.appspot.apprtc.util;
 
+import com.serenegiant.nio.CharsetsUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,7 +60,7 @@ public class AsyncHttpURLConnection {
       HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
       byte[] postData = new byte[0];
       if (message != null) {
-        postData = message.getBytes("UTF-8");
+        postData = message.getBytes(CharsetsUtils.UTF8);
       }
       connection.setRequestMethod(method);
       connection.setUseCaches(false);

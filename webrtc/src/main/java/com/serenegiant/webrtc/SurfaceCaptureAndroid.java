@@ -17,6 +17,7 @@ import android.view.Surface;
 
 import com.serenegiant.glutils.IRendererHolder;
 import com.serenegiant.glutils.RendererHolder;
+import com.serenegiant.math.Fraction;
 
 import org.webrtc.CapturerObserver;
 import org.webrtc.Logging;
@@ -269,7 +270,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		synchronized (stateLock) {
 			checkNotDisposed();
 			requireRendererHolder();
-			mRendererHolder.addSurface(id, surface, isRecordable, maxFps);
+			mRendererHolder.addSurface(id, surface, isRecordable, new Fraction(maxFps));
 		}
 	}
 
