@@ -39,6 +39,7 @@ public class AppRTCAudioManager {
   private static final String SPEAKERPHONE_AUTO = "auto";
   private static final String SPEAKERPHONE_TRUE = "true";
   private static final String SPEAKERPHONE_FALSE = "false";
+  private static final String SPEAKERPHONE_AS_POSSIBLE = "asPossible";
 
   /**
    * AudioDevice is the names of possible audio devices that we currently
@@ -564,7 +565,10 @@ public class AppRTCAudioManager {
     // Update selected audio device.
     final AudioDevice newAudioDevice;
 
-    if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
+    if (useSpeakerphone.equals(SPEAKERPHONE_AS_POSSIBLE)
+      && audioDevices.contains(AppRTCAudioManager.AudioDevice.SPEAKER_PHONE)) {
+      newAudioDevice = AudioDevice.SPEAKER_PHONE;
+    } else if (bluetoothManager.getState() == AppRTCBluetoothManager.State.SCO_CONNECTED) {
       // If a Bluetooth is connected, then it should be used as output audio
       // device. Note that it is not sufficient that a headset is available;
       // an active SCO channel must also be up and running.
