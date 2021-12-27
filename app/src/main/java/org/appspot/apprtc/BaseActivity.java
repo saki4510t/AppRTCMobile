@@ -1,18 +1,28 @@
 package org.appspot.apprtc;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.serenegiant.apprtcmobile.R;
-import com.serenegiant.dialog.MessageDialogFragmentV4;
+import com.serenegiant.dialog.RationalDialogV4;
 import com.serenegiant.system.BuildCheck;
 import com.serenegiant.system.PermissionCheck;
+import com.serenegiant.system.PermissionUtils;
+
+import java.util.Arrays;
 
 public abstract class BaseActivity extends AppCompatActivity
-	implements MessageDialogFragmentV4.MessageDialogListener {
+	implements RationalDialogV4.DialogResultListener {
+
+	private static final boolean DEBUG = true;	// set false on production
+	private static final String TAG = BaseActivity.class.getSimpleName();
 
 	static int ID_PERMISSION_REASON_AUDIO = R.string.permission_audio_reason;
 	static int ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_request;
@@ -23,59 +33,48 @@ public abstract class BaseActivity extends AppCompatActivity
 	static int ID_PERMISSION_REASON_CAMERA = R.string.permission_camera_reason;
 	static int ID_PERMISSION_REQUEST_CAMERA = R.string.permission_camera_request;
 
+
 //================================================================================
+	private PermissionUtils mPermissions;
+
+	@Override
+	protected void onCreate(@Nullable final Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		mPermissions = new PermissionUtils(this, mPermissionCallback);
+	}
+
 	/**
-	 * MessageDialogFragmentメッセージダイアログからのコールバックリスナー
+	 * RationalDialogV4からのコールバックリスナー
 	 * @param dialog
-	 * @param requestCode
 	 * @param permissions
 	 * @param result
 	 */
 	@SuppressLint("NewApi")
 	@Override
-	public void onMessageDialogResult(@NonNull final MessageDialogFragmentV4 dialog,
-		final int requestCode, @NonNull final String[] permissions, final boolean result) {
+	public void onDialogResult(@NonNull final RationalDialogV4 dialog,
+		@NonNull final String[] permissions, final boolean result) {
 
 		if (result) {
 			// メッセージダイアログでOKを押された時はパーミッション要求する
 			if (BuildCheck.isMarshmallow()) {
-				requestPermissions(permissions, requestCode);
+				mPermissions.requestPermission(permissions, false);
 				return;
 			}
 		}
 		// メッセージダイアログでキャンセルされた時とAndroid6でない時は自前でチェックして#checkPermissionResultを呼び出す
 		for (final String permission: permissions) {
-			checkPermissionResult(requestCode, permission,
+			checkPermissionResult(permission,
 				PermissionCheck.hasPermission(this, permission));
-		}
-	}
-
-	/**
-	 * パーミッション要求結果を受け取るためのメソッド
-	 * @param requestCode
-	 * @param permissions
-	 * @param grantResults
-	 */
-	@Override
-	public void onRequestPermissionsResult(final int requestCode,
-		@NonNull final String[] permissions, @NonNull final int[] grantResults) {
-
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults);	// 何もしてないけど一応呼んどく
-		final int n = Math.min(permissions.length, grantResults.length);
-		for (int i = 0; i < n; i++) {
-			checkPermissionResult(requestCode, permissions[i],
-				grantResults[i] == PackageManager.PERMISSION_GRANTED);
 		}
 	}
 
 	/**
 	 * パーミッション要求の結果をチェック
 	 * ここではパーミッションを取得できなかった時にToastでメッセージ表示するだけ
-	 * @param requestCode
 	 * @param permission
 	 * @param result
 	 */
-	protected void checkPermissionResult(final int requestCode,
+	private void checkPermissionResult(
 		final String permission, final boolean result) {
 
 		// パーミッションがないときにはメッセージを表示する
@@ -99,24 +98,15 @@ public abstract class BaseActivity extends AppCompatActivity
 		}
 	}
 
-	protected static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0x12345;
-	protected static final int REQUEST_PERMISSION_AUDIO_RECORDING = 0x234567;
-	protected static final int REQUEST_PERMISSION_CAMERA = 0x345678;
-	protected static final int REQUEST_PERMISSION_NETWORK = 0x456789;
-
 	/**
 	 * 外部ストレージへの書き込みパーミッションが有るかどうかをチェック
 	 * なければ説明ダイアログを表示する
 	 * @return true 外部ストレージへの書き込みパーミッションが有る
 	 */
 	protected boolean checkPermissionWriteExternalStorage() {
-		if (!PermissionCheck.hasWriteExternalStorage(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE,
-				R.string.permission_title, ID_PERMISSION_REQUEST_EXT_STORAGE,
-				new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE});
-			return false;
-		}
-		return true;
+		return BuildCheck.isAPI29()
+			|| mPermissions.requestPermission(
+				Manifest.permission.WRITE_EXTERNAL_STORAGE, true);
 	}
 
 	/**
@@ -125,13 +115,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @return true 録音のパーミッションが有る
 	 */
 	protected boolean checkPermissionAudio() {
-		if (!PermissionCheck.hasAudio(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_AUDIO_RECORDING,
-				R.string.permission_title, ID_PERMISSION_REQUEST_AUDIO,
-				new String[]{android.Manifest.permission.RECORD_AUDIO});
-			return false;
-		}
-		return true;
+		return mPermissions.requestPermission(
+			Manifest.permission.RECORD_AUDIO, true);
 	}
 
 	/**
@@ -140,13 +125,8 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @return true カメラアクセスのパーミッションがある
 	 */
 	protected boolean checkPermissionCamera() {
-		if (!PermissionCheck.hasCamera(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_CAMERA,
-				R.string.permission_title, ID_PERMISSION_REQUEST_CAMERA,
-				new String[]{android.Manifest.permission.CAMERA});
-			return false;
-		}
-		return true;
+		return mPermissions.requestPermission(
+			Manifest.permission.CAMERA, true);
 	}
 
 	/**
@@ -155,12 +135,55 @@ public abstract class BaseActivity extends AppCompatActivity
 	 * @return true ネットワークアクセスのパーミッションが有る
 	 */
 	protected boolean checkPermissionNetwork() {
-		if (!PermissionCheck.hasNetwork(this)) {
-			MessageDialogFragmentV4.showDialog(this, REQUEST_PERMISSION_NETWORK,
-				R.string.permission_title, ID_PERMISSION_REQUEST_NETWORK,
-				new String[]{android.Manifest.permission.INTERNET});
-			return false;
-		}
-		return true;
+		return mPermissions.requestPermission(
+			Manifest.permission.INTERNET, true);
 	}
+
+	private final PermissionUtils.PermissionCallback mPermissionCallback
+		= new PermissionUtils.PermissionCallback() {
+		@Override
+		public void onPermissionShowRational(@NonNull final String permission) {
+			if (DEBUG) Log.v(TAG, "onPermissionShowRational:" + permission);
+			final RationalDialogV4 dialog
+				= RationalDialogV4.showDialog(BaseActivity.this, permission);
+			if (dialog == null) {
+				if (DEBUG) Log.v(TAG, "onPermissionShowRational:" +
+					"デフォルトのダイアログ表示ができなかったので自前で表示しないといけない," + permission);
+				// FIXME 未実装
+			}
+		}
+
+		@Override
+		public void onPermissionShowRational(@NonNull final String[] permissions) {
+			if (DEBUG) Log.v(TAG, "onPermissionShowRational:" + Arrays.toString(permissions));
+			// FIXME 未実装
+		}
+
+		@Override
+		public void onPermissionDenied(@NonNull final String permission) {
+			if (DEBUG) Log.v(TAG, "onPermissionDenied:" + permission);
+			// ユーザーがパーミッション要求を拒否したときの処理
+			// FIXME 未実装
+		}
+
+		@Override
+		public void onPermission(@NonNull final String permission) {
+			if (DEBUG) Log.v(TAG, "onPermission:" + permission);
+			// ユーザーがパーミッション要求を承認したときの処理
+		}
+
+		@Override
+		public void onPermissionNeverAskAgain(@NonNull final String permission) {
+			if (DEBUG) Log.v(TAG, "onPermissionNeverAskAgain:" + permission);
+			// 端末のアプリ設定画面を開くためのボタンを配置した画面へ遷移させる
+			// FIXME 未実装
+		}
+
+		@Override
+		public void onPermissionNeverAskAgain(@NonNull final String[] permissions) {
+			if (DEBUG) Log.v(TAG, "onPermissionNeverAskAgain:" + Arrays.toString(permissions));
+			// 端末のアプリ設定画面を開くためのボタンを配置した画面へ遷移させる
+			// FIXME 未実装
+		}
+	};
 }
