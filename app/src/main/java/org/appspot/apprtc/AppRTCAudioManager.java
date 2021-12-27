@@ -414,6 +414,7 @@ public class AppRTCAudioManager {
     if (wasOn == on) {
       return;
     }
+    Log.d(TAG, "setSpeakerphoneOn:" + on);
     audioManager.setSpeakerphoneOn(on);
   }
 
