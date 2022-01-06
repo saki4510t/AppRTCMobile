@@ -286,6 +286,9 @@ public class AppRTCAudioManager {
     // detection of new (enabled) BT devices.
     bluetoothManager.start();
 
+    if (proximitySensor != null) {
+      proximitySensor.start();
+	}
     // Do initial selection of audio device. This setting can later be changed
     // either by adding/removing a BT or wired headset or by covering/uncovering
     // the proximity sensor.
