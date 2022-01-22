@@ -198,6 +198,14 @@ public class AppRTCAudioManager {
     AppRTCUtils.logDeviceInfo(TAG);
   }
 
+  /**
+   * get whether audio manager is running or not
+   * @return
+   */
+  public boolean isStarted() {
+      return amState == AudioManagerState.RUNNING;
+  }
+
   @SuppressLint("WrongConstant")
   @SuppressWarnings("deprecation") // TODO(henrika): audioManager.requestAudioFocus() is deprecated.
   public void start(AudioManagerEvents audioManagerEvents) {
