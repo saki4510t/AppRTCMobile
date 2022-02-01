@@ -92,6 +92,8 @@ public class CallActivity extends BaseActivity
 	public static final String EXTRA_HWCODEC_ENABLED = "org.appspot.apprtc.HWCODEC";
 	public static final String EXTRA_CAPTURETOTEXTURE_ENABLED = "org.appspot.apprtc.CAPTURETOTEXTURE";
 	public static final String EXTRA_FLEXFEC_ENABLED = "org.appspot.apprtc.FLEXFEC";
+	public static final String EXTRA_AUDIO_SOURCE = "org.appspot.apprtc.AUDIO_SOURCE";
+	public static final String EXTRA_AUDIO_FORMAT = "org.appspot.apprtc.AUDIO_FORMAT";
 	public static final String EXTRA_AUDIO_BITRATE = "org.appspot.apprtc.AUDIO_BITRATE";
 	public static final String EXTRA_AUDIOCODEC = "org.appspot.apprtc.AUDIOCODEC";
 	public static final String EXTRA_NOAUDIOPROCESSING_ENABLED =
@@ -324,6 +326,8 @@ public class CallActivity extends BaseActivity
 				intent.getIntExtra(EXTRA_VIDEO_BITRATE, 0), intent.getStringExtra(EXTRA_VIDEOCODEC),
 				intent.getBooleanExtra(EXTRA_HWCODEC_ENABLED, true),
 				intent.getBooleanExtra(EXTRA_FLEXFEC_ENABLED, false),
+				intent.getIntExtra(EXTRA_AUDIO_SOURCE, 7),
+				intent.getIntExtra(EXTRA_AUDIO_FORMAT, 2),
 				intent.getIntExtra(EXTRA_AUDIO_BITRATE, 0), intent.getStringExtra(EXTRA_AUDIOCODEC),
 				intent.getBooleanExtra(EXTRA_NOAUDIOPROCESSING_ENABLED, false),
 				intent.getBooleanExtra(EXTRA_AECDUMP_ENABLED, false),

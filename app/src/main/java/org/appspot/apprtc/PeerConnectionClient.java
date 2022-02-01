@@ -217,6 +217,8 @@ public class PeerConnectionClient {
     public final String videoCodec;
     public final boolean videoCodecHwAcceleration;
     public final boolean videoFlexfecEnabled;
+    public final int audioSource;
+    public final int audioFormat;
     public final int audioStartBitrate;
     public final String audioCodec;
     public final boolean noAudioProcessing;
@@ -232,8 +234,9 @@ public class PeerConnectionClient {
 
     public PeerConnectionParameters(boolean videoCallEnabled, boolean loopback, boolean tracing,
         int videoWidth, int videoHeight, int videoFps, int videoMaxBitrate, String videoCodec,
-        boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled, int audioStartBitrate,
-        String audioCodec, boolean noAudioProcessing, boolean aecDump, boolean saveInputAudioToFile,
+        boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled,
+        int audioSource, int audioFormat, int audioStartBitrate, String audioCodec,
+        boolean noAudioProcessing, boolean aecDump, boolean saveInputAudioToFile,
         boolean useOpenSLES, boolean disableBuiltInAEC, boolean disableBuiltInAGC,
         boolean disableBuiltInNS, boolean disableWebRtcAGCAndHPF, boolean enableRtcEventLog,
         DataChannelParameters dataChannelParameters) {
@@ -247,6 +250,8 @@ public class PeerConnectionClient {
       this.videoCodec = videoCodec;
       this.videoFlexfecEnabled = videoFlexfecEnabled;
       this.videoCodecHwAcceleration = videoCodecHwAcceleration;
+      this.audioSource = audioSource;
+      this.audioFormat = audioFormat;
       this.audioStartBitrate = audioStartBitrate;
       this.audioCodec = audioCodec;
       this.noAudioProcessing = noAudioProcessing;
@@ -497,6 +502,8 @@ public class PeerConnectionClient {
     };
 
     return JavaAudioDeviceModule.builder(appContext)
+        .setAudioSource(peerConnectionParameters.audioSource)
+        .setAudioFormat(peerConnectionParameters.audioFormat)
         .setSamplesReadyCallback(saveRecordedAudioToFile)
         .setUseHardwareAcousticEchoCanceler(!peerConnectionParameters.disableBuiltInAEC)
         .setUseHardwareNoiseSuppressor(!peerConnectionParameters.disableBuiltInNS)
