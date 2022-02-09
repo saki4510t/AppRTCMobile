@@ -23,6 +23,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public interface SurfaceVideoCapture extends VideoCapturer {
+	/**
+	 * カメラ映像が取得できないときにエラーとするまでの回数
+	 * チェックが2秒間隔なので1なら2秒、2なら4秒
+	 */
+	public static int CAMERA_FAILURE_COUNTS = 2;
+
 	public static enum CaptureState {
 		RUNNING,
 		STOPPED
@@ -56,19 +62,22 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 		private final SurfaceTextureHelper surfaceTextureHelper;
 		@NonNull
 		private final CaptureListener captureListener;
+		private final int cameraFailureCounts;
 		private int frameCount;
 		private int freezePeriodCount;
 
 		public Statistics(
 			@NonNull final SurfaceVideoCapture parent,
 			@NonNull final SurfaceTextureHelper surfaceTextureHelper,
-			@NonNull final CaptureListener captureListener) {
+			@NonNull final CaptureListener captureListener,
+			final int cameraFailureCounts) {
 
 			mParent = parent;
 			this.surfaceTextureHelper = surfaceTextureHelper;
 			this.captureListener = captureListener;
 			frameCount = 0;
 			freezePeriodCount = 0;
+			this.cameraFailureCounts = cameraFailureCounts;
 			surfaceTextureHelper.getHandler().postDelayed(cameraObserver, 2000L);
 		}
 
@@ -93,7 +102,7 @@ public interface SurfaceVideoCapture extends VideoCapturer {
 				Logging.d(TAG, "Camera fps: " + cameraFps + ".");
 				if (frameCount == 0) {
 					++freezePeriodCount;
-					if (2000 * freezePeriodCount >= 4000) {
+					if (freezePeriodCount >= cameraFailureCounts) {
 						Logging.e(TAG, "Camera freezed.");
 						if (surfaceTextureHelper.isTextureInUse()) {
 							captureListener.onFailure(mParent, "Camera failure. Client must return video buffers.");

@@ -112,7 +112,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		synchronized (stateLock) {
 			checkNotDisposed();
 			if (surfaceHelper != null) {
-				mStatistics = new Statistics(this, surfaceHelper, captureListener);
+				mStatistics = new Statistics(this, surfaceHelper, captureListener, CAMERA_FAILURE_COUNTS);
 			} else {
 				throw new IllegalStateException("not initialized");
 			}
