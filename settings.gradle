@@ -1,1 +1,1 @@
-include ':app', ':javalib', ':autobanh-jar', ':webrtc'
+include ':app', ':autobanh-jar', ':webrtc'
