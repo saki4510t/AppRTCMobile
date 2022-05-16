@@ -1,4 +1,8 @@
-apply plugin: 'com.android.library'
+plugins {
+	id 'com.android.library'
+	id 'kotlin-android'
+	id 'kotlin-kapt'
+}
 
 android {
 	compileSdkVersion versionCompiler
@@ -26,47 +30,62 @@ android {
 		}
 	}
 
+	kotlinOptions.jvmTarget = "1.8"
 }
 
 dependencies {
 	api fileTree(dir: 'libs', include: ['*.jar'])
 
-	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 	testImplementation 'junit:junit:4.13.2'
 	androidTestImplementation 'androidx.test.ext:junit:1.1.3'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
+	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 	implementation "androidx.appcompat:appcompat:${androidXVersion}"
 //	implementation "com.google.android.material:material:${androidXMaterial}"
 	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 
-	api "org.webrtc:google-webrtc:${webrtcVersion}"
-	api project(':autobanh-jar')
+	implementation "org.webrtc:google-webrtc:${webrtcVersion}"
+	implementation project(':autobanh-jar')
 
 	implementation "com.serenegiant:common:${commonLibVersion}"
 }
 
 def repo = new File(rootDir, "repository")
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
-uploadArchives {
-	repositories {
-		mavenDeployer {
-            repository url: "file://${repo.absolutePath}"
-            pom.version = webrtcAarVersionString
-            pom.groupId = 'com.serenegiant'
-            pom.artifactId = 'webrtc'
-			pom.project {
-				inceptionYear '2018'
-				licenses {
-					license {
-						name 'BSD'
-						url 'https://webrtc.org/license/software/'
-						distribution 'repo'
+afterEvaluate {
+	publishing {
+		repositories {
+			maven {
+				url = "file://${repo.absolutePath}"
+			}
+		}
+		publications {
+			release(MavenPublication) {
+				groupId = 'com.serenegiant'
+				artifactId = 'webrtc'
+				version = webrtcAarVersionString
+				from components.release
+				pom {
+					inceptionYear = '2018'
+					licenses {
+						license {
+							name = 'The WebRTC Software License'
+							url = 'https://webrtc.org/support/license'
+							distribution = 'repo'
+						}
+					}
+					developers {
+						developer {
+							id = 'saki4510t'
+							name = 't_saki'
+							email = 't_saki@serenegiant.com'
+						}
 					}
 				}
 			}
 		}
-    }
+	}
 }
