@@ -46,7 +46,6 @@ dependencies {
 	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 
 	implementation "org.webrtc:google-webrtc:${webrtcVersion}"
-	implementation project(':autobanh-jar')
 
 	implementation "com.serenegiant:common:${commonLibVersion}"
 }
