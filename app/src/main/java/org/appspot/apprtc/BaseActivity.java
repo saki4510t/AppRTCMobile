@@ -13,7 +13,6 @@ import android.widget.Toast;
 import com.serenegiant.apprtcmobile.R;
 import com.serenegiant.dialog.RationalDialogV4;
 import com.serenegiant.system.BuildCheck;
-import com.serenegiant.system.PermissionCheck;
 import com.serenegiant.system.PermissionUtils;
 
 import java.util.Arrays;
@@ -64,7 +63,7 @@ public abstract class BaseActivity extends AppCompatActivity
 		// メッセージダイアログでキャンセルされた時とAndroid6でない時は自前でチェックして#checkPermissionResultを呼び出す
 		for (final String permission: permissions) {
 			checkPermissionResult(permission,
-				PermissionCheck.hasPermission(this, permission));
+				PermissionUtils.hasPermission(this, permission));
 		}
 	}
 
