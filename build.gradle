@@ -44,10 +44,10 @@ ext {
 	androidXMultidex = '2.0.1'
 	constraintLibVersion = '2.1.2'
 
-	versionGson = '2.8.4'
 	webrtcVersion = '1.0.32006'
+	versionGson = '2.9.1'
 
-	commonLibVersion= '8.1.2'
+	commonLibVersion= '8.2.1'
 
 	versionCodeNum = 41
 	versionNameString = '1.7.2'
