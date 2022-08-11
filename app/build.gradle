@@ -49,9 +49,9 @@ dependencies {
 	implementation "androidx.constraintlayout:constraintlayout:${constraintLibVersion}"
 	implementation "androidx.multidex:multidex:${androidXMultidex}"
 
-	implementation "org.webrtc:google-webrtc:${webrtcVersion}"
 	implementation "com.serenegiant:common:${commonLibVersion}"
 
+	implementation project(':libwebrtc')
 	implementation project(':webrtc')
 	implementation project(':autobanh-jar')
 }

@@ -45,9 +45,9 @@ dependencies {
 //	implementation "com.google.android.material:material:${androidXMaterial}"
 	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 
-	implementation "org.webrtc:google-webrtc:${webrtcVersion}"
-
 	implementation "com.serenegiant:common:${commonLibVersion}"
+
+	implementation project(':libwebrtc')
 }
 
 def repo = new File(rootDir, "repository")

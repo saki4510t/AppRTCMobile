@@ -20,7 +20,7 @@ allprojects {
         google()
 		mavenCentral()
 		maven { url 'https://raw.github.com/saki4510t/libcommon/master/repository/' }
-		mavenLocal()
+//		mavenLocal()
     }
 }
 
@@ -44,10 +44,10 @@ ext {
 	androidXMultidex = '2.0.1'
 	constraintLibVersion = '2.1.2'
 
-	webrtcVersion = '1.0.32006'
 	versionGson = '2.9.1'
 
 	commonLibVersion= '8.2.1'
+	libwebrtcVersion = '2022-08-02T04_04_41'
 
 	versionCodeNum = 41
 	versionNameString = '1.7.2'
