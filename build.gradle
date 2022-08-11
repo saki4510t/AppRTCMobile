@@ -49,7 +49,7 @@ ext {
 	commonLibVersion= '8.2.1'
 	libwebrtcVersion = '2022-08-02T04_04_41'
 
-	versionCodeNum = 41
+	versionCodeNum = 42
 	versionNameString = '1.7.2'
-	webrtcAarVersionString = '2.2.0'
+	webrtcAarVersionString = '2.3.0'
 }
