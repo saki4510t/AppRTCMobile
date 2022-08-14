@@ -46,7 +46,7 @@ ext {
 
 	versionGson = '2.9.1'
 
-	commonLibVersion= '8.2.1'
+	commonLibVersion= '8.3.0'
 	libwebrtcVersion = '2022-08-02T04_04_41'
 
 	versionCodeNum = 42
