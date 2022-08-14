@@ -21,6 +21,7 @@ import org.webrtc.SurfaceTextureHelper;
  * WebRTCへ流すためのCameraSurfaceCapture実装
  *
  * WebRTCオフィシャルライブラリの内蔵カメラアクセスクラスCamera1Capture.javaを元に作成
+ * FIXME Camera2Captureに対応するクラスをCamera2SurfaceCaptureAndroidを追加する
  */
 public class Camera1SurfaceCaptureAndroid extends CameraSurfaceCapture {
 	private static final boolean DEBUG = false; // set false on production

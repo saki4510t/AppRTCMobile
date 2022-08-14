@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  * 内蔵カメラへCamera APIでアクセスするためのSurfaceCameraSession実装
  *
  * WebRTCオフィシャルライブラリの内蔵カメラアクセスクラスCamera1Session.javaを参考に作成
+ * FIXME 現行のCamera1Sessionに合わせて更新する、Camera2Session相当のクラスを追加する
  */
 public class SurfaceCamera1Session implements SurfaceCameraSession {
 	private static final boolean DEBUG = false; // set false on production
