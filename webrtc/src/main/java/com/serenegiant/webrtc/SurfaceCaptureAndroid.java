@@ -58,6 +58,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 	private int width;
 	private int height;
 	private int framerate;
+	private int frameRotation;
 	/**
 	 * このクラス内でIRendererHolderを生成したかどうか
 	 */
@@ -325,11 +326,20 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 	}
 
 	/**
+	 * 映像フレームの回転角を設定
+	 * カメラアクセスする下位クラスはここで設定した値よりもカメラから取得した値が優先される
+	 * @param rotation
+	 */
+	public void setFrameRotation(final int rotation) {
+		frameRotation = ((rotation / 90) * 90) % 360;
+	}
+
+	/**
 	 * 映像フレームの回転角を取得
 	 * @return
 	 */
 	protected int getFrameRotation() {
-		return 0;
+		return frameRotation;
 	}
 	
 	/**
