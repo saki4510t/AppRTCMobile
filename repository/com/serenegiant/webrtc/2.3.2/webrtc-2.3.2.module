@@ -1,0 +1,104 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.serenegiant",
+    "module": "webrtc",
+    "version": "2.3.2",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.3.3"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.7.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "webrtc-2.3.2.aar",
+          "url": "webrtc-2.3.2.aar",
+          "size": 77543,
+          "sha512": "fdfa40bbdc9faa66a2c38f39b6ed989323f62138dff95b6fca5642b0c78f1b58621102b932619aa77396ce2629ddca4bf3938dd5a1b561725466a98b5f1e1106",
+          "sha256": "1c20addc65f12a2b2a97db19e5f1af1640e76d06f058599c2b5224dc7d9dfd4a",
+          "sha1": "448dd2e87f44e9ad338abf5c8f50e97bf9cbc696",
+          "md5": "a7e3c68710541572a223192f72365c99"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.7.10"
+          }
+        },
+        {
+          "group": "androidx.legacy",
+          "module": "legacy-support-v4",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.3.1"
+          }
+        },
+        {
+          "group": "com.serenegiant",
+          "module": "common",
+          "version": {
+            "requires": "8.3.0"
+          }
+        },
+        {
+          "group": "AppRTCMobile",
+          "module": "libwebrtc",
+          "version": {
+            "requires": "unspecified"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "webrtc-2.3.2.aar",
+          "url": "webrtc-2.3.2.aar",
+          "size": 77543,
+          "sha512": "fdfa40bbdc9faa66a2c38f39b6ed989323f62138dff95b6fca5642b0c78f1b58621102b932619aa77396ce2629ddca4bf3938dd5a1b561725466a98b5f1e1106",
+          "sha256": "1c20addc65f12a2b2a97db19e5f1af1640e76d06f058599c2b5224dc7d9dfd4a",
+          "sha1": "448dd2e87f44e9ad338abf5c8f50e97bf9cbc696",
+          "md5": "a7e3c68710541572a223192f72365c99"
+        }
+      ]
+    }
+  ]
+}
