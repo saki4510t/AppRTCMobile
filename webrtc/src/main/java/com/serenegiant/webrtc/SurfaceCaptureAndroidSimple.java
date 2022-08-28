@@ -146,10 +146,7 @@ public class SurfaceCaptureAndroidSimple implements SurfaceVideoCapture {
 		stopCapture();
 		synchronized (stateLock) {
 			isDisposed = true;
-			if (surfaceHelper != null) {
-				surfaceHelper.dispose();
-				surfaceHelper = null;
-			}
+			surfaceHelper = null;
 		}
 	}
 	

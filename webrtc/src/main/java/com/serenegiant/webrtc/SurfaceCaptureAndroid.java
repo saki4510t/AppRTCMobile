@@ -172,6 +172,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		stopCapture();
 		synchronized (stateLock) {
 			isDisposed = true;
+			surfaceHelper = null;
 			releaseRendererHolder();
 		}
 	}
