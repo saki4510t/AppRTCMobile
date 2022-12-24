@@ -58,7 +58,7 @@ public class AppRTCAudioManager {
   public interface AudioManagerEvents {
     // Callback fired once audio device is changed or list of available audio devices changed.
     void onAudioDeviceChanged(
-		AudioDevice selectedAudioDevice, Set<AudioDevice> availableAudioDevices);
+		AudioDevice selected, Set<AudioDevice> availables);
   }
 
   private final Context apprtcContext;

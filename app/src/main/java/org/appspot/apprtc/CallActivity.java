@@ -637,8 +637,8 @@ public class CallActivity extends BaseActivity
 			// devices has changed.
 			@Override
 			public void onAudioDeviceChanged(
-				AudioDevice audioDevice, Set<AudioDevice> availableAudioDevices) {
-				onAudioManagerDevicesChanged(audioDevice, availableAudioDevices);
+				AudioDevice selected, Set<AudioDevice> availables) {
+				onAudioManagerDevicesChanged(selected, availables);
 			}
 		});
 	}
