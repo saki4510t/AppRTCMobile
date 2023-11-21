@@ -1,2 +1,2 @@
-include ':app', ':autobanh-jar', ':webrtc'
+include ':app', ':webrtc'
 include ':libwebrtc'

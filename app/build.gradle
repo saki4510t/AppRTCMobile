@@ -53,5 +53,4 @@ dependencies {
 
 	implementation project(':libwebrtc')
 	implementation project(':webrtc')
-	implementation project(':autobanh-jar')
 }
