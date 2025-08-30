@@ -5,7 +5,6 @@ plugins {
 	id 'com.android.library' version '8.9.3' apply false
 	// kotlin
 	id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
-	id 'org.jetbrains.kotlin.kapt' version '1.9.24' apply false
 	id 'org.jetbrains.dokka' version '1.9.20' apply false
 }
 
@@ -14,25 +13,25 @@ tasks.register('clean', Delete) {
 }
 
 ext {
-	javaSourceCompatibility = JavaVersion.VERSION_1_8
-	javaTargetCompatibility = JavaVersion.VERSION_1_8
+	javaSourceCompatibility = JavaVersion.VERSION_17
+	javaTargetCompatibility = JavaVersion.VERSION_17
 
 	versionCompiler = 35
 	versionTarget = 27
 
 	junitVersion = '4.13.2'
-	androidXTestRunnerVersion = '1.1.5'
-	androidXEspressoVersion = '3.5.1'
+	androidXTestRunnerVersion = '1.3.0'
+	androidXEspressoVersion = '3.7.0'
 
-	androidXAppCompat = '1.6.0'
+	androidXAppCompat = '1.7.1'
 	androidXLegacyV4 = '1.0.0'
 	androidXExif = '1.3.3'
 	androidXLifecycle = '2.3.1'
 	androidXMultiDex = '2.0.1'
 	androidXMaterial = '1.7.0'
-	androidXRecyclerview = '1.2.1'
+	androidXRecyclerview = '1.4.0'
 	androidXPreference = '1.2.0'
-	androidXConstraint = '2.1.4'
+	androidXConstraint = '2.2.1'
 	androidXSwiperefreshlayout = '1.1.0'
 
 	androidXCore = '1.8.0'
