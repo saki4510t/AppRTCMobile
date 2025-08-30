@@ -5,6 +5,7 @@ plugins {
 }
 
 android {
+	namespace 'com.serenegiant.apprtcmobile'
 	compileSdk versionCompiler
 
 	compileOptions {
@@ -30,6 +31,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+	buildFeatures {
+		buildConfig true
+	}
 
 	kotlinOptions.jvmTarget = "1.8"
 }

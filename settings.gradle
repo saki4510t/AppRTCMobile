@@ -1,2 +1,22 @@
-include ':app', ':webrtc'
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://raw.github.com/saki4510t/libcommon/master/repository/") }
+    }
+}
+
+rootProject.name = "AppRTCMobile"
+
+include ':app'
+include ':webrtc'
 include ':libwebrtc'

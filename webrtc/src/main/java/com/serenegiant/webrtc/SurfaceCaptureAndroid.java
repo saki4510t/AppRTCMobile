@@ -480,7 +480,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 	private final IRendererHolder.RenderHolderCallback mRenderHolderCallback
 		= new IRendererHolder.RenderHolderCallback() {
 		@Override
-		public void onCreate(final Surface surface) {
+		public void onCreateSurface(final Surface surface) {
 			if (DEBUG) Log.v(TAG, "onCreate:");
 		}
 		
@@ -490,7 +490,7 @@ public class SurfaceCaptureAndroid implements SurfaceVideoDistributeCapture {
 		}
 		
 		@Override
-		public void onDestroy() {
+		public void onDestroySurface() {
 			if (DEBUG) Log.v(TAG, "onDestroy:");
 		}
 	};

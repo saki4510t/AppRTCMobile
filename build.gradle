@@ -1,27 +1,12 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-
-buildscript {
-	ext.kotlin_version = '1.8.10'
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-		classpath 'com.android.tools.build:gradle:7.4.2'
-		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-		mavenCentral()
-		maven { url 'https://raw.github.com/saki4510t/libcommon/master/repository/' }
-//		mavenLocal()
-    }
+plugins {
+	// android
+	id 'com.android.application' version '8.9.3' apply false
+	id 'com.android.library' version '8.9.3' apply false
+	// kotlin
+	id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
+	id 'org.jetbrains.kotlin.kapt' version '1.9.24' apply false
+	id 'org.jetbrains.dokka' version '1.9.20' apply false
 }
 
 tasks.register('clean', Delete) {
@@ -32,7 +17,7 @@ ext {
 	javaSourceCompatibility = JavaVersion.VERSION_1_8
 	javaTargetCompatibility = JavaVersion.VERSION_1_8
 
-	versionCompiler = 33
+	versionCompiler = 35
 	versionTarget = 27
 
 	junitVersion = '4.13.2'
@@ -54,10 +39,8 @@ ext {
 	androidXLifecycleKtx = '2.5.1'
 	androidXFragmentKtx = '1.5.5'
 
-	versionGson = '2.9.1'
-
-	commonLibVersion= '8.15.0'
-	libwebrtcVersion = '2022-08-02T04_04_41'
+	commonLibVersion= '9.14.4'
+	libwebrtcVersion = '2025-08-29T04_03_50'
 
 	versionCodeNum = 45
 	versionNameString = '1.7.2'
