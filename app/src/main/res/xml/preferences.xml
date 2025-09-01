@@ -1,26 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <PreferenceCategory
+        app:iconSpaceReserved="false"
         android:key="@string/pref_videosettings_key"
         android:title="@string/pref_videosettings_title">
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_videocall_key"
             android:title="@string/pref_videocall_title"
             android:dialogTitle="@string/pref_videocall_dlg"
             android:defaultValue="@string/pref_videocall_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_screencapture_key"
             android:title="@string/pref_screencapture_title"
             android:defaultValue="@string/pref_screencapture_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_camera2_key"
             android:title="@string/pref_camera2_title"
             android:defaultValue="@string/pref_camera2_default" />
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_resolution_key"
             android:title="@string/pref_resolution_title"
             android:defaultValue="@string/pref_resolution_default"
@@ -29,6 +37,7 @@
             android:entryValues="@array/videoResolutionsValues" />
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_fps_key"
             android:title="@string/pref_fps_title"
             android:defaultValue="@string/pref_fps_default"
@@ -37,12 +46,14 @@
             android:entryValues="@array/cameraFps" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_capturequalityslider_key"
             android:title="@string/pref_capturequalityslider_title"
             android:dialogTitle="@string/pref_capturequalityslider_dlg"
             android:defaultValue="@string/pref_capturequalityslider_default" />
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_maxvideobitrate_key"
             android:title="@string/pref_maxvideobitrate_title"
             android:defaultValue="@string/pref_maxvideobitrate_default"
@@ -51,6 +62,7 @@
             android:entryValues="@array/startBitrate" />
 
         <EditTextPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_maxvideobitratevalue_key"
             android:title="@string/pref_maxvideobitratevalue_title"
             android:inputType="number"
@@ -58,6 +70,7 @@
             android:dialogTitle="@string/pref_maxvideobitratevalue_dlg" />
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_videocodec_key"
             android:title="@string/pref_videocodec_title"
             android:defaultValue="@string/pref_videocodec_default"
@@ -66,18 +79,21 @@
             android:entryValues="@array/videoCodecs" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_hwcodec_key"
             android:title="@string/pref_hwcodec_title"
             android:dialogTitle="@string/pref_hwcodec_dlg"
             android:defaultValue="@string/pref_hwcodec_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_capturetotexture_key"
             android:title="@string/pref_capturetotexture_title"
             android:dialogTitle="@string/pref_capturetotexture_dlg"
             android:defaultValue="@string/pref_capturetotexture_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_flexfec_key"
             android:title="@string/pref_flexfec_title"
             android:dialogTitle="@string/pref_flexfec_dlg"
@@ -85,10 +101,12 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:iconSpaceReserved="false"
         android:key="@string/pref_audiosettings_key"
         android:title="@string/pref_audiosettings_title">
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_startaudiobitrate_key"
             android:title="@string/pref_startaudiobitrate_title"
             android:defaultValue="@string/pref_startaudiobitrate_default"
@@ -97,6 +115,7 @@
             android:entryValues="@array/startBitrate" />
 
         <EditTextPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_startaudiobitratevalue_key"
             android:title="@string/pref_startaudiobitratevalue_title"
             android:inputType="number"
@@ -104,6 +123,7 @@
             android:dialogTitle="@string/pref_startaudiobitratevalue_dlg" />
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_audiocodec_key"
             android:title="@string/pref_audiocodec_title"
             android:defaultValue="@string/pref_audiocodec_default"
@@ -112,53 +132,62 @@
             android:entryValues="@array/audioCodecs" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_noaudioprocessing_key"
             android:title="@string/pref_noaudioprocessing_title"
             android:dialogTitle="@string/pref_noaudioprocessing_dlg"
             android:defaultValue="@string/pref_noaudioprocessing_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_aecdump_key"
             android:title="@string/pref_aecdump_title"
             android:dialogTitle="@string/pref_aecdump_dlg"
             android:defaultValue="@string/pref_aecdump_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_enable_save_input_audio_to_file_key"
             android:title="@string/pref_enable_save_input_audio_to_file_title"
             android:dialogTitle="@string/pref_enable_save_input_audio_to_file_dlg"
             android:defaultValue="@string/pref_enable_save_input_audio_to_file_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_opensles_key"
             android:title="@string/pref_opensles_title"
             android:dialogTitle="@string/pref_opensles_dlg"
             android:defaultValue="@string/pref_opensles_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_disable_built_in_aec_key"
             android:title="@string/pref_disable_built_in_aec_title"
             android:dialogTitle="@string/pref_disable_built_in_aec_dlg"
             android:defaultValue="@string/pref_disable_built_in_aec_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_disable_built_in_agc_key"
             android:title="@string/pref_disable_built_in_agc_title"
             android:dialogTitle="@string/pref_disable_built_in_agc_dlg"
             android:defaultValue="@string/pref_disable_built_in_agc_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_disable_built_in_ns_key"
             android:title="@string/pref_disable_built_in_ns_title"
             android:dialogTitle="@string/pref_disable_built_in_ns_dlg"
             android:defaultValue="@string/pref_disable_built_in_ns_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_disable_webrtc_agc_and_hpf_key"
             android:title="@string/pref_disable_webrtc_agc_and_hpf_title"
             android:defaultValue="@string/pref_disable_webrtc_agc_default" />
 
         <ListPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_speakerphone_key"
             android:title="@string/pref_speakerphone_title"
             android:defaultValue="@string/pref_speakerphone_default"
@@ -167,26 +196,31 @@
             android:entryValues="@array/speakerphoneValues" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_use_legacy_audio_device_key"
             android:title="@string/pref_use_legacy_audio_device_title"
             android:defaultValue="@string/pref_use_legacy_audio_device_default" />
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:iconSpaceReserved="false"
         android:key="@string/pref_datasettings_key"
         android:title="@string/pref_datasettings_title">
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_enable_datachannel_key"
             android:title="@string/pref_enable_datachannel_title"
             android:defaultValue="@string/pref_enable_datachannel_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_ordered_key"
             android:title="@string/pref_ordered_title"
             android:defaultValue="@string/pref_ordered_default" />
 
         <EditTextPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_data_protocol_key"
             android:title="@string/pref_data_protocol_title"
             android:inputType="text"
@@ -194,11 +228,13 @@
             android:dialogTitle="@string/pref_data_protocol_dlg" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_negotiated_key"
             android:title="@string/pref_negotiated_title"
             android:defaultValue="@string/pref_negotiated_default" />
 
         <EditTextPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_max_retransmit_time_ms_key"
             android:title="@string/pref_max_retransmit_time_ms_title"
             android:inputType="number"
@@ -206,6 +242,7 @@
             android:dialogTitle="@string/pref_max_retransmit_time_ms_dlg" />
 
         <EditTextPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_max_retransmits_key"
             android:title="@string/pref_max_retransmits_title"
             android:inputType="number"
@@ -213,6 +250,7 @@
             android:dialogTitle="@string/pref_max_retransmits_dlg" />
 
         <EditTextPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_data_id_key"
             android:title="@string/pref_data_id_title"
             android:inputType="number"
@@ -221,10 +259,12 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:iconSpaceReserved="false"
         android:key="@string/pref_miscsettings_key"
         android:title="@string/pref_miscsettings_title">
 
         <EditTextPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_room_server_url_key"
             android:title="@string/pref_room_server_url_title"
             android:inputType="text"
@@ -232,18 +272,21 @@
             android:dialogTitle="@string/pref_room_server_url_dlg" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_displayhud_key"
             android:title="@string/pref_displayhud_title"
             android:dialogTitle="@string/pref_displayhud_dlg"
             android:defaultValue="@string/pref_displayhud_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_tracing_key"
             android:title="@string/pref_tracing_title"
             android:dialogTitle="@string/pref_tracing_dlg"
             android:defaultValue="@string/pref_tracing_default" />
 
         <CheckBoxPreference
+            app:iconSpaceReserved="false"
             android:key="@string/pref_enable_rtceventlog_key"
             android:title="@string/pref_enable_rtceventlog_title"
             android:defaultValue="@string/pref_enable_rtceventlog_default"/>

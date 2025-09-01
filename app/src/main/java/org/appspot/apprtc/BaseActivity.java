@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -16,6 +17,7 @@ import com.serenegiant.system.BuildCheck;
 import com.serenegiant.system.PermissionUtils;
 
 import java.util.Arrays;
+import java.util.List;
 
 public abstract class BaseActivity extends AppCompatActivity
 	implements RationalDialogV4.DialogResultListener {
@@ -23,23 +25,21 @@ public abstract class BaseActivity extends AppCompatActivity
 	private static final boolean DEBUG = true;	// set false on production
 	private static final String TAG = BaseActivity.class.getSimpleName();
 
-	static int ID_PERMISSION_REASON_AUDIO = R.string.permission_audio_reason;
-	static int ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_request;
-	static int ID_PERMISSION_REASON_NETWORK = R.string.permission_network_reason;
-	static int ID_PERMISSION_REQUEST_NETWORK = R.string.permission_network_request;
-	static int ID_PERMISSION_REASON_EXT_STORAGE = R.string.permission_ext_storage_reason;
-	static int ID_PERMISSION_REQUEST_EXT_STORAGE = R.string.permission_ext_storage_request;
-	static int ID_PERMISSION_REASON_CAMERA = R.string.permission_camera_reason;
-	static int ID_PERMISSION_REQUEST_CAMERA = R.string.permission_camera_request;
-
-
-//================================================================================
+	private String[] mMissingPermissions;
 	private PermissionUtils mPermissions;
 
 	@Override
 	protected void onCreate(@Nullable final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mPermissions = new PermissionUtils(this, mPermissionCallback);
+		try {
+			final List<String> missingPermissions = PermissionUtils.missingPermissions(this);
+			mMissingPermissions = missingPermissions.toArray(new String[0]);
+		} catch (PackageManager.NameNotFoundException e) {
+			Log.w(TAG, e);
+			mMissingPermissions = new String[0];
+		}
+		mPermissions = new PermissionUtils(this, mPermissionCallback)
+			.prepare(this, mMissingPermissions);
 	}
 
 	/**
@@ -94,48 +94,26 @@ public abstract class BaseActivity extends AppCompatActivity
 				Toast.makeText(getApplicationContext(),
 					R.string.permission_network, Toast.LENGTH_SHORT).show();
 			}
+			if (Manifest.permission.BLUETOOTH.equals(permission)
+				|| Manifest.permission.BLUETOOTH_CONNECT.equals(permission)) {
+				Toast.makeText(getApplicationContext(),
+					R.string.permission_bluetooth, Toast.LENGTH_SHORT).show();
+			}
+			if (Manifest.permission.ACCESS_COARSE_LOCATION.equals(permission)
+				|| Manifest.permission.ACCESS_FINE_LOCATION.equals(permission)) {
+				Toast.makeText(getApplicationContext(),
+					R.string.permission_location, Toast.LENGTH_SHORT).show();
+			}
 		}
 	}
 
 	/**
-	 * 外部ストレージへの書き込みパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true 外部ストレージへの書き込みパーミッションが有る
+	 * アプリの実行に必要なパーミッションを一括して要求する
+	 * @return
 	 */
-	protected boolean checkPermissionWriteExternalStorage() {
-		return BuildCheck.isAPI29()
-			|| mPermissions.requestPermission(
-				Manifest.permission.WRITE_EXTERNAL_STORAGE, true);
-	}
-
-	/**
-	 * 録音のパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true 録音のパーミッションが有る
-	 */
-	protected boolean checkPermissionAudio() {
-		return mPermissions.requestPermission(
-			Manifest.permission.RECORD_AUDIO, true);
-	}
-
-	/**
-	 * カメラアクセスのパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true カメラアクセスのパーミッションがある
-	 */
-	protected boolean checkPermissionCamera() {
-		return mPermissions.requestPermission(
-			Manifest.permission.CAMERA, true);
-	}
-
-	/**
-	 * ネットワークアクセスのパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true ネットワークアクセスのパーミッションが有る
-	 */
-	protected boolean checkPermissionNetwork() {
-		return mPermissions.requestPermission(
-			Manifest.permission.INTERNET, true);
+	protected boolean checkPermissions() {
+		if (DEBUG) Log.v(TAG, "checkPermissions:missingPermissions=" + Arrays.toString(mMissingPermissions));
+		return mPermissions.requestPermission(mMissingPermissions, false);
 	}
 
 	private final PermissionUtils.PermissionCallback mPermissionCallback

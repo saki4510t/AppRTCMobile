@@ -6,4 +6,6 @@
 	<string name="permission_network">ネットワークへのアクセス許可がありません。</string>
 	<string name="permission_network_reason">通話するにはネットワークへのアクセス許可が必要です。</string>
 	<string name="permission_network_request">通話するにはネットワークへのアクセス許可が必要です。</string>
+	<string name="permission_bluetooth">Bluetoothへのアクセス許可がありません。</string>
+	<string name="permission_location">位置情報へのアクセス許可がありません。</string>
 </resources>

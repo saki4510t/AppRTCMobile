@@ -6,4 +6,6 @@
 	<string name="permission_network">No network access permission.</string>
 	<string name="permission_network_reason">Network access permission is necessary for calling.</string>
 	<string name="permission_network_request">Network access permission is necessary for calling.</string>
+	<string name="permission_bluetooth">No Bluetooth access permission.</string>
+	<string name="permission_location">No location access permission</string>
 </resources>

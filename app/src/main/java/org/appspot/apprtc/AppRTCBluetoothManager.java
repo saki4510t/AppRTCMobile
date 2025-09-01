@@ -8,6 +8,7 @@ package org.appspot.apprtc;/*
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -235,10 +236,12 @@ public class AppRTCBluetoothManager {
    * Note that the org.appspot.apprtc.AppRTCAudioManager is also involved in driving this state
    * change.
    */
+  @SuppressLint("MissingPermission")
   public void start() {
     ThreadUtils.checkIsOnMainThread();
     Log.d(TAG, "start");
-    if (!hasPermission(apprtcContext, android.Manifest.permission.BLUETOOTH)) {
+    if (!hasPermission(apprtcContext, android.Manifest.permission.BLUETOOTH)
+      || !hasPermission(apprtcContext, Manifest.permission.BLUETOOTH_CONNECT)) {
       Log.w(TAG, "Process (pid=" + Process.myPid() + ") lacks BLUETOOTH permission");
       return;
     }
@@ -371,6 +374,7 @@ public class AppRTCBluetoothManager {
    * HEADSET_AVAILABLE and |bluetoothDevice| will be mapped to the connected
    * device if available.
    */
+  @SuppressLint("MissingPermission")
   public void updateDevice() {
     if (bluetoothState == State.UNINITIALIZED || bluetoothHeadset == null) {
       return;
@@ -423,7 +427,7 @@ public class AppRTCBluetoothManager {
   }
 
   /** Logs the state of the local Bluetooth adapter. */
-  @SuppressLint("HardwareIds")
+  @SuppressLint({"HardwareIds", "MissingPermission"})
   protected void logBluetoothAdapterInfo(BluetoothAdapter localAdapter) {
     Log.d(TAG, "BluetoothAdapter: "
             + "enabled=" + localAdapter.isEnabled() + ", "
@@ -465,6 +469,7 @@ public class AppRTCBluetoothManager {
    * Called when start of the BT SCO channel takes too long time. Usually
    * happens when the BT device has been turned on during an ongoing call.
    */
+  @SuppressLint("MissingPermission")
   private void bluetoothTimeout() {
     ThreadUtils.checkIsOnMainThread();
     if (bluetoothState == State.UNINITIALIZED || bluetoothHeadset == null) {
@@ -479,7 +484,7 @@ public class AppRTCBluetoothManager {
     // Bluetooth SCO should be connecting; check the latest result.
     boolean scoConnected = false;
     List<BluetoothDevice> devices = bluetoothHeadset.getConnectedDevices();
-    if (devices.size() > 0) {
+    if (!devices.isEmpty()) {
       bluetoothDevice = devices.get(0);
       if (bluetoothHeadset.isAudioConnected(bluetoothDevice)) {
         Log.d(TAG, "SCO connected with " + bluetoothDevice.getName());
