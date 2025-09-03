@@ -1,0 +1,117 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.serenegiant",
+    "module": "webrtc",
+    "version": "2.5.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.11.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "webrtc-2.5.0.aar",
+          "url": "webrtc-2.5.0.aar",
+          "size": 55377,
+          "sha512": "e7809d522b5c4ae1a9f49fffd323acdf35008e57c59b4fe85230525ae16d9c4fd385f7fe6059202f41448445e69233141fdd77486cea530ccb005b042a131fbc",
+          "sha256": "b410804aff6e50dd9160e6e5fb15c719252e6fc4aa5829fa123f049a56d91a4f",
+          "sha1": "5a428bbdd6a23f8c810824f7ceb8daacccc9ecf2",
+          "md5": "9e899d208852b99c64d206e91c8ac40b"
+        }
+      ]
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.appcompat",
+          "module": "appcompat",
+          "version": {
+            "requires": "1.7.1"
+          }
+        },
+        {
+          "group": "androidx.legacy",
+          "module": "legacy-support-v4",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "com.serenegiant",
+          "module": "common",
+          "version": {
+            "requires": "9.14.4"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.9.24"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "webrtc-2.5.0.aar",
+          "url": "webrtc-2.5.0.aar",
+          "size": 55377,
+          "sha512": "e7809d522b5c4ae1a9f49fffd323acdf35008e57c59b4fe85230525ae16d9c4fd385f7fe6059202f41448445e69233141fdd77486cea530ccb005b042a131fbc",
+          "sha256": "b410804aff6e50dd9160e6e5fb15c719252e6fc4aa5829fa123f049a56d91a4f",
+          "sha1": "5a428bbdd6a23f8c810824f7ceb8daacccc9ecf2",
+          "md5": "9e899d208852b99c64d206e91c8ac40b"
+        }
+      ]
+    },
+    {
+      "name": "releaseSourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "files": [
+        {
+          "name": "webrtc-2.5.0-sources.jar",
+          "url": "webrtc-2.5.0-sources.jar",
+          "size": 39669,
+          "sha512": "c73127553e990ea33525945de46b4ca6f480805e30419259c81018eacd559bb75fd42330441832520c33b5ce5128afc310f33569d3bc8db915cc502a104a0ee9",
+          "sha256": "cf2b7c008e8ab468b1ae8ae65112959b2e70d54a8db980a767d5d0f2fb39df5f",
+          "sha1": "81d777d3581e4ec04cfabdf4b8e7f5cf2673a0a9",
+          "md5": "f4f4ac03a4c53496e4c4e834028cae95"
+        }
+      ]
+    }
+  ]
+}
