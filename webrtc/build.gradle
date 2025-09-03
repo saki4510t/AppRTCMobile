@@ -43,7 +43,7 @@ dependencies {
 
 	implementation "com.serenegiant:common:${commonLibVersion}"
 
-	implementation project(':libwebrtc')
+	compileOnly project(':libwebrtc')
 }
 
 def repo = new File(rootDir, "repository")
